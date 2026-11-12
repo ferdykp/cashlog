@@ -23,6 +23,7 @@ import {
   Copy,
   AlertTriangle,
   Loader2,
+  ArrowLeftRight,
 } from "@lucide/vue";
 import api from "@/lib/axios";
 import { previousMonth } from "@/utils/dates";
@@ -412,13 +413,19 @@ async function handleDelete() {
                 <div
                   class="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 shadow-soft"
                   :class="
-                    tx.type === 'income'
-                      ? 'bg-violet-600 text-white'
-                      : 'bg-rose-500 text-white'
+                    tx.type === 'transfer'
+                      ? 'bg-sky-100 text-sky-700'
+                      : tx.type === 'income'
+                        ? 'bg-violet-600 text-white'
+                        : 'bg-rose-500 text-white'
                   "
                 >
                   <component
-                    :is="getCategoryIcon(tx.category?.name)"
+                    :is="
+                      tx.type === 'transfer'
+                        ? ArrowLeftRight
+                        : getCategoryIcon(tx.category?.name)
+                    "
                     class="w-5 h-5 stroke-[2.2]"
                   />
                 </div>
@@ -427,11 +434,25 @@ async function handleDelete() {
                   <h4
                     class="font-display font-bold text-sm text-ink-900 group-hover:text-violet-600 transition-colors"
                   >
-                    {{ tx.note || tx.category?.name || "Transaksi" }}
+                    {{
+                      tx.note ||
+                      (tx.type === "transfer"
+                        ? "Transfer antar dompet"
+                        : tx.category?.name || "Transaksi")
+                    }}
                   </h4>
                   <p class="text-xs text-ink-600 font-medium">
-                    {{ tx.category?.name || "Umum" }} •
-                    {{ tx.account?.name || "Dompet" }}
+                    <template v-if="tx.type === 'transfer'">
+                      <span class="text-sky-700">Transfer</span>
+                      <span aria-hidden="true"> · </span>
+                      {{ tx.account?.name || "Dompet asal" }}
+                      <span class="px-1 text-sky-700" aria-label="ke">→</span>
+                      {{ tx.related_account?.name || "Dompet tujuan" }}
+                    </template>
+                    <template v-else>
+                      {{ tx.category?.name || "Umum" }} •
+                      {{ tx.account?.name || "Dompet" }}
+                    </template>
                   </p>
                 </div>
               </div>
@@ -440,10 +461,20 @@ async function handleDelete() {
                 <div
                   class="font-mono-money font-bold text-sm sm:text-base text-right"
                   :class="
-                    tx.type === 'income' ? 'text-violet-600' : 'text-rose-500'
+                    tx.type === 'transfer'
+                      ? 'text-sky-700'
+                      : tx.type === 'income'
+                        ? 'text-violet-600'
+                        : 'text-rose-500'
                   "
                 >
-                  {{ tx.type === "income" ? "+ " : "- " }}
+                  {{
+                    tx.type === "transfer"
+                      ? ""
+                      : tx.type === "income"
+                        ? "+ "
+                        : "- "
+                  }}
                   {{ formatRupiah(tx.amount) }}
                 </div>
 
