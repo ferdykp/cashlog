@@ -1,12 +1,12 @@
 # Deploy and verify performance changes
 
-These changes are local and have not been deployed. This document describes the operator-run release path; it does not change or restart production services.
+These changes are committed and pushed to GitHub `main`, but have not been deployed to production. This document describes the operator-run release path; it does not change or restart production services.
 
 Validation on 2026-11-17 confirmed production still serves `main-rhgnFTDC.js` and a service worker that precaches chart chunks. The local build uses `main-CAU2u9BQ.js` and excludes chart chunks from precache. Do not treat the local 46.8% precache reduction as live until the release below is performed and rechecked.
 
 ## Release
 
-On the server, after reviewing and merging/pushing the intended commit, run the project's existing deployment script:
+On the server, after reviewing the pushed commit, run the project's existing deployment script:
 
 ```bash
 cd /var/www/cashlog

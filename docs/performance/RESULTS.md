@@ -84,4 +84,4 @@ The live page is controlled by `/build/sw.js`. Its active Workbox precache cache
 4. Profile net-worth and cash-allocation endpoints under realistic asset and transaction counts.
 5. Capture repeat cold/warm browser traces and route-transition timings on the same machine and viewport; include LCP, long tasks, chart transfer and render duration.
 
-No new code optimization was applied in this follow-up: the remaining measured latency cannot yet be safely attributed to a code path. Existing local optimizations remain uncommitted and undeployed.
+No new code optimization was applied in this follow-up: the remaining measured latency cannot yet be safely attributed to a code path. The first optimization patch is committed as `40d3860` and pushed to GitHub `main`, but remains undeployed. No production speedup is claimed until the server deploy and browser measurements are complete.
