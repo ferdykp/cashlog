@@ -1125,18 +1125,18 @@ table {
 .content-page-enter-active,
 .content-page-leave-active {
   transition:
-    opacity 0.18s var(--ease-ui),
-    transform 0.22s var(--ease-ui);
+    opacity 0.16s var(--ease-ui),
+    transform 0.18s var(--ease-ui);
 }
 .page-enter-from,
 .content-page-enter-from {
   opacity: 0;
-  transform: translateY(7px);
+  transform: translate3d(0, 4px, 0);
 }
 .page-leave-to,
 .content-page-leave-to {
   opacity: 0;
-  transform: translateY(-3px);
+  transform: translate3d(0, -2px, 0);
 }
 button,
 a,

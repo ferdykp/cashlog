@@ -1,9 +1,7 @@
 <script setup>
 import { onMounted } from "vue";
-import { useAuthStore } from "./stores/auth";
 import ToastContainer from "./components/ToastContainer.vue";
 import PwaInstallPrompt from "./components/PwaInstallPrompt.vue";
-const authStore = useAuthStore();
 onMounted(() => {
   const savedTheme = localStorage.getItem("theme") || "light";
   document.documentElement.classList.toggle("dark", savedTheme === "dark");
@@ -13,7 +11,11 @@ onMounted(() => {
   <div class="app-root">
     <router-view v-slot="{ Component, route }">
       <transition name="page" mode="out-in">
-        <component :is="Component" :key="route.path" />
+        <!-- Keep the authenticated shell mounted while child routes change. -->
+        <component
+          :is="Component"
+          :key="route.matched[0]?.path || route.path"
+        />
       </transition>
     </router-view>
     <ToastContainer />

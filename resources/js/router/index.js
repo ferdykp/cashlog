@@ -148,8 +148,11 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
-  scrollBehavior() {
-    return { top: 0, behavior: "smooth" };
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) return savedPosition;
+    if (to.hash) return { el: to.hash, behavior: "smooth" };
+    // Route changes should feel immediate; reserve smooth scrolling for anchors.
+    return { top: 0 };
   },
 });
 
