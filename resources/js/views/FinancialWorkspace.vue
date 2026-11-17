@@ -39,6 +39,7 @@ const monthlyTargetForm = ref({ type: "rdpu", amount: "" });
 const selectedGoalId = ref(null);
 const selectedAssetId = ref(null);
 const loading = ref(true);
+const hasLoadedData = ref(false);
 const busy = ref(false);
 const error = ref("");
 
@@ -55,6 +56,11 @@ const {
   selectedGoalId,
   notifyError,
   isBusy: busy,
+});
+watch(tab, () => {
+  selectedGoalId.value = null;
+  clearGoalDetails();
+  selectedAssetId.value = assets.value[0]?.id ?? null;
 });
 
 const templates = {
@@ -384,30 +390,63 @@ const tradePreview = computed(() => {
 });
 
 async function fetchAll() {
-  loading.value = true;
+  loading.value = !hasLoadedData.value;
   error.value = "";
   try {
-    const [
-      goalRes,
-      accountRes,
-      assetRes,
-      fundingSummaryRes,
-      cashAllocationRes,
-      consistencyRes,
-    ] = await Promise.all([
-      api.get("/api/goals"),
-      api.get("/api/accounts"),
-      api.get("/api/assets"),
+    const applyRequest = (request, apply) =>
+      request
+        .then(({ data }) => {
+          apply(data.data);
+          return { ok: true };
+        })
+        .catch((error) => ({ ok: false, error }));
+    const goalRequest = applyRequest(api.get("/api/goals"), (data) => {
+      goals.value = data || [];
+    });
+    const accountRequest = applyRequest(api.get("/api/accounts"), (data) => {
+      accounts.value = data || [];
+    });
+    const assetRequest = applyRequest(api.get("/api/assets"), (data) => {
+      assets.value = data || [];
+    });
+    const fundingRequest = applyRequest(
       api.get("/api/goals/funding-summary"),
+      (data) => {
+        goalFundingSummaries.value = data || [];
+      },
+    );
+    const allocationRequest = applyRequest(
       api.get("/api/cash-allocations/accounts"),
-      api.get("/api/assets/saving-consistency").catch(() => ({ data: { data: savingConsistency.value } })),
-    ]);
-    goals.value = goalRes.data.data || [];
-    accounts.value = accountRes.data.data || [];
-    assets.value = assetRes.data.data || [];
-    goalFundingSummaries.value = fundingSummaryRes.data.data || [];
-    cashAllocationSummary.value = cashAllocationRes.data.data || [];
-    savingConsistency.value = consistencyRes.data.data || savingConsistency.value;
+      (data) => {
+        cashAllocationSummary.value = data || [];
+      },
+    );
+    const consistencyRequest = applyRequest(
+      api.get("/api/assets/saving-consistency"),
+      (data) => {
+        savingConsistency.value = data || savingConsistency.value;
+      },
+    );
+
+    const requests = [
+      goalRequest,
+      accountRequest,
+      assetRequest,
+      fundingRequest,
+      allocationRequest,
+      consistencyRequest,
+    ];
+    const primaryRequest = tab.value === "assets" ? assetRequest : goalRequest;
+    const primaryResult = await primaryRequest;
+    if (!primaryResult.ok) throw primaryResult.error;
+    hasLoadedData.value = true;
+    loading.value = false;
+    const results = await Promise.all(requests);
+    for (const result of results) {
+      if (!result.ok) {
+        console.warn("Data pendukung belum dapat dimuat:", result.error.message);
+      }
+    }
     if (selectedGoalId.value) await fetchGoalDetails();
   } catch (err) {
     error.value = normalizeError(
@@ -1065,12 +1104,12 @@ onMounted(async () => {
     </header>
 
     <div
-      v-if="loading"
+      v-if="loading && !hasLoadedData"
       class="surface-card p-8 text-center text-sm text-ink-500"
     >
       Memuat perencanaan keuangan…
     </div>
-    <div v-else-if="error" class="surface-card p-6">
+    <div v-else-if="error && !hasLoadedData" class="surface-card p-6">
       <p class="text-sm text-expense-600">{{ error }}</p>
       <button class="primary-button mt-4" @click="fetchAll">Coba lagi</button>
     </div>

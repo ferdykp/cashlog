@@ -83,10 +83,10 @@ const remainingDaysInMonth = computed(() => {
 });
 
 onMounted(async () => {
-  await budgetStore.fetchBudgets(currentMonth.value);
-  if (categories.value.length === 0) {
-    await categoryStore.fetchCategories();
-  }
+  await Promise.all([
+    budgetStore.fetchBudgets(currentMonth.value),
+    categories.value.length === 0 ? categoryStore.fetchCategories() : null,
+  ]);
 });
 
 function openModal(budgetToEdit = null) {

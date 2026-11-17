@@ -41,7 +41,7 @@ const page = ref(1),
   lastPage = ref(1);
 let requestVersion = 0;
 const notify = useNotificationStore();
-const isLoading = ref(false);
+const isLoading = ref(true);
 
 // Filter & Search State
 const searchQuery = ref("");
@@ -360,7 +360,14 @@ async function handleDelete() {
 
     <!-- LIST TRANSAKSI BERDASARKAN TANGGAL -->
     <div class="space-y-6">
-      <template v-if="isLoading">
+      <p
+        v-if="isLoading && transactions.length"
+        role="status"
+        class="text-xs text-ink-500"
+      >
+        Memperbarui transaksi…
+      </p>
+      <template v-if="isLoading && transactions.length === 0">
         <div v-for="i in 3" :key="i" class="space-y-3">
           <div class="w-32 h-4 bg-base-100 rounded animate-pulse"></div>
           <div

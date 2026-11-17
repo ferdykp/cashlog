@@ -10,7 +10,7 @@ export function useBills() {
   const accountStore = useAccountStore();
   const { accounts } = storeToRefs(accountStore);
   const bills = ref([]),
-    loading = ref(false),
+    loading = ref(true),
     saving = ref(false),
     open = ref(false),
     editing = ref(null);

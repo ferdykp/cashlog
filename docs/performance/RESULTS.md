@@ -115,3 +115,11 @@ The warm reload sample was captured before all deferred requests had completed. 
 - No controlled cold/warm series, LCP/INP/long-task profile, Laravel request span, SQL timing, or post-deploy navigation median is available. Do not attribute the remaining API latency to a specific query or claim a production speedup from these samples.
 
 Next priority is protected server-side timing for the slow endpoints (`cash-flow`, `budgets`, and `goals/funding-summary`): record request wall time, SQL query count, and cumulative SQL time without logging financial payloads. Then capture repeat authenticated browser runs with identical viewport, cache state, and network conditions.
+
+## Cross-page loading follow-up (local, not deployed)
+
+Code review found and addressed two avoidable query patterns that affect more than the dashboard: asset snapshots were reloading already eager-loaded relations per asset (including a separate audit-history query), and cash-allocation summaries loaded allocation rows per account. The asset list, net-worth, and goal-funding paths now batch relation reads; net-worth and goal-funding use a summary-only snapshot without nested transaction detail. Financial values and formulas are unchanged.
+
+The Financial Workspace now renders its active primary list as soon as that endpoint responds instead of waiting for six responses before assigning any result. Other data screens preserve existing results while requests refresh, and independent form data requests run concurrently. These are local source changes on 2026-11-17. `npm run build` passed and `php -l` passed for all changed PHP files. No application test suite or controlled browser timing run was performed for this follow-up.
+
+The current local Workbox build reports 79 precache entries / 657.34 KiB. This is build output only; no production asset version, before/after request duration, dashboard-ready time, LCP, or page-transition timing was captured. Production remains on the previously observed asset until deployed.

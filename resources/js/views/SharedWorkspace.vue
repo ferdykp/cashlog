@@ -13,6 +13,7 @@ const route = useRoute();
 const router = useRouter();
 const notification = useNotificationStore();
 const loading = ref(true);
+const hasLoadedData = ref(false);
 const busy = ref(false);
 const error = ref("");
 const workspaces = ref([]);
@@ -160,18 +161,25 @@ async function loadWorkspace(id) {
     ? selectedAssetId.value : workspace.value.assets[0]?.id || null;
 }
 async function load() {
-  loading.value = true;
+  loading.value = !hasLoadedData.value;
   error.value = "";
   try {
-    const [workspaceRes, accountRes, invitationRes] = await Promise.all([
-      api.get("/api/shared-workspaces"), api.get("/api/accounts"), api.get("/api/shared-workspaces/invitations/pending"),
-    ]);
-    workspaces.value = workspaceRes.data.data || [];
-    accounts.value = accountRes.data.data || [];
-    invitations.value = invitationRes.data.data || [];
-    const selectedId = route.query.workspace || workspace.value?.id || workspaces.value[0]?.id;
-    workspace.value = workspaces.value.find((item) => Number(item.id) === Number(selectedId)) || null;
-    if (workspace.value) await loadWorkspace(workspace.value.id);
+    const workspaceRequest = api.get("/api/shared-workspaces").then(async ({ data }) => {
+      workspaces.value = data.data || [];
+      const selectedId = route.query.workspace || workspace.value?.id || workspaces.value[0]?.id;
+      workspace.value = workspaces.value.find((item) => Number(item.id) === Number(selectedId)) || null;
+      if (workspace.value) await loadWorkspace(workspace.value.id);
+    });
+    const accountRequest = api.get("/api/accounts").then(({ data }) => {
+      accounts.value = data.data || [];
+    }).catch((err) => console.warn("Gagal memuat akun:", err.message));
+    const invitationRequest = api.get("/api/shared-workspaces/invitations/pending").then(({ data }) => {
+      invitations.value = data.data || [];
+    }).catch((err) => console.warn("Gagal memuat undangan:", err.message));
+    await workspaceRequest;
+    hasLoadedData.value = true;
+    loading.value = false;
+    await Promise.all([accountRequest, invitationRequest]);
   } catch (err) {
     error.value = formatError(err, "Ruang bersama gagal dimuat.");
   } finally {
@@ -394,8 +402,8 @@ watch(() => route.query.workspace, async (id) => { if (id && !loading.value) awa
       </div>
     </header>
 
-    <section v-if="loading" class="surface-card p-8 text-center text-sm text-ink-500">Memuat ruang bersama…</section>
-    <section v-else-if="error" class="surface-card p-6">
+    <section v-if="loading && !hasLoadedData" class="surface-card p-8 text-center text-sm text-ink-500">Memuat ruang bersama…</section>
+    <section v-else-if="error && !hasLoadedData" class="surface-card p-6">
       <p class="text-sm text-expense-600">{{ error }}</p><button class="secondary-button mt-3" @click="load"><RefreshCw class="h-4 w-4" /> Coba lagi</button>
     </section>
 

@@ -57,12 +57,18 @@ class GoalFinancialSummaryService
         $assetRows = GoalAssetAllocation::where('goal_id', $goal->id)->get();
         $assetSummary = [];
         $assetValue = '0.00';
+        $assetIds = $assetRows->pluck('asset_id')->unique()->values();
+        $assets = Asset::where('user_id', $goal->user_id)->whereIn('id', $assetIds)->with([
+            'transactions' => fn ($q) => $q->whereNull('superseded_at'),
+            'prices' => fn ($q) => $q->latest('captured_at')->limit(1),
+            'allocations',
+        ])->get()->keyBy('id');
         foreach ($assetRows->groupBy('asset_id') as $assetId => $rows) {
-            $asset = Asset::where('user_id', $goal->user_id)->with('transactions', 'prices')->find($assetId);
+            $asset = $assets->get($assetId);
             if (! $asset) continue;
             $quantity = '0.00000000';
             foreach ($rows as $row) $quantity = $row->action === 'allocate' ? DecimalMath::add($quantity, (string) $row->quantity, 8) : DecimalMath::subtract($quantity, (string) $row->quantity, 8);
-            $snapshot = $this->assets->snapshot($asset);
+            $snapshot = $this->assets->snapshot($asset, false);
             $allocatedValue = $snapshot['allocated_value'];
             if ($allocatedValue !== null) $assetValue = DecimalMath::add($assetValue, $allocatedValue);
             $assetSummary[] = ['asset_id' => $asset->id, 'name' => $asset->name, 'type' => $asset->type, 'quantity' => $quantity, 'value' => $allocatedValue, 'price_timestamp' => $snapshot['valuation_at']];

@@ -14,4 +14,5 @@ class Asset extends Model
     public function transactions(): HasMany { return $this->hasMany(AssetTransaction::class); }
     public function prices(): HasMany { return $this->hasMany(AssetPrice::class); }
     public function allocations(): HasMany { return $this->hasMany(GoalAssetAllocation::class); }
+    public function auditHistory(): HasMany { return $this->hasMany(AssetTransaction::class)->whereNotNull('superseded_at')->orderByDesc('transaction_date'); }
 }

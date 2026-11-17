@@ -191,14 +191,13 @@ const availableCategories = computed(() => {
 });
 
 onMounted(async () => {
-  if (accountStore.accounts.length === 0) {
-    await accountStore.fetchAccounts();
-  }
+  const requests = [];
+  if (accountStore.accounts.length === 0) requests.push(accountStore.fetchAccounts());
+  if (categoryStore.categories.length === 0) requests.push(categoryStore.fetchCategories());
+  await Promise.all(requests);
+
   if (accountStore.accounts.length > 0 && !form.value.account_id) {
     form.value.account_id = accountStore.accounts[0].id;
-  }
-  if (categoryStore.categories.length === 0) {
-    await categoryStore.fetchCategories();
   }
   if (!isEditMode.value) {
     form.value.amount = Number(route.query.amount) || "";

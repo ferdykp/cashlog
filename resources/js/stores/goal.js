@@ -6,6 +6,7 @@ import api from "@/lib/axios";
 export const useGoalStore = defineStore("goal", () => {
   const goals = ref([]);
   const isLoading = ref(true);
+  const hasFetched = ref(false);
 
   // Kalkulasi Total Terkumpul & Total Target
   const totalTargetAmount = computed(() => {
@@ -32,7 +33,7 @@ export const useGoalStore = defineStore("goal", () => {
 
   // Fetch semua daftar impian tabungan
   async function fetchGoals() {
-    isLoading.value = true;
+    isLoading.value = !hasFetched.value;
     try {
       const response = await api.get("/api/goals");
       const data = response.data.data || response.data;
@@ -40,6 +41,7 @@ export const useGoalStore = defineStore("goal", () => {
     } catch (error) {
       console.warn("Gagal memuat target tabungan:", error.message);
     } finally {
+      hasFetched.value = true;
       isLoading.value = false;
     }
   }
@@ -82,6 +84,7 @@ export const useGoalStore = defineStore("goal", () => {
   return {
     goals,
     isLoading,
+    hasFetched,
     totalTargetAmount,
     totalCurrentAmount,
     overallProgressPercent,

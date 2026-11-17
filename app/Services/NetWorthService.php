@@ -23,8 +23,13 @@ class NetWorthService
         $marketValue = '0.00';
         $bookValueFallback = '0.00';
         $unpricedAssets = 0;
-        foreach (Asset::where('user_id', $user->id)->with('prices', 'transactions', 'allocations')->get() as $asset) {
-            $snapshot = $this->assets->snapshot($asset);
+        $assets = Asset::where('user_id', $user->id)->with([
+            'prices' => fn ($q) => $q->latest('captured_at')->limit(1),
+            'transactions' => fn ($q) => $q->whereNull('superseded_at'),
+            'allocations',
+        ])->get();
+        foreach ($assets as $asset) {
+            $snapshot = $this->assets->snapshot($asset, false);
             if ($snapshot['estimated_value'] !== null) {
                 $marketValue = DecimalMath::add($marketValue, (string) $snapshot['estimated_value']);
             } else {

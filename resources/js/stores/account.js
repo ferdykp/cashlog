@@ -8,7 +8,8 @@ export const useAccountStore = defineStore("account", () => {
   const accounts = ref([]);
   const allocationSummary = ref([]);
   const allocationSummaryLoaded = ref(false);
-  const isLoading = ref(false);
+  const isLoading = ref(true);
+  const hasFetched = ref(false);
 
   // Menghitung total saldo (dipastikan konversi ke Number/parseFloat)
   const totalBalance = computed(() => {
@@ -69,7 +70,7 @@ export const useAccountStore = defineStore("account", () => {
 
   // Ambil daftar akun dari backend Laravel
   async function fetchAccounts() {
-    isLoading.value = true;
+    isLoading.value = !hasFetched.value;
     try {
       const response = await api.get("/api/accounts");
       // PERBAIKAN: Tangkap response.data.data dari AccountResource
@@ -83,6 +84,7 @@ export const useAccountStore = defineStore("account", () => {
     } catch (error) {
       console.warn("Gagal memuat akun:", error.message);
     } finally {
+      hasFetched.value = true;
       isLoading.value = false;
     }
   }
@@ -134,6 +136,7 @@ export const useAccountStore = defineStore("account", () => {
     cashAvailableTotal,
     savingsCashTotal,
     isLoading,
+    hasFetched,
     fetchAccounts,
     fetchAllocationSummary,
     addAccount,

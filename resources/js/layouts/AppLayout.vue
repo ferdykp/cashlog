@@ -9,7 +9,10 @@ import Sidebar from "@/components/Sidebar.vue";
       <div class="app-content-inner">
         <router-view v-slot="{ Component, route }">
           <transition name="content-page" mode="out-in" appear>
-            <component :is="Component" :key="route.path" />
+            <component
+              :is="Component"
+              :key="['goals.index', 'assets.index'].includes(route.name) ? 'financial-workspace' : route.path"
+            />
           </transition>
         </router-view>
       </div>

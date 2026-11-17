@@ -61,8 +61,18 @@ class GoalCashAllocationService
 
     public function summary(User $user): array
     {
-        return Account::where('user_id', $user->id)->where('is_archived', false)->whereIn('type', ['cash', 'bank', 'ewallet'])->get()->map(function (Account $account) use ($user) {
-            $entries = GoalCashAllocation::with('goal')->where('user_id', $user->id)->where('account_id', $account->id)->get();
+        $accounts = Account::where('user_id', $user->id)
+            ->where('is_archived', false)
+            ->whereIn('type', ['cash', 'bank', 'ewallet'])
+            ->get();
+        $entriesByAccount = GoalCashAllocation::with('goal')
+            ->where('user_id', $user->id)
+            ->whereIn('account_id', $accounts->pluck('id'))
+            ->get()
+            ->groupBy('account_id');
+
+        return $accounts->map(function (Account $account) use ($entriesByAccount) {
+            $entries = $entriesByAccount->get($account->id, collect());
             $nominalAllocated = $this->sumAllocations($entries);
             $backing = DecimalMath::compare((string) $account->balance, '0.00') > 0 ? (string) $account->balance : '0.00';
             $allocated = DecimalMath::compare($nominalAllocated, '0.00') > 0 ? $nominalAllocated : '0.00';

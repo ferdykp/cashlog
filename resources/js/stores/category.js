@@ -5,7 +5,8 @@ import api from "@/lib/axios";
 
 export const useCategoryStore = defineStore("category", () => {
   const categories = ref([]);
-  const isLoading = ref(false);
+  const isLoading = ref(true);
+  const hasFetched = ref(false);
 
   // Filter kategori bertipe 'expense'
   const expenseCategories = computed(() => {
@@ -19,7 +20,7 @@ export const useCategoryStore = defineStore("category", () => {
 
   // Ambil semua daftar kategori dari API
   async function fetchCategories(type = null) {
-    isLoading.value = true;
+    isLoading.value = !hasFetched.value;
     try {
       const url = type ? `/api/categories?type=${type}` : "/api/categories";
       const response = await api.get(url);
@@ -29,6 +30,7 @@ export const useCategoryStore = defineStore("category", () => {
     } catch (error) {
       console.warn("Gagal memuat kategori:", error.message);
     } finally {
+      hasFetched.value = true;
       isLoading.value = false;
     }
   }
@@ -65,6 +67,7 @@ export const useCategoryStore = defineStore("category", () => {
     expenseCategories,
     incomeCategories,
     isLoading,
+    hasFetched,
     fetchCategories,
     addCategory,
     updateCategory,

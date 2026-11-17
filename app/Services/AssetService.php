@@ -19,7 +19,12 @@ class AssetService
 {
     public function assets(User $user): array
     {
-        return Asset::where('user_id', $user->id)->with(['prices' => fn ($q) => $q->latest('captured_at')->limit(1), 'transactions', 'allocations'])
+        return Asset::where('user_id', $user->id)->with([
+            'prices' => fn ($q) => $q->latest('captured_at')->limit(1),
+            'transactions' => fn ($q) => $q->whereNull('superseded_at')->with(['cashAccount', 'cashTransaction', 'settlementTransaction', 'refunds']),
+            'allocations',
+            'auditHistory',
+        ])
             ->latest()->get()->map(fn (Asset $asset) => $this->snapshot($asset))->all();
     }
 
@@ -568,11 +573,13 @@ class AssetService
         }, 3);
     }
 
-    public function snapshot(Asset $asset): array
+    public function snapshot(Asset $asset, bool $includeDetails = true): array
     {
-        $asset->unsetRelation('transactions')->unsetRelation('prices')->load([
-            'transactions' => fn ($q) => $q->whereNull('superseded_at')->with(['cashAccount', 'cashTransaction', 'settlementTransaction', 'refunds']),
+        $asset->loadMissing([
+            'transactions' => fn ($q) => $q->whereNull('superseded_at')->when($includeDetails, fn ($query) => $query->with(['cashAccount', 'cashTransaction', 'settlementTransaction', 'refunds'])),
             'prices' => fn ($q) => $q->latest('captured_at')->limit(1),
+            'allocations',
+            ...($includeDetails ? ['auditHistory'] : []),
         ]);
         $quantity = '0.00000000';
         $basis = '0.00';
@@ -653,8 +660,8 @@ class AssetService
             'total_profit_loss' => $basisKnown && $unrealized !== null ? DecimalMath::add($unrealized, $realized) : null,
             'valuation_stale' => $price ? $price->captured_at->lt(now()->subDays(30)) : null,
             'allocation_deficit' => DecimalMath::compare($free, '0.00000000', 8) < 0 ? bcmul($free, '-1', 8) : '0.00000000',
-            'transactions' => $asset->transactions->sortByDesc('transaction_date')->values(),
-            'audit_history' => AssetTransaction::where('asset_id', $asset->id)->whereNotNull('superseded_at')->orderByDesc('transaction_date')->get(),
+            'transactions' => $includeDetails ? $asset->transactions->sortByDesc('transaction_date')->values() : [],
+            'audit_history' => $includeDetails ? $asset->auditHistory : [],
         ];
     }
 
@@ -716,7 +723,9 @@ class AssetService
 
     private function sumAllocations(Asset $asset, ?int $goalId = null): string
     {
-        $rows = GoalAssetAllocation::where('asset_id', $asset->id)->when($goalId, fn ($q) => $q->where('goal_id', $goalId))->get();
+        $rows = $asset->relationLoaded('allocations')
+            ? $asset->allocations->when($goalId, fn ($items) => $items->where('goal_id', $goalId))
+            : GoalAssetAllocation::where('asset_id', $asset->id)->when($goalId, fn ($q) => $q->where('goal_id', $goalId))->get();
         $total = '0.00000000';
         foreach ($rows as $row) $total = $row->action === 'allocate' ? DecimalMath::add($total, (string) $row->quantity, 8) : DecimalMath::subtract($total, (string) $row->quantity, 8);
         return $total;

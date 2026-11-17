@@ -23,7 +23,7 @@ const month = ref(localMonth());
 const from = ref(`${localMonth()}-01`);
 const to = ref(localDate());
 const report = ref(null);
-const loading = ref(false);
+const loading = ref(true);
 const error = ref("");
 const validation = ref("");
 const applied = ref(null);
@@ -292,19 +292,25 @@ onUnmounted(() => {
     </section>
 
     <div
-      v-if="loading"
+      v-if="loading && !report"
       role="status"
       class="surface-card p-12 flex items-center justify-center gap-3 text-ink-500"
     >
       <LoaderCircle class="w-5 h-5 animate-spin" />Menghitung rekap pengeluaran…
     </div>
-    <div v-else-if="error" role="alert" class="surface-card p-6 space-y-3">
+    <div v-else-if="error && !report" role="alert" class="surface-card p-6 space-y-3">
       <div class="flex items-center gap-2 text-expense-600">
         <AlertCircle class="w-5 h-5" />{{ error }}
       </div>
       <button @click="apply" class="secondary-button">Coba lagi</button>
     </div>
     <template v-else-if="report">
+      <p v-if="loading" role="status" class="text-xs text-ink-500">
+        Memperbarui rekap…
+      </p>
+      <p v-else-if="error" role="status" class="text-xs text-expense-600">
+        Rekap belum berhasil diperbarui. Data sebelumnya masih ditampilkan.
+      </p>
       <div class="flex flex-wrap items-center justify-between gap-2">
         <h2 class="text-lg font-bold text-ink-900">{{ periodLabel }}</h2>
         <span class="text-xs text-ink-500"
