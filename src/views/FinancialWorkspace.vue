@@ -5,6 +5,7 @@ import { localDate } from "@/utils/dates";
 import { formatQuantity, formatRupiah } from "@/utils/formatters";
 import MoneyInput from "@/components/MoneyInput.vue";
 import AssetSavingConsistency from "@/components/financial/AssetSavingConsistency.vue";
+import { useGoalDetails } from "@/composables/useGoalDetails";
 import {
   addDecimal,
   compareDecimal,
@@ -36,14 +37,24 @@ const savingConsistency = ref({ current_streak: 0, longest_streak: 0, active_mon
 const monthlyTargetForm = ref({ type: "rdpu", amount: "" });
 const selectedGoalId = ref(null);
 const selectedAssetId = ref(null);
-const funding = ref(null);
-const contributions = ref([]);
-const contributionNextPage = ref(null);
-const contributionHasMore = ref(false);
-const cashHistory = ref([]);
 const loading = ref(true);
 const busy = ref(false);
 const error = ref("");
+
+const {
+  funding,
+  contributions,
+  contributionNextPage,
+  contributionHasMore,
+  cashHistory,
+  fetchGoalDetails,
+  loadMoreContributions,
+  clearGoalDetails,
+} = useGoalDetails({
+  selectedGoalId,
+  notifyError,
+  isBusy: busy,
+});
 
 const templates = {
   Lamaran: [
@@ -298,11 +309,7 @@ async function deleteSelectedRecord() {
 
     if (record.type === "goal") {
       selectedGoalId.value = null;
-      funding.value = null;
-      contributions.value = [];
-      cashHistory.value = [];
-      contributionNextPage.value = null;
-      contributionHasMore.value = false;
+      clearGoalDetails();
     } else {
       selectedAssetId.value = null;
     }
@@ -442,51 +449,6 @@ function onAssetTradeTypeChange() {
   assetTrade.value.calc_mode = "actual";
   assetTrade.value.unit_price = "";
   assetTrade.value.quantity = "";
-}
-
-async function fetchGoalDetails() {
-  if (!selectedGoalId.value) return;
-  try {
-    const [fundingRes, contributionRes, cashRes] = await Promise.all([
-      api.get(`/api/goals/${selectedGoalId.value}/funding`),
-      api.get(`/api/goals/${selectedGoalId.value}/contributions?page=1`),
-      api.get(`/api/goals/${selectedGoalId.value}/cash-allocations`),
-    ]);
-    funding.value = fundingRes.data.data;
-    contributions.value = contributionRes.data.data || [];
-    contributionNextPage.value = contributionRes.data.meta?.current_page
-      ? contributionRes.data.meta.current_page + 1
-      : null;
-    contributionHasMore.value = Boolean(
-      contributionRes.data.meta?.current_page &&
-      contributionRes.data.meta.current_page <
-        contributionRes.data.meta.last_page,
-    );
-    cashHistory.value = cashRes.data.history?.data || [];
-  } catch (err) {
-    notifyError(err, "Rincian target gagal dimuat.");
-  }
-}
-
-async function loadMoreContributions() {
-  if (!selectedGoalId.value || !contributionNextPage.value || busy.value)
-    return;
-  busy.value = true;
-  try {
-    const { data } = await api.get(
-      `/api/goals/${selectedGoalId.value}/contributions?page=${contributionNextPage.value}`,
-    );
-    contributions.value.push(...(data.data || []));
-    contributionNextPage.value =
-      data.meta?.current_page < data.meta?.last_page
-        ? data.meta.current_page + 1
-        : null;
-    contributionHasMore.value = Boolean(contributionNextPage.value);
-  } catch (err) {
-    notifyError(err, "Riwayat setoran gagal dimuat.");
-  } finally {
-    busy.value = false;
-  }
 }
 
 async function refreshAll() {
