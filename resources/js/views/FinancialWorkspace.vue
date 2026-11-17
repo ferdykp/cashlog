@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { localDate } from "@/utils/dates";
 import { formatQuantity, formatRupiah } from "@/utils/formatters";
+import AnimatedMoney from "@/components/AnimatedMoney.vue";
 import MoneyInput from "@/components/MoneyInput.vue";
 import AssetSavingConsistency from "@/components/financial/AssetSavingConsistency.vue";
 import { useGoalDetails } from "@/composables/useGoalDetails";
@@ -1079,13 +1080,13 @@ onMounted(async () => {
         <article class="surface-card goal-summary-card goal-summary-primary">
           <p class="text-xs text-ink-500">Total anggaran target</p>
           <p class="mt-2 text-xl font-bold">
-            {{ formatRupiah(totalGoalBudget) }}
+            <AnimatedMoney :value="totalGoalBudget" />
           </p>
         </article>
         <article class="surface-card goal-summary-card">
           <p class="text-xs text-ink-500">Pendanaan target</p>
           <p class="mt-2 text-xl font-bold">
-            {{ formatRupiah(totalGoalFunding) }}
+            <AnimatedMoney :value="totalGoalFunding" />
           </p>
           <p class="mt-1 text-xs text-ink-500">
             Pembayaran target dan kas/aset yang sudah dialokasikan.

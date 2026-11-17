@@ -10,7 +10,7 @@ onMounted(() => {
 <template>
   <div class="app-root">
     <router-view v-slot="{ Component, route }">
-      <transition name="page" mode="out-in">
+      <transition name="page" mode="out-in" appear>
         <!-- Keep the authenticated shell mounted while child routes change. -->
         <component
           :is="Component"

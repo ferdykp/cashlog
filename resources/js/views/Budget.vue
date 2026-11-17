@@ -7,6 +7,7 @@ import { useBudgetStore } from "@/stores/budget";
 import { useCategoryStore } from "@/stores/category";
 import { useNotificationStore } from "@/stores/notification";
 import { formatRupiah } from "@/utils/formatters";
+import AnimatedMoney from "@/components/AnimatedMoney.vue";
 import MoneyInput from "@/components/MoneyInput.vue";
 import {
   Plus,
@@ -191,12 +192,12 @@ async function handleDeleteBudget() {
           <span
             class="font-mono-money font-black text-3xl sm:text-4xl text-violet-600"
           >
-            {{ formatRupiah(totalBudgetSpent) }}
+            <AnimatedMoney :value="totalBudgetSpent" />
           </span>
           <span
             class="font-mono-money font-extrabold text-xl sm:text-2xl text-ink-900"
           >
-            / {{ formatRupiah(totalBudgetLimit) }}
+            / <AnimatedMoney :value="totalBudgetLimit" />
           </span>
         </div>
       </div>
@@ -265,11 +266,28 @@ async function handleDeleteBudget() {
                 />
               </div>
 
-              <h3
-                class="font-display font-bold text-base md:text-lg text-ink-900"
-              >
-                {{ b.category?.name }}
-              </h3>
+              <div class="min-w-0">
+                <h3
+                  class="font-display font-bold text-base md:text-lg text-ink-900"
+                >
+                  {{ b.category?.name }}
+                </h3>
+                <span
+                  v-if="b.percentage > 100"
+                  class="budget-status is-over"
+                  role="status"
+                >
+                  <AlertTriangle class="h-3.5 w-3.5" />
+                  Melebihi anggaran
+                </span>
+                <span
+                  v-else-if="b.percentage >= 80"
+                  class="budget-status is-near"
+                  role="status"
+                >
+                  Mendekati batas
+                </span>
+              </div>
             </div>
 
             <div class="flex items-center gap-4">

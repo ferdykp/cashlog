@@ -1,0 +1,388 @@
+/* Shared polish layer: calm financial surfaces, consistent spacing, and restrained motion. */
+:root:not(.dark) {
+    --color-base-50: #f4f6f2;
+    --color-base-100: #ebf0eb;
+    --color-line-200: #d9e3dc;
+    --color-ink-900: #172e29;
+    --color-ink-700: #304a43;
+    --color-primary-700: #075e55;
+    --color-primary-600: #08796d;
+}
+
+:root {
+    --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
+    --motion-page: 420ms;
+}
+
+.app-content {
+    padding: clamp(26px, 3.1vw, 46px) clamp(20px, 3.2vw, 52px)
+        clamp(36px, 4vw, 60px);
+}
+
+.app-content-inner {
+    max-width: 1520px;
+}
+
+.page-shell,
+.app-page {
+    gap: clamp(22px, 2.1vw, 30px);
+}
+
+.page-heading {
+    margin-bottom: 2px;
+}
+
+.page-heading h1 {
+    letter-spacing: -0.05em;
+}
+
+.page-heading p {
+    margin-top: 9px;
+    line-height: 1.6;
+}
+
+.surface-card,
+.bank-panel,
+.bank-metric-card {
+    border-color: color-mix(in srgb, var(--color-line-200) 86%, white);
+    box-shadow: 0 8px 24px rgba(22, 50, 40, 0.035);
+}
+
+.bank-dashboard {
+    gap: clamp(24px, 2vw, 32px);
+}
+
+.bank-topbar {
+    padding: 2px 2px 4px;
+}
+
+.bank-topbar h1 {
+    letter-spacing: -0.055em;
+}
+
+.bank-hero-grid {
+    grid-template-columns: minmax(0, 1.36fr) minmax(360px, 0.9fr);
+    gap: clamp(16px, 1.7vw, 24px);
+}
+
+.bank-balance-card {
+    padding: clamp(24px, 2.2vw, 34px);
+    border-radius: 26px;
+    box-shadow: 0 18px 44px rgba(17, 61, 49, 0.14);
+}
+
+.bank-main-balance,
+.bank-metric-card > strong,
+.bank-budget > strong {
+    font-variant-numeric: tabular-nums lining-nums;
+    font-feature-settings: "tnum" 1;
+}
+
+.bank-main-balance {
+    letter-spacing: -0.06em;
+}
+
+.bank-quick-actions {
+    gap: 10px;
+    margin-top: 28px;
+}
+
+.bank-quick-actions a {
+    min-height: 74px;
+    justify-content: center;
+    border-color: rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.bank-metrics {
+    gap: 14px;
+}
+
+.bank-metric-card {
+    padding: clamp(17px, 1.55vw, 23px);
+    border-radius: 20px;
+}
+
+.bank-metric-card > p {
+    margin-top: 17px;
+}
+
+.bank-content-grid,
+.bank-bottom-grid {
+    gap: clamp(16px, 1.7vw, 24px);
+}
+
+.bank-panel {
+    padding: clamp(20px, 1.8vw, 28px);
+    border-radius: 22px;
+}
+
+.bank-panel-head h2 {
+    font-size: clamp(17px, 1.35vw, 20px);
+}
+
+.bank-section-kicker {
+    letter-spacing: 0.16em;
+}
+
+.bank-tx-row {
+    padding-block: 14px;
+}
+
+.budget-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 5px;
+    border-radius: 999px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.budget-status.is-near {
+    background: #fff4d6;
+    color: #8a5a08;
+}
+
+.budget-status.is-over {
+    background: #ffebec;
+    color: #a83438;
+}
+
+.dark .budget-status.is-near {
+    background: #4b3b1c;
+    color: #f4c15d;
+}
+
+.dark .budget-status.is-over {
+    background: #512d31;
+    color: #ff9f9f;
+}
+
+.animated-money {
+    display: inline-block;
+    font-variant-numeric: tabular-nums lining-nums;
+    white-space: inherit;
+}
+
+/* Each route enters as one coordinated, short sequence instead of a hard swap. */
+.page-enter-active,
+.page-leave-active,
+.page-appear-active,
+.content-page-enter-active,
+.content-page-leave-active,
+.content-page-appear-active {
+    transition:
+        opacity 220ms var(--ease-premium),
+        transform 260ms var(--ease-premium);
+}
+
+.page-enter-from,
+.page-appear-from,
+.content-page-enter-from,
+.content-page-appear-from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+}
+
+.page-leave-to,
+.content-page-leave-to {
+    opacity: 0;
+    transform: translate3d(0, -3px, 0);
+}
+
+.content-page-enter-active > *,
+.content-page-appear-active > *,
+.page-appear-active > *,
+.page-enter-active > * {
+    animation: premium-content-in var(--motion-page) var(--ease-premium) both;
+}
+
+.content-page-enter-active > :nth-child(2),
+.content-page-appear-active > :nth-child(2),
+.page-appear-active > :nth-child(2),
+.page-enter-active > :nth-child(2) {
+    animation-delay: 35ms;
+}
+
+.content-page-enter-active > :nth-child(3),
+.content-page-appear-active > :nth-child(3),
+.page-appear-active > :nth-child(3),
+.page-enter-active > :nth-child(3) {
+    animation-delay: 70ms;
+}
+
+.content-page-enter-active > :nth-child(4),
+.content-page-appear-active > :nth-child(4),
+.page-appear-active > :nth-child(4),
+.page-enter-active > :nth-child(4) {
+    animation-delay: 105ms;
+}
+
+.content-page-enter-active > :nth-child(n + 5),
+.content-page-appear-active > :nth-child(n + 5),
+.page-appear-active > :nth-child(n + 5),
+.page-enter-active > :nth-child(n + 5) {
+    animation-delay: 140ms;
+}
+
+@keyframes premium-content-in {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 12px, 0);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+button,
+a,
+.surface-card,
+.bank-panel,
+.bank-metric-card {
+    transition-timing-function: var(--ease-premium);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .bank-metric-card {
+        transition:
+            transform 220ms var(--ease-premium),
+            border-color 220ms var(--ease-premium),
+            box-shadow 220ms var(--ease-premium);
+    }
+
+    .bank-metric-card:hover {
+        transform: translateY(-2px);
+        border-color: #c4d8ce;
+        box-shadow: 0 14px 32px rgba(22, 50, 40, 0.075);
+    }
+
+    .bank-primary-action:hover,
+    .primary-button:hover {
+        transform: translateY(-2px);
+    }
+}
+
+@media (max-width: 1023px) {
+    .app-content {
+        padding: calc(var(--app-header-h) + env(safe-area-inset-top) + 20px)
+            20px calc(var(--app-nav-h) + env(safe-area-inset-bottom) + 30px);
+    }
+
+    .bank-hero-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* Keep the dashboard primary action readable on narrow screens. */
+@media (max-width: 767px) {
+    .app-page > .bank-topbar .bank-header-actions {
+        width: 100%;
+        align-self: stretch;
+    }
+
+    .app-page > .bank-topbar .bank-header-actions .bank-primary-action {
+        width: 100%;
+        min-width: 0;
+        min-height: 48px;
+        flex: 1 1 auto;
+        justify-content: center;
+        padding: 0 16px;
+        font-size: 14px;
+        line-height: 1.2;
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 639px) {
+    .app-content {
+        padding-inline: max(16px, env(safe-area-inset-left));
+    }
+
+    .page-shell,
+    .app-page,
+    .bank-dashboard {
+        gap: 20px;
+    }
+
+    .bank-balance-card {
+        padding: 23px 20px;
+        border-radius: 22px;
+    }
+
+    .bank-panel {
+        padding: 19px;
+    }
+}
+
+@media (max-width: 359px) {
+    .app-content {
+        padding-inline: max(12px, env(safe-area-inset-left));
+    }
+
+    .page-heading,
+    .bank-topbar {
+        gap: 12px;
+    }
+
+    .page-heading h1,
+    .bank-topbar h1 {
+        font-size: clamp(1.4rem, 7vw, 1.7rem);
+        overflow-wrap: anywhere;
+    }
+
+    .bank-metrics {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .bank-quick-actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .bank-main-balance {
+        font-size: clamp(29px, 9vw, 36px);
+    }
+}
+
+@media (min-width: 1600px) {
+    .app-content {
+        padding-inline: clamp(52px, 3.5vw, 84px);
+    }
+
+    .app-content-inner,
+    .bank-dashboard {
+        max-width: 1600px;
+    }
+
+    .bank-dashboard {
+        gap: 34px;
+    }
+
+    .bank-panel {
+        padding: 30px;
+    }
+
+    .bank-metrics {
+        gap: 16px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .page-enter-active,
+    .page-leave-active,
+    .page-appear-active,
+    .content-page-enter-active,
+    .content-page-leave-active,
+    .content-page-appear-active,
+    .content-page-enter-active > *,
+    .content-page-appear-active > *,
+    .page-enter-active > *,
+    .page-appear-active > * {
+        animation: none !important;
+        transition: none !important;
+    }
+}

@@ -6,6 +6,7 @@ import { storeToRefs } from "pinia";
 import { useAccountStore } from "@/stores/account";
 import { useNotificationStore } from "@/stores/notification";
 import { formatRupiah } from "@/utils/formatters";
+import AnimatedMoney from "@/components/AnimatedMoney.vue";
 import AccountCreateModal from "@/views/AccountCreate.vue";
 import {
   Wallet,
@@ -171,7 +172,7 @@ async function handleDelete() {
         <span
           class="font-mono-money font-extrabold text-2xl md:text-3xl text-violet-600"
         >
-          {{ formatRupiah(totalBalance) }}
+          <AnimatedMoney :value="totalBalance" />
         </span>
       </div>
     </div>
@@ -305,7 +306,7 @@ async function handleDelete() {
             <div
               class="font-mono-money font-extrabold text-xl md:text-2xl text-ink-900 group-hover:text-violet-600 transition-colors"
             >
-              {{ formatRupiah(acc.balance) }}
+              <AnimatedMoney :value="acc.balance" />
             </div>
           </div>
         </div>

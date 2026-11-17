@@ -15,6 +15,7 @@ import {
 import VueApexCharts from "@/lib/charts";
 import api from "@/lib/axios";
 import { formatRupiah } from "@/utils/formatters";
+import AnimatedMoney from "@/components/AnimatedMoney.vue";
 import { localDate, localMonth } from "@/utils/dates";
 
 const mode = ref("month");
@@ -326,7 +327,7 @@ onUnmounted(() => {
             class="text-3xl sm:text-4xl font-extrabold tracking-tight break-words"
             data-testid="expense-total"
           >
-            {{ formatRupiah(report.expense) }}
+            <AnimatedMoney :value="report.expense" />
           </p>
           <p class="text-sm opacity-90">
             {{
@@ -340,7 +341,7 @@ onUnmounted(() => {
             <div>
               <span class="block text-xs opacity-75"
                 >Rata-rata per hari kalender</span
-              ><strong>{{ formatRupiah(report.daily_average) }}</strong>
+              ><strong><AnimatedMoney :value="report.daily_average" /></strong>
             </div>
             <div>
               <span class="block text-xs opacity-75">Jumlah pengeluaran</span
@@ -355,9 +356,7 @@ onUnmounted(() => {
             </div>
             <div>
               <p class="text-xs text-ink-500">Total pemasukan</p>
-              <strong class="text-xl text-ink-900">{{
-                formatRupiah(report.income)
-              }}</strong>
+              <strong class="text-xl text-ink-900"><AnimatedMoney :value="report.income" /></strong>
             </div>
           </article>
           <article class="surface-card p-5 flex gap-4 items-center">
@@ -371,7 +370,7 @@ onUnmounted(() => {
               <strong
                 class="text-xl"
                 :class="report.net < 0 ? 'text-expense-600' : 'text-ink-900'"
-                >{{ formatRupiah(report.net) }}</strong
+                ><AnimatedMoney :value="report.net" /></strong
               >
               <p class="text-xs text-ink-500 mt-1">
                 Selisih periode, bukan saldo dompet.

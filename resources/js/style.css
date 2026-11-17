@@ -1033,12 +1033,6 @@ table {
   .bank-header-actions .bank-icon-action {
     display: none;
   }
-  .bank-primary-action {
-    width: 44px;
-    padding: 0;
-    justify-content: center;
-    font-size: 0;
-  }
   .bank-balance-card {
     padding: 22px 18px;
     min-height: 290px;

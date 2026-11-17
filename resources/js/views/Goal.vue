@@ -6,6 +6,7 @@ import { storeToRefs } from "pinia";
 import { useGoalStore } from "@/stores/goal";
 import { useNotificationStore } from "@/stores/notification";
 import { formatRupiah } from "@/utils/formatters";
+import AnimatedMoney from "@/components/AnimatedMoney.vue";
 import MoneyInput from "@/components/MoneyInput.vue";
 import {
   Plus,
@@ -358,10 +359,10 @@ async function handleDeleteGoal() {
                 <span
                   class="font-mono-money font-black text-xl md:text-2xl text-ink-900"
                 >
-                  {{ formatRupiah(priorityGoal.current_amount) }}
+                  <AnimatedMoney :value="priorityGoal.current_amount" />
                 </span>
                 <span class="font-mono-money font-bold text-sm text-ink-400">
-                  / {{ formatRupiah(priorityGoal.target_amount) }}
+                  / <AnimatedMoney :value="priorityGoal.target_amount" />
                 </span>
               </div>
             </div>
@@ -434,7 +435,7 @@ async function handleDeleteGoal() {
           <div class="space-y-1.5">
             <div class="flex items-baseline justify-between text-xs font-bold">
               <span class="font-mono-money font-extrabold text-sm text-ink-900">
-                {{ formatRupiah(goal.current_amount) }}
+                <AnimatedMoney :value="goal.current_amount" />
               </span>
               <span class="text-violet-600 font-mono-money font-bold">
                 {{ goal.progress_percent }}%
