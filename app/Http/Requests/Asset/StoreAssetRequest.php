@@ -24,7 +24,7 @@ class StoreAssetRequest extends FormRequest
             'initial_cost_basis' => ['nullable', 'numeric', 'gte:0', 'decimal:0,2', 'max:9999999999999.99'],
             'initial_current_value' => [Rule::requiredIf(fn () => $this->input('ownership_source') === 'existing' && in_array($this->input('type'), ['rdpu', 'deposit'], true) && ($this->input('type') === 'deposit' || $this->input('opening_mode') === 'value_only')), 'nullable', 'numeric', 'gt:0', 'decimal:0,2', 'max:9999999999999.99'],
             'initial_nav' => ['nullable', 'numeric', 'gt:0', 'decimal:0,8', 'max:9999999999999999.99999999'],
-            'initial_price' => [Rule::requiredIf(fn () => $this->input('ownership_source') === 'existing' && $this->input('type') === 'gold'), 'nullable', 'numeric', 'gt:0', 'decimal:0,8', 'max:9999999999999999.99999999'],
+            'initial_price' => ['nullable', 'numeric', 'gt:0', 'decimal:0,8', 'max:9999999999999999.99999999'],
             'initial_date' => ['required_if:ownership_source,existing', 'nullable', 'date'],
             'purchase_amount' => [Rule::requiredIf(fn () => $this->input('ownership_source') === 'new'), 'nullable', 'numeric', 'gt:0', 'decimal:0,2', 'max:9999999999999.99'],
             'purchase_quantity' => [Rule::requiredIf(fn () => $this->input('ownership_source') === 'new' && $this->input('type') === 'gold'), 'nullable', 'numeric', 'gt:0', 'decimal:0,8', 'max:999999999.99999999'],

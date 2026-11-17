@@ -50,7 +50,9 @@ class AssetService
             unset($data['ownership_source'], $data['initial_quantity'], $data['initial_cost_basis'], $data['initial_current_value'], $data['initial_nav'], $data['initial_price'], $data['initial_date'], $data['opening_mode'], $data['purchase_amount'], $data['purchase_quantity'], $data['purchase_status'], $data['purchase_cash_account_id'], $data['purchase_cash_debited'], $data['purchase_fees'], $data['purchase_date']);
             if (in_array($assetType, ['rdpu', 'deposit'], true)) {
                 $manualMode = $assetType === 'deposit' || $ownershipSource === 'new' || $initial['mode'] === 'value_only';
-                $data['valuation_mode'] = $manualMode ? 'manual' : 'units';
+                $data['valuation_mode'] = $assetType === 'rdpu' && $initial['mode'] === 'value_only'
+                    ? 'value_only'
+                    : ($manualMode ? 'manual' : 'units');
                 $data['manual_current_value'] = $manualMode
                     ? ($ownershipSource === 'existing' ? ($initial['current_value'] ?? '0.00') : '0.00')
                     : null;
