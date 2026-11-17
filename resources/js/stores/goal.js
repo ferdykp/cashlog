@@ -5,7 +5,7 @@ import api from "@/lib/axios";
 
 export const useGoalStore = defineStore("goal", () => {
   const goals = ref([]);
-  const isLoading = ref(false);
+  const isLoading = ref(true);
 
   // Kalkulasi Total Terkumpul & Total Target
   const totalTargetAmount = computed(() => {

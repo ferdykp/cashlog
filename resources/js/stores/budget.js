@@ -5,7 +5,7 @@ import api from "@/lib/axios";
 
 export const useBudgetStore = defineStore("budget", () => {
   const budgets = ref([]);
-  const isLoading = ref(false);
+  const isLoading = ref(true);
   const hasFetched = ref(false);
 
   // Total keseluruhan limit & pengeluaran bulan ini

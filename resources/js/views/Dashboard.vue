@@ -56,6 +56,7 @@ const { goals, isLoading: isLoadingGoals } = storeToRefs(goalStore);
 
 const recentTransactions = ref([]);
 const transactionsLoaded = ref(false);
+const isLoadingTransactions = ref(true);
 const netWorth = ref({
   cash_total: "0.00",
   investment_total: "0.00",
@@ -87,15 +88,16 @@ const investmentAssets = computed(() =>
   ),
 );
 const monthlyReport = ref({ income: 0, expense: 0, categories: [] });
-const isLoadingTransactions = ref(false);
-
 const cashFlowMonths = ref([]);
 const cashFlowIncome = ref([]);
 const cashFlowExpense = ref([]);
 const isLoadingCashFlow = ref(true);
 const chartPanel = ref(null);
+const planningPanel = ref(null);
+const activityPanel = ref(null);
 const chartVisible = ref(false);
-let chartObserver;
+let sectionObserver;
+const sectionLoaders = new WeakMap();
 
 // Map Ikon untuk Transaksi
 const iconMap = {
@@ -214,22 +216,52 @@ function getLastNMonths(n) {
 }
 
 let refreshing = false;
+let refreshAgain = false;
+let cashFlowLoaded = false;
+let planningLoaded = false;
+let activityLoaded = false;
 async function refreshDashboard() {
-  if (refreshing) return;
+  if (refreshing) {
+    refreshAgain = true;
+    return;
+  }
   refreshing = true;
   try {
-    await Promise.all([
+    const requests = [
       accountStore.fetchAccounts(),
       accountStore.fetchAllocationSummary(),
-      fetchTransactionsData(),
-      fetchCashFlowData(),
-      budgetStore.fetchBudgets(localMonth()),
-      goalStore.fetchGoals(),
+      fetchDashboardSummary(),
       fetchNetWorthData(),
-      fetchGoalFundingSummaries(),
-    ]);
+    ];
+    if (cashFlowLoaded) requests.push(fetchCashFlowData());
+    if (planningLoaded) requests.push(fetchPlanningData());
+    if (activityLoaded) requests.push(fetchTransactionsData());
+    await Promise.all(requests);
   } finally {
     refreshing = false;
+    if (refreshAgain) {
+      refreshAgain = false;
+      void refreshDashboard();
+    }
+  }
+}
+
+function fetchPlanningData() {
+  return Promise.all([
+    budgetStore.fetchBudgets(localMonth()),
+    goalStore.fetchGoals(),
+    fetchGoalFundingSummaries(),
+  ]);
+}
+
+async function fetchDashboardSummary() {
+  try {
+    const response = await api.get("/api/reports/dashboard-summary", {
+      params: { month: localMonth() },
+    });
+    monthlyReport.value = response.data.data;
+  } catch (err) {
+    console.warn("Gagal memuat ringkasan bulan ini:", err.message);
   }
 }
 
@@ -254,39 +286,63 @@ async function fetchNetWorthData() {
   }
 }
 onMounted(() => {
-  refreshDashboard();
+  void refreshDashboard();
   window.addEventListener("ledger:data-changed", refreshDashboard);
 
-  if ("IntersectionObserver" in window && chartPanel.value) {
-    chartObserver = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          chartVisible.value = true;
-          chartObserver.disconnect();
+  const loadSection = (element, load) => {
+    if (!element) return;
+    if (sectionObserver) {
+      sectionObserver.observe(element);
+      sectionLoaders.set(element, load);
+    } else {
+      load();
+    }
+  };
+
+  if ("IntersectionObserver" in window) {
+    sectionObserver = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const load = sectionLoaders.get(entry.target);
+          sectionObserver.unobserve(entry.target);
+          load?.();
         }
       },
       { rootMargin: "200px" },
     );
-    chartObserver.observe(chartPanel.value);
-  } else {
-    chartVisible.value = true;
   }
+
+  loadSection(chartPanel.value, () => {
+    chartVisible.value = true;
+    if (!cashFlowLoaded) {
+      cashFlowLoaded = true;
+      void fetchCashFlowData();
+    }
+  });
+  loadSection(planningPanel.value, () => {
+    if (!planningLoaded) {
+      planningLoaded = true;
+      void fetchPlanningData();
+    }
+  });
+  loadSection(activityPanel.value, () => {
+    if (!activityLoaded) {
+      activityLoaded = true;
+      void fetchTransactionsData();
+    }
+  });
 });
 onUnmounted(() => {
   window.removeEventListener("ledger:data-changed", refreshDashboard);
-  chartObserver?.disconnect();
+  sectionObserver?.disconnect();
 });
 
 async function fetchTransactionsData() {
   isLoadingTransactions.value = !transactionsLoaded.value;
   try {
-    // Both requests are independent; run them together to shorten dashboard refresh.
-    const [resRecent, resAll] = await Promise.all([
-      api.get("/api/transactions?limit=5"),
-      api.get(`/api/reports/monthly?month=${localMonth()}`),
-    ]);
-    recentTransactions.value = resRecent.data.data || resRecent.data || [];
-    monthlyReport.value = resAll.data.data;
+    const response = await api.get("/api/transactions?limit=5");
+    recentTransactions.value = response.data.data || response.data || [];
   } catch (err) {
     console.warn("Gagal memuat data transaksi:", err.message);
   } finally {
@@ -503,7 +559,7 @@ async function fetchCashFlowData() {
         <div v-else class="bank-chart-placeholder" aria-hidden="true"></div>
       </article>
 
-      <aside class="bank-side-stack">
+      <aside ref="planningPanel" class="bank-side-stack">
         <article class="bank-panel bank-budget">
           <div class="bank-panel-head compact">
             <div>
@@ -544,7 +600,10 @@ async function fetchCashFlowData() {
             </div>
             <Target />
           </div>
-          <template v-if="activeGoal"
+          <div v-if="isLoadingGoals" class="bank-loading small">
+            Memuat target...
+          </div>
+          <template v-else-if="activeGoal"
             ><div class="bank-goal-row">
               <span class="bank-goal-icon"
                 ><component :is="getGoalIcon(activeGoal.icon)"
@@ -570,7 +629,7 @@ async function fetchCashFlowData() {
     </section>
 
     <section class="bank-bottom-grid">
-      <article class="bank-panel bank-transactions">
+      <article ref="activityPanel" class="bank-panel bank-transactions">
         <div class="bank-panel-head">
           <div>
             <span class="bank-section-kicker">AKTIVITAS</span>

@@ -44,6 +44,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('accounts', AccountController::class);
     Route::apiResource('categories', CategoryController::class);
     Route::get('reports/expenses', ExpenseRecapController::class);
+    Route::get('reports/dashboard-summary', [TransactionController::class, 'dashboardSummary']);
     Route::get('reports/monthly', [TransactionController::class, 'report']);
     Route::get('reports/cash-flow', [TransactionController::class, 'cashFlow']);
     Route::get('reports/net-worth', NetWorthController::class);

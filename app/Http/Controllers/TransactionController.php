@@ -84,6 +84,15 @@ class TransactionController extends Controller
         return response()->json(['data' => $this->transactionService->report($request->user(), $data['month'])]);
     }
 
+    public function dashboardSummary(Request $request): JsonResponse
+    {
+        $data = $request->validate(['month' => ['required', 'date_format:Y-m']]);
+
+        return response()->json([
+            'data' => $this->transactionService->dashboardSummary($request->user(), $data['month']),
+        ]);
+    }
+
     public function cashFlow(Request $request): JsonResponse
     {
         $months = max(1, min($request->integer('months', 6), 24));

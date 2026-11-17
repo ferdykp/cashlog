@@ -204,6 +204,38 @@ class TransactionService
             'categories' => $categories->map(fn ($x) => ['name' => $x->name, 'amount' => DecimalMath::add((string) $x->amount, '0.00')])->values(), 'weekly' => $weekly];
     }
 
+    public function dashboardSummary(User $user, string $month): array
+    {
+        $start = Carbon::createFromFormat('!Y-m', $month)->startOfMonth();
+        $end = $start->copy()->endOfMonth();
+
+        $summary = Transaction::where('user_id', $user->id)
+            ->whereNull('financial_purpose')
+            ->whereBetween('date', [$start->toDateString(), $end->toDateString()])
+            ->selectRaw("COALESCE(SUM(CASE WHEN type='income' THEN amount ELSE 0 END),0) income, COALESCE(SUM(CASE WHEN type='expense' THEN amount ELSE 0 END),0) expense")
+            ->first();
+
+        $topCategory = Transaction::leftJoin('categories', 'transactions.category_id', '=', 'categories.id')
+            ->where('transactions.user_id', $user->id)
+            ->whereNull('transactions.financial_purpose')
+            ->where('transactions.type', 'expense')
+            ->whereBetween('transactions.date', [$start->toDateString(), $end->toDateString()])
+            ->groupBy('transactions.category_id', 'categories.name')
+            ->selectRaw("COALESCE(categories.name,'Lainnya') name, SUM(transactions.amount) amount")
+            ->orderByDesc('amount')
+            ->first();
+
+        return [
+            'month' => $month,
+            'income' => DecimalMath::add((string) $summary->income, '0.00'),
+            'expense' => DecimalMath::add((string) $summary->expense, '0.00'),
+            'categories' => $topCategory ? [[
+                'name' => $topCategory->name,
+                'amount' => DecimalMath::add((string) $topCategory->amount, '0.00'),
+            ]] : [],
+        ];
+    }
+
     public function cashFlow(User $user, int $months = 6): array
     {
         $months = max(1, min($months, 24));
