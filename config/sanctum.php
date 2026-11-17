@@ -50,7 +50,9 @@ return [
     |
     */
 
-    'expiration' => null,
+    // Personal access tokens expire after 30 days by default. Override in
+    // production when the deployment has a stricter session policy.
+    'expiration' => (int) env('SANCTUM_EXPIRATION', 43200),
 
     /*
     |--------------------------------------------------------------------------

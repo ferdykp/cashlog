@@ -12,7 +12,7 @@ class GroqParser
     public function parse(User $user, string $text): ?array
     {
         $key = config('services.groq.key');
-        if (! $key) {
+        if (! config('services.groq.enabled') || ! $key) {
             return null;
         }
         $context = [

@@ -110,7 +110,6 @@ class WhatsAppWebhookController extends Controller
                 'phone_number' => $match[1],
                 'message_type' => 'text',
                 'body' => $text,
-                'payload' => $payload,
             ]
         );
 
