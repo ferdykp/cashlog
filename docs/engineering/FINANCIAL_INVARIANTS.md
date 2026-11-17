@@ -12,3 +12,5 @@
 ## Unresolved account balance contract
 
 Account creation accepts an initial balance, and ordinary account update still accepts a direct balance edit that has no financial adjustment event. This behavior remains unchanged. Before replacing it, define account-type semantics and a reconciliation equation, add passing feature tests, design a reviewed additive audit record/API/UI, and distinguish legacy opening snapshots. Do not infer or rewrite historical production transactions.
+
+The prior automated review rejected an account balance/history schema and behavior patch because its regression coverage had not passed. That rejection was not bypassed. Keep this behavior unchanged until the adjustment contract and tests are reviewable and passing; no production balance migration or reconciliation has run.

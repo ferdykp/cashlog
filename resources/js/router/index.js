@@ -159,13 +159,8 @@ const router = createRouter({
 router.beforeEach(async (to) => {
     const authStore = useAuthStore();
 
-    if (authStore.token && !authStore.user) {
-        // Validate a saved session without holding the first protected page render.
-        if (to.meta.requiresGuest) {
-            await authStore.fetchUser();
-        } else {
-            void authStore.fetchUser();
-        }
+    if ((to.meta.requiresAuth || to.meta.requiresGuest) && !authStore.user) {
+        await authStore.fetchUser();
     }
 
     if (to.meta.requiresAuth && !authStore.isAuthenticated) {

@@ -92,7 +92,7 @@ watch(
 
 const currency = ref("IDR");
 const language = ref("id");
-const theme = ref(localStorage.getItem("theme") || "light");
+const theme = ref(localStorage.getItem("theme") || "dark");
 
 /*
 |--------------------------------------------------------------------------

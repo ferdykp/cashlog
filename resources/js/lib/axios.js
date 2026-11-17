@@ -6,7 +6,8 @@ import { createApiMemoryCache } from "@/lib/apiMemoryCache";
 const api = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL || "",
     timeout: 20000,
-    withCredentials: false,
+    withCredentials: true,
+    withXSRFToken: true,
     headers: {
         "X-Requested-With": "XMLHttpRequest",
         Accept: "application/json",
@@ -20,28 +21,20 @@ const inFlightMisses = new Map();
 const reactiveCache = new Map();
 const apiResponseCache = createApiMemoryCache({ ttlMs: CACHE_TTL_MS });
 let cacheEpoch = 0;
-let pendingRefreshes = 0;
-let hasStaleData = false;
-let failedRefreshes = 0;
-let refreshFailed = false;
 const getRequest = api.get.bind(api);
+let csrfCookieRequest = null;
 
-function cacheStatus() {
-    return {
-        pending: pendingRefreshes,
-        hasStale: hasStaleData,
-        offline: refreshFailed && pendingRefreshes === 0,
-    };
-}
-
-function emitCacheStatus() {
-    if (typeof window !== "undefined") {
-        window.dispatchEvent(
-            new CustomEvent("ledger:api-cache-status", {
-                detail: cacheStatus(),
-            }),
+function ensureCsrfCookie() {
+    if (!csrfCookieRequest) {
+        csrfCookieRequest = getRequest("/sanctum/csrf-cookie").catch(
+            (error) => {
+                csrfCookieRequest = null;
+                throw error;
+            },
         );
     }
+
+    return csrfCookieRequest;
 }
 
 function stableValue(value) {
@@ -123,10 +116,6 @@ function clearApiCache() {
     cacheEpoch++;
     reactiveCache.clear();
     apiResponseCache.clear();
-    hasStaleData = false;
-    failedRefreshes = 0;
-    refreshFailed = false;
-    emitCacheStatus();
 }
 
 function cachedResponse(data, config, status = 200) {
@@ -189,13 +178,7 @@ async function getWithSessionCache(url, config = {}) {
     }
     const requestConfig = { ...config };
     const epochAtStart = cacheEpoch;
-    hasStaleData = true;
-    emitCacheStatus();
-
     if (!inFlightRefreshes.has(key)) {
-        if (pendingRefreshes === 0) failedRefreshes = 0;
-        pendingRefreshes++;
-        emitCacheStatus();
         const refresh = getRequest(url, requestConfig)
             .then((response) => {
                 if (
@@ -213,17 +196,9 @@ async function getWithSessionCache(url, config = {}) {
                     }
                 }
             })
-            .catch((error) => {
-                if (error?.code !== "ERR_CANCELED") failedRefreshes++;
-            })
+            .catch(() => {})
             .finally(() => {
                 inFlightRefreshes.delete(key);
-                pendingRefreshes = Math.max(0, pendingRefreshes - 1);
-                if (pendingRefreshes === 0) {
-                    refreshFailed = failedRefreshes > 0;
-                    if (!refreshFailed) hasStaleData = false;
-                }
-                emitCacheStatus();
             });
         inFlightRefreshes.set(key, refresh);
     }
@@ -233,20 +208,28 @@ async function getWithSessionCache(url, config = {}) {
 
 api.get = getWithSessionCache;
 api.interceptors.request.use((config) => {
+    const method = config.method?.toLowerCase();
+    const needsCsrf = method && !["get", "head", "options"].includes(method);
+    const isCsrfRequest = config.url?.includes("/sanctum/csrf-cookie");
+
+    if (needsCsrf && !isCsrfRequest) {
+        return ensureCsrfCookie().then(() => config);
+    }
+
+    return config;
+});
+api.interceptors.request.use((config) => {
     if (config.method && config.method.toLowerCase() !== "get") clearApiCache();
     return config;
 });
 
 if (typeof window !== "undefined") {
     window.addEventListener("ledger:session-cleared", clearApiCache);
+    window.addEventListener("ledger:session-changed", clearApiCache);
     window.addEventListener("ledger:data-changed", clearApiCache);
 }
 
-export function getApiCacheStatus() {
-    return cacheStatus();
-}
-
-// Otomatis menempelkan Bearer Token dari localStorage
+// Existing API and mobile integrations may continue using Sanctum bearer tokens.
 api.interceptors.request.use((config) => {
     const token = localStorage.getItem("token");
     config.ledgerToken = token;
@@ -265,12 +248,30 @@ api.interceptors.response.use(
         return response;
     },
     (error) => {
+        if (
+            error.response?.status === 419 &&
+            error.config &&
+            !error.config._csrfRetry
+        ) {
+            csrfCookieRequest = null;
+            error.config._csrfRetry = true;
+
+            return ensureCsrfCookie().then(() => api.request(error.config));
+        }
+
         const activeSession =
             error.config?.ledgerToken === localStorage.getItem("token");
+        const publicAuthRequest = [
+            "/api/login",
+            "/api/session/login",
+            "/api/register",
+            "/api/forgot-password",
+            "/api/reset-password",
+        ].some((path) => error.config?.url?.includes(path));
         if (
             error.response?.status === 401 &&
             activeSession &&
-            error.config?.ledgerToken
+            !publicAuthRequest
         ) {
             window.dispatchEvent(new Event("ledger:unauthorized"));
         } else if (

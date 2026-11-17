@@ -41,7 +41,7 @@ function dismiss() {
                 L
             </div>
             <div>
-                <p class="text-xs font-bold">Install Aplikasi Ledger</p>
+                <p class="text-xs font-bold">Install Aplikasi Cashlog</p>
                 <p class="text-[11px] text-ink-300">
                     Akses cepat dari Home Screen HP kamu.
                 </p>

@@ -12,7 +12,13 @@ const iconPaths = ["/favicon.svg", "/pwa-192x192.png", "/pwa-512x512.png"];
 export default defineConfig({
     plugins: [
         vue(),
-        laravel({ input: ["resources/js/main.js"], refresh: true }),
+        laravel({
+            input: ["resources/js/main.js"],
+            refresh: true,
+            hotFile:
+                process.env.CASHLOG_E2E_HOT_FILE ||
+                path.join(rootDir, "public/hot"),
+        }),
         tailwindcss(),
         VitePWA({
             strategies: "injectManifest",
@@ -30,8 +36,8 @@ export default defineConfig({
                 short_name: "Ledger",
                 description:
                     "Kelola transaksi, budget, goals, tagihan, dan bukti pembayaran dalam satu tempat.",
-                theme_color: "#08796d",
-                background_color: "#f3f6f3",
+                theme_color: "#0b0f17",
+                background_color: "#0b0f17",
                 display: "standalone",
                 orientation: "any",
                 start_url: "/",

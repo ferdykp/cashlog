@@ -11,3 +11,8 @@ Artisan::command('inspire', function () {
 Schedule::command('bills:process-automatic-payments')
     ->dailyAt('00:05')
     ->timezone('Asia/Jakarta');
+
+Schedule::command('ocr:cleanup-expired')
+    ->dailyAt('02:15')
+    ->timezone('Asia/Jakarta')
+    ->withoutOverlapping();

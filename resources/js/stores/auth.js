@@ -9,35 +9,44 @@ export const useAuthStore = defineStore("auth", () => {
     const user = ref(null);
     // Deklarasikan variabel token sebagai ref
     const token = ref(localStorage.getItem("token") || "");
-    const isAuthenticated = computed(() => Boolean(token.value));
+    const isAuthenticated = computed(() => Boolean(user.value || token.value));
     const notifyStore = useNotificationStore();
+    let authResolved = false;
+    let userRequest = null;
 
     async function fetchUser() {
-        // Gunakan token.value untuk membaca nilai ref
-        if (!token.value) {
-            user.value = null;
-            return false;
-        }
+        if (authResolved) return isAuthenticated.value;
+        if (userRequest) return userRequest;
 
-        try {
-            const response = await api.get("/api/user");
-            user.value = response.data;
+        userRequest = (async () => {
+            try {
+                const response = await api.get("/api/user");
+                user.value = response.data;
+                authResolved = true;
+                return true;
+            } catch (error) {
+                if (error.response?.status === 401) {
+                    user.value = null;
+                    localStorage.removeItem("token");
+                    token.value = "";
+                }
+                authResolved = true;
+                return false;
+            } finally {
+                userRequest = null;
+            }
+        })();
 
-            return true;
-        } catch (error) {
-            if (error.response?.status === 401) logoutLocal();
-            return false;
-        }
+        return userRequest;
     }
 
     async function login(credentials) {
-        const response = await api.post("/api/login", credentials);
-        const authToken = response.data.data.token;
-
-        token.value = authToken;
-        localStorage.setItem("token", authToken);
-
+        const response = await api.post("/api/session/login", credentials);
+        localStorage.removeItem("token");
+        token.value = "";
         user.value = response.data.data.user;
+        authResolved = true;
+        window.dispatchEvent(new Event("ledger:session-changed"));
 
         notifyStore.notify({
             message: "Berhasil masuk ke akun Anda.",
@@ -60,9 +69,7 @@ export const useAuthStore = defineStore("auth", () => {
 
     async function logout() {
         try {
-            if (token.value) {
-                await api.post("/api/logout");
-            }
+            await api.post(token.value ? "/api/logout" : "/api/session/logout");
         } catch {
             // Always finish local logout even if the network is unavailable.
         } finally {
@@ -81,6 +88,7 @@ export const useAuthStore = defineStore("auth", () => {
         localStorage.removeItem("token");
         token.value = "";
         user.value = null;
+        authResolved = true;
     }
     // resources/js/stores/auth.js
 

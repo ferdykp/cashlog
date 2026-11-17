@@ -7,6 +7,7 @@ use App\Http\Requests\RegisterRequest;
 use App\Services\AuthServices;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
@@ -40,6 +41,25 @@ class AuthController extends Controller
         ]);
     }
 
+    public function sessionLogin(LoginRequest $request): JsonResponse
+    {
+        $credentials = $request->validated();
+
+        if (! Auth::guard('web')->attempt($credentials)) {
+            return response()->json([
+                'message' => 'Email atau password salah',
+                'errors' => ['email' => ['Email atau password salah']],
+            ], 422);
+        }
+
+        $request->session()->regenerate();
+
+        return response()->json([
+            'message' => 'Login Berhasil',
+            'data' => ['user' => $request->user('web')],
+        ]);
+    }
+
     public function logout(Request $request): JsonResponse
     {
         $this->authService->logout(
@@ -49,6 +69,15 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Logout Berhasil',
         ]);
+    }
+
+    public function sessionLogout(Request $request): JsonResponse
+    {
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return response()->json(['message' => 'Logout Berhasil']);
     }
 
     public function me(Request $request): JsonResponse

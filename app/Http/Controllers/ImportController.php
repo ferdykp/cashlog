@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\TransactionImport;
+use App\Services\Ocr\OcrDocumentRetentionService;
 use App\Services\Ocr\OcrService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -44,6 +45,7 @@ class ImportController extends Controller
             $import = TransactionImport::create([
                 'user_id' => $request->user()->id,
                 'file_path' => $path,
+                'file_expires_at' => now()->addDays((int) config('services.ocr.retention_days', 30)),
                 'ocr_raw_text' => $parsed['raw_text'],
                 'parsed_data' => $parsed['draft'],
                 'confidence' => $parsed['confidence'],
@@ -91,5 +93,20 @@ class ImportController extends Controller
                 Storage::disk('private')->delete($path);
             }
         }
+    }
+
+    public function deleteSource(Request $request, TransactionImport $transactionImport, OcrDocumentRetentionService $retention): JsonResponse
+    {
+        abort_unless((int) $transactionImport->user_id === (int) $request->user()->id, 404);
+
+        $deleted = $retention->deleteSourceForOwner(
+            (int) $transactionImport->id,
+            (int) $request->user()->id,
+        );
+
+        return response()->json([
+            'message' => $deleted ? 'Dokumen OCR berhasil dihapus.' : 'Dokumen OCR sudah tidak tersedia.',
+            'data' => ['deleted' => $deleted],
+        ]);
     }
 }

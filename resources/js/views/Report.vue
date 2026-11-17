@@ -91,7 +91,7 @@ const trendSeries = computed(() => [
 ]);
 const trendOptions = computed(() => ({
     chart: { type: "bar", toolbar: { show: false }, fontFamily: "inherit" },
-    colors: ["#ef4444", "#10b981"],
+    colors: ["#E1495E", "#12A875"],
     dataLabels: { enabled: false },
     plotOptions: { bar: { borderRadius: 3, columnWidth: "55%" } },
     xaxis: {
@@ -218,7 +218,7 @@ onUnmounted(() => {
                         Rentang tanggal
                     </button>
                 </div>
-                <div class="flex flex-wrap gap-2 text-xs">
+                <div class="flex flex-wrap gap-2 text-xs report-presets">
                     <button class="secondary-button" @click="preset('today')">
                         Hari ini</button
                     ><button class="secondary-button" @click="preset('week')">

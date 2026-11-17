@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\TransactionImport;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -56,6 +57,10 @@ class OcrImportTest extends TestCase
         $this->assertFileDoesNotExist($prepared);
         $this->assertDatabaseCount('transaction_imports', 1);
         $this->assertCount(1, Storage::disk('private')->allFiles());
+        $import = TransactionImport::firstOrFail();
+        $this->assertNotNull($import->file_expires_at);
+        $this->assertNull($import->file_deleted_at);
+        $this->assertSame('49300.00', $import->parsed_data['amount']);
     }
 
     public function test_timeout_is_not_swallowed_or_retried_and_files_are_cleaned(): void

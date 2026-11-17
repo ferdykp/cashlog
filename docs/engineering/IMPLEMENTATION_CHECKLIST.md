@@ -9,7 +9,7 @@ State: in progress. Source: the engineering audit documents in this directory, v
 - [ ] Add balance-adjustment regression contract (gated by automatic review; no production behavior changed).
 - [x] Change API payload caching from sessionStorage to page-lifetime memory; full reload now fetches fresh server data.
 - [x] Add CI for the existing PHP and JavaScript/build suites.
-- [ ] Add browser coverage only with isolated services/accounts.
+- [ ] Add Playwright browser coverage only with isolated services/accounts; Playwright is not configured in this repository yet.
 
 ## Phase B — Confirmed correctness findings
 
@@ -20,9 +20,9 @@ State: in progress. Source: the engineering audit documents in this directory, v
 
 ## Phase C — Security and data policy
 
-- [ ] Decide compatible Sanctum session/token rollout; do not invalidate production sessions or break external API clients.
+- [x] Add compatible Sanctum SPA session-cookie flow while retaining the PAT API contract; staging rollout validation remains required.
 - [x] Keep authenticated API response cache page-lifetime only; preserve token scoping, mutation/logout invalidation, and no shared SW API cache.
-- [partial] Document OCR source retention; automatic deletion remains undecided because import/history semantics are not established.
+- [x] Add configurable OCR source retention, owner deletion, metadata preservation, dry-run cleanup, and scheduled cleanup for new imports; legacy imports remain unexpired.
 - [ ] Verify WhatsApp provider signature capabilities before changing webhook verification.
 
 ## Phase D — Architecture, quality, and verification

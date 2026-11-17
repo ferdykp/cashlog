@@ -2,8 +2,9 @@
 import { onMounted } from "vue";
 import ToastContainer from "./components/ToastContainer.vue";
 import PwaInstallPrompt from "./components/PwaInstallPrompt.vue";
+const savedTheme = localStorage.getItem("theme") || "dark";
+document.documentElement.classList.toggle("dark", savedTheme === "dark");
 onMounted(() => {
-    const savedTheme = localStorage.getItem("theme") || "light";
     document.documentElement.classList.toggle("dark", savedTheme === "dark");
 });
 </script>

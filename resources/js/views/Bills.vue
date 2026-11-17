@@ -43,7 +43,7 @@ const {
                 <p>
                     Simpan biaya rutin, tanggal jatuh tempo, dan status
                     pembayaran agar pengeluaran wajib tidak terlewat. Pembayaran
-                    otomatis mengurangi saldo yang tercatat di Ledger.
+                    otomatis mengurangi saldo yang tercatat di Cashlog.
                 </p>
             </div>
             <button @click="add" class="primary-button">
@@ -83,7 +83,7 @@ const {
         <p class="text-xs text-ink-500">
             Tandai lunas mencatat status tagihan; catat pembayaran di Transaksi
             untuk memperbarui saldo. Auto bayar hanya memotong saldo internal
-            Ledger, bukan melakukan debit langsung dari bank.
+            Cashlog, bukan melakukan debit langsung dari bank.
         </p>
         <p v-if="loadError" role="alert" class="text-expense-600">
             Daftar belum berhasil diperbarui.
@@ -365,7 +365,7 @@ const {
                                 class="mt-1"
                             />
                             <span
-                                >Potong saldo Ledger otomatis saat jatuh
+                                >Potong saldo Cashlog otomatis saat jatuh
                                 tempo</span
                             >
                         </label>
@@ -401,7 +401,7 @@ const {
                             >
                             <p class="text-xs leading-relaxed text-ink-500">
                                 Pada tanggal {{ dueLabel(form.due_date) }},
-                                Ledger mencatat pengeluaran
+                                Cashlog mencatat pengeluaran
                                 {{ formatRupiah(form.amount) }} dan mengurangi
                                 saldo internal. Ini tidak menarik uang langsung
                                 dari bank. Jika saldo kurang, pembayaran ditunda

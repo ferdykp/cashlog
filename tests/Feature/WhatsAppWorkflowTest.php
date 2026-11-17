@@ -47,6 +47,19 @@ class WhatsAppWorkflowTest extends TestCase
         ], ['X-Ledger-Webhook-Secret' => 'test-secret']);
     }
 
+    private function jwtWebhook(string $id, string $text, int $issuedAt, int $expiresAt, string $secret = 'jwt-secret')
+    {
+        $encode = fn (array $value) => rtrim(strtr(base64_encode(json_encode($value, JSON_THROW_ON_ERROR)), '+/', '-_'), '=');
+        $header = $encode(['alg' => 'HS256', 'typ' => 'JWT']);
+        $payload = $encode(['iat' => $issuedAt, 'exp' => $expiresAt, 'app' => 'evolution', 'action' => 'webhook']);
+        $signature = rtrim(strtr(base64_encode(hash_hmac('sha256', $header.'.'.$payload, $secret, true)), '+/', '-_'), '=');
+
+        return $this->postJson('/api/webhooks/whatsapp', [
+            'event' => 'messages.upsert',
+            'data' => ['key' => ['id' => $id, 'remoteJid' => $this->phone.'@s.whatsapp.net', 'fromMe' => false], 'message' => ['conversation' => $text]],
+        ], ['Authorization' => "Bearer {$header}.{$payload}.{$signature}"]);
+    }
+
     public function test_reply_delivery_does_not_hold_a_database_transaction(): void
     {
         $level = DB::transactionLevel();
@@ -171,6 +184,21 @@ class WhatsAppWorkflowTest extends TestCase
         $this->webhook('group', '1', ['remoteJid' => '1234567890@g.us'])->assertOk()->assertJsonPath('ignored', true);
         $this->webhook('', '1')->assertUnprocessable();
         $this->assertDatabaseCount('whatsapp_messages', 0);
+    }
+
+    public function test_provider_jwt_expiry_is_enforced_and_duplicate_ids_remain_idempotent(): void
+    {
+        config(['services.evolution.webhook_jwt_secret' => 'jwt-secret']);
+        $now = now()->timestamp;
+
+        $this->jwtWebhook('expired-jwt', 'bantuan', $now - 601, $now - 1)->assertUnauthorized();
+        $this->mock(EvolutionProvider::class, fn ($mock) => $mock->shouldReceive('sendText')->once()->andReturnTrue());
+
+        $this->jwtWebhook('signed-message', 'bantuan', $now, $now + 600)->assertOk();
+        $this->jwtWebhook('signed-message', 'bantuan', $now, $now + 600)->assertOk();
+        $this->jwtWebhook('second-message-with-replayed-token', 'bantuan', $now, $now + 600)->assertUnauthorized();
+
+        $this->assertDatabaseCount('whatsapp_messages', 1);
     }
 
     public function test_confirmation_revalidates_stale_category_and_amount(): void

@@ -21,21 +21,20 @@ class WhatsAppWebhookController extends Controller
     ): JsonResponse {
         $requestStarted = microtime(true);
 
-        $secret = (string) config('services.evolution.webhook_secret');
+        $jwtSecret = (string) config('services.evolution.webhook_jwt_secret');
+        $sharedSecret = (string) config('services.evolution.webhook_secret');
+        $providerJwt = null;
 
-        abort_if(
-            $secret === '',
-            503,
-            'WhatsApp webhook belum dikonfigurasi.'
-        );
-
-        abort_unless(
-            hash_equals(
-                $secret,
-                (string) $request->header('X-Ledger-Webhook-Secret')
-            ),
-            401
-        );
+        if ($jwtSecret !== '') {
+            $providerJwt = $this->providerJwtContext($request, $jwtSecret);
+            abort_unless($providerJwt !== null, 401);
+        } else {
+            abort_if($sharedSecret === '', 503, 'WhatsApp webhook belum dikonfigurasi.');
+            abort_unless(
+                hash_equals($sharedSecret, (string) $request->header('X-Ledger-Webhook-Secret')),
+                401
+            );
+        }
 
         $payload = $request->all();
         $event = data_get($payload, 'event');
@@ -103,6 +102,15 @@ class WhatsAppWebhookController extends Controller
             422,
             'Pesan terlalu panjang.'
         );
+
+        if ($providerJwt !== null) {
+            $ttl = max(1, $providerJwt['expires_at'] - now()->timestamp);
+            $replayKey = 'whatsapp:webhook-jwt:'.$providerJwt['fingerprint'];
+
+            if (! Cache::add($replayKey, $id, $ttl)) {
+                abort_unless(Cache::get($replayKey) === $id, 401);
+            }
+        }
 
         $message = WhatsAppMessage::firstOrCreate(
             ['provider_message_id' => $id],
@@ -187,5 +195,61 @@ class WhatsAppWebhookController extends Controller
             ],
             $sent ? 200 : 502
         );
+    }
+
+    private function providerJwtContext(Request $request, string $secret): ?array
+    {
+        $authorization = (string) $request->header('Authorization');
+        if (! preg_match('/^Bearer\s+([A-Za-z0-9_.-]+)$/i', $authorization, $matches)) {
+            return null;
+        }
+
+        $parts = explode('.', $matches[1]);
+        if (count($parts) !== 3) {
+            return null;
+        }
+
+        [$encodedHeader, $encodedPayload, $encodedSignature] = $parts;
+        $header = json_decode($this->decodeBase64Url($encodedHeader), true);
+        $claims = json_decode($this->decodeBase64Url($encodedPayload), true);
+
+        if (! is_array($header) || ($header['alg'] ?? null) !== 'HS256' || ! is_array($claims)) {
+            return null;
+        }
+
+        $expectedSignature = rtrim(strtr(base64_encode(hash_hmac(
+            'sha256',
+            $encodedHeader.'.'.$encodedPayload,
+            $secret,
+            true
+        )), '+/', '-_'), '=');
+
+        if (! hash_equals($expectedSignature, $encodedSignature)) {
+            return null;
+        }
+
+        $now = now()->timestamp;
+        $issuedAt = filter_var($claims['iat'] ?? null, FILTER_VALIDATE_INT);
+        $expiresAt = filter_var($claims['exp'] ?? null, FILTER_VALIDATE_INT);
+
+        $valid = $issuedAt !== false
+            && $expiresAt !== false
+            && $issuedAt <= $now + 30
+            && $issuedAt >= $now - 600
+            && $expiresAt > $now
+            && $expiresAt > $issuedAt
+            && $expiresAt - $issuedAt <= 600;
+
+        return $valid ? [
+            'expires_at' => $expiresAt,
+            'fingerprint' => hash('sha256', $matches[1]),
+        ] : null;
+    }
+
+    private function decodeBase64Url(string $value): string
+    {
+        $decoded = base64_decode(strtr($value, '-_', '+/').str_repeat('=', (4 - strlen($value) % 4) % 4), true);
+
+        return $decoded === false ? '' : $decoded;
     }
 }

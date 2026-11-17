@@ -4,10 +4,10 @@ import { ArrowUpRight, Check } from "@lucide/vue";
 </script>
 <template>
     <main class="auth-layout">
-        <section class="auth-story" aria-label="Tentang Ledger">
+        <section class="auth-story" aria-label="Tentang Cashlog">
             <router-link to="/login" class="brand-lockup"
                 ><BrandMark /><span
-                    >Ledger<span class="brand-caption"
+                    >Cashlog<span class="brand-caption"
                         >Keuangan, lebih terarah.</span
                     ></span
                 ></router-link
@@ -38,7 +38,7 @@ import { ArrowUpRight, Check } from "@lucide/vue";
         </section>
         <section class="auth-form-side">
             <div class="auth-form-card"><slot /></div>
-            <p class="auth-footer">Ledger · Pencatatan keuangan pribadi</p>
+            <p class="auth-footer">Cashlog · Pencatatan keuangan pribadi</p>
         </section>
     </main>
 </template>

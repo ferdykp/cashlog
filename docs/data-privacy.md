@@ -2,6 +2,8 @@
 
 Dokumen ini menjelaskan perilaku teknis yang terlihat di kode. Ini bukan pengganti pemberitahuan privasi untuk pengguna atau penilaian hukum.
 
+Dokumen sumber OCR disimpan pada private disk. Dokumen baru dihapus setelah periode `OCR_RETENTION_DAYS` (default 30 hari) melalui scheduler, sedangkan metadata hasil ekstraksi tetap disimpan. Pengguna dapat menghapus file bukti sendiri tanpa menghapus metadata. Baris lama tanpa tanggal kedaluwarsa tidak dihapus otomatis.
+
 ## Data yang diproses
 
 - Data akun, kategori, transaksi, anggaran, tujuan, dan aset disimpan di database aplikasi.

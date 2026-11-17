@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
+Route::post('/session/login', [AuthController::class, 'sessionLogin'])->middleware('throttle:10,1');
 Route::post('/forgot-password', [PasswordController::class, 'forgot'])->middleware('throttle:5,1');
 Route::post('/reset-password', [PasswordController::class, 'reset'])->middleware('throttle:5,1');
 
@@ -38,6 +39,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/integrations/whatsapp/pairing', [WhatsAppIntegrationController::class, 'pairing'])->middleware('throttle:5,1');
     Route::delete('/integrations/whatsapp', [WhatsAppIntegrationController::class, 'disconnect']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/session/logout', [AuthController::class, 'sessionLogout']);
     Route::get('/user', fn (Request $request) => $request->user());
     Route::post('user/profile', [ProfileController::class, 'update']);
     Route::put('user/password', [PasswordController::class, 'change'])->middleware('throttle:5,1');
@@ -51,6 +53,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('transactions/export', [TransactionController::class, 'export']);
     Route::apiResource('transactions', TransactionController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
     Route::post('imports/scan', [ImportController::class, 'scan'])->middleware('throttle:20,1');
+    Route::delete('imports/{transactionImport}/document', [ImportController::class, 'deleteSource']);
     Route::apiResource('budgets', BudgetController::class)->only(['index', 'store', 'destroy']);
     Route::apiResource('bills', BillController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::post('bills/{bill}/paid', [BillController::class, 'markPaid']);

@@ -1,7 +1,7 @@
 <!-- resources/js/views/TransactionCreate.vue -->
 <script setup>
 import { localDate, localMonth } from "@/utils/dates";
-import { ref, onMounted, computed, watch } from "vue";
+import { ref, onMounted, computed, watch, nextTick } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { storeToRefs } from "pinia";
 import { useAccountStore } from "@/stores/account";
@@ -230,6 +230,8 @@ onMounted(async () => {
         form.value.amount = String(route.query.amount || "");
         form.value.note = route.query.note || "";
         if (route.query.date) form.value.date = route.query.date;
+        await nextTick();
+        document.querySelector(".transaction-amount")?.focus({ preventScroll: true });
     }
     if (isEditMode.value) {
         try {
@@ -470,6 +472,7 @@ async function handleSubmit() {
                             form.type = 'expense';
                             form.category_id = null;
                         "
+                        :aria-pressed="form.type === 'expense'"
                         class="flex-1 py-2 rounded-full text-xs font-bold transition-all cursor-pointer text-center"
                         :class="
                             form.type === 'expense'
@@ -485,6 +488,7 @@ async function handleSubmit() {
                             form.type = 'income';
                             form.category_id = null;
                         "
+                        :aria-pressed="form.type === 'income'"
                         class="flex-1 py-2 rounded-full text-xs font-bold transition-all cursor-pointer text-center"
                         :class="
                             form.type === 'income'
@@ -500,6 +504,7 @@ async function handleSubmit() {
                             form.type = 'transfer';
                             form.category_id = null;
                         "
+                        :aria-pressed="form.type === 'transfer'"
                         class="flex-1 py-2 rounded-full text-xs font-bold transition-all cursor-pointer text-center"
                         :class="
                             form.type === 'transfer'
@@ -524,6 +529,7 @@ async function handleSubmit() {
                             :show-prefix="false"
                             aria-label="Jumlah transaksi"
                             v-model="formattedAmount"
+                            autofocus
                             placeholder="0"
                             required
                             class="transaction-amount font-mono-money font-extrabold text-3xl md:text-4xl text-ink-900 bg-transparent border-none focus:outline-none placeholder:text-ink-300"
@@ -573,10 +579,16 @@ async function handleSubmit() {
                             v-for="cat in availableCategories"
                             :key="cat.id"
                             class="relative flex flex-col items-center group cursor-pointer"
+                            role="button"
+                            tabindex="0"
+                            :aria-pressed="form.category_id === cat.id"
+                            :aria-label="`Pilih kategori ${cat.name}`"
                             @click="
                                 form.category_id =
                                     form.category_id === cat.id ? null : cat.id
                             "
+                            @keydown.enter.prevent="form.category_id = form.category_id === cat.id ? null : cat.id"
+                            @keydown.space.prevent="form.category_id = form.category_id === cat.id ? null : cat.id"
                         >
                             <!-- Aksi hapus tersedia lewat hover desktop atau mode Kelola di layar sentuh. -->
                             <button
@@ -699,6 +711,7 @@ async function handleSubmit() {
                 <!-- Akun Tujuan (Khusus Tipe Transfer) -->
                 <div v-if="form.type === 'transfer'" class="space-y-3">
                     <label
+                        for="transaction-date"
                         class="block text-[11px] font-bold text-ink-300 uppercase tracking-wider"
                     >
                         KE DOMPET TUJUAN
@@ -738,6 +751,8 @@ async function handleSubmit() {
                     </label>
                     <input
                         v-model="form.date"
+                        id="transaction-date"
+                        name="date"
                         type="date"
                         required
                         aria-label="Tanggal transaksi"
@@ -748,12 +763,15 @@ async function handleSubmit() {
                 <!-- Catatan -->
                 <div class="space-y-2">
                     <label
+                        for="transaction-note"
                         class="block text-[11px] font-bold text-ink-300 uppercase tracking-wider"
                     >
                         CATATAN (OPSIONAL)
                     </label>
                     <textarea
                         v-model="form.note"
+                        id="transaction-note"
+                        name="note"
                         rows="2"
                         placeholder="Tambahkan deskripsi..."
                         class="w-full px-4 py-3 border border-line-200 rounded-xl bg-paper-0 focus:border-violet-600 focus:outline-none text-sm text-ink-900 transition-colors placeholder:text-ink-300 resize-none"

@@ -8,9 +8,10 @@
     "dev": "vite",
     "build": "vite build",
     "test": "node --test tests/js/*.test.js",
+    "test:e2e": "playwright test",
     "preview": "vite preview",
-    "format": "prettier --write resources/js tests/js vite.config.js",
-    "format:check": "prettier --check resources/js tests/js vite.config.js"
+    "format": "prettier --write resources/js tests/js tests/e2e scripts vite.config.js playwright.config.js",
+    "format:check": "prettier --check resources/js tests/js tests/e2e scripts vite.config.js playwright.config.js"
   },
   "dependencies": {
     "@lucide/vue": "^1.66.0",
@@ -22,6 +23,7 @@
     "vue3-apexcharts": "^1.11.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.1",
     "@tailwindcss/vite": "^4.3.3",
     "@vitejs/plugin-vue": "^6.0.8",
     "concurrently": "^10.0.3",

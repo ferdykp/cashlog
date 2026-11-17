@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Tests\TestCase;
@@ -11,6 +12,31 @@ use Tests\TestCase;
 class AccountLifecycleTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_spa_uses_a_regenerated_session_cookie_without_issuing_a_bearer_token(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'cookie-session@example.test',
+            'password' => Hash::make('Password123'),
+        ]);
+
+        $this->withHeader('Origin', 'http://localhost')
+            ->postJson('/api/session/login', [
+                'email' => $user->email,
+                'password' => 'Password123',
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.user.id', $user->id)
+            ->assertJsonMissingPath('data.token');
+
+        $this->assertAuthenticatedAs($user, 'web');
+        $this->withHeader('Origin', 'http://localhost')->getJson('/api/user')->assertOk()->assertJsonPath('id', $user->id);
+        $this->postJson('/api/session/logout')->assertOk();
+        $this->assertGuest('web');
+        Auth::forgetGuards();
+        $this->withHeader('Origin', 'http://localhost')->getJson('/api/user')->assertUnauthorized();
+        $this->getJson('/api/user')->assertUnauthorized();
+    }
 
     public function test_registration_login_password_change_reset_and_logout(): void
     {

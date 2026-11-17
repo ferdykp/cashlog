@@ -50,11 +50,13 @@ return [
         'key' => env('EVOLUTION_API_KEY'),
         'instance' => env('EVOLUTION_INSTANCE', 'ledger'),
         'webhook_secret' => env('EVOLUTION_WEBHOOK_SECRET'),
+        'webhook_jwt_secret' => env('EVOLUTION_WEBHOOK_JWT_SECRET'),
     ],
 
     'ocr' => [
         'tesseract_binary' => env('TESSERACT_BINARY', 'tesseract'),
         'timeout' => env('OCR_TIMEOUT', 15),
+        'retention_days' => max(1, (int) env('OCR_RETENTION_DAYS', 30)),
     ],
 
 ];
