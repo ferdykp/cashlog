@@ -265,12 +265,12 @@ onUnmounted(() => {
 async function fetchTransactionsData() {
   isLoadingTransactions.value = true;
   try {
-    const resRecent = await api.get("/api/transactions?limit=5");
+    // Both requests are independent; run them together to shorten dashboard refresh.
+    const [resRecent, resAll] = await Promise.all([
+      api.get("/api/transactions?limit=5"),
+      api.get(`/api/reports/monthly?month=${localMonth()}`),
+    ]);
     recentTransactions.value = resRecent.data.data || resRecent.data || [];
-
-    // FIX: sebelumnya tidak difilter bulan, jadi ikut menjumlahkan transaksi
-    // sepanjang waktu padahal labelnya "bulan ini".
-    const resAll = await api.get(`/api/reports/monthly?month=${localMonth()}`);
     monthlyReport.value = resAll.data.data;
   } catch (err) {
     console.warn("Gagal memuat data transaksi:", err.message);

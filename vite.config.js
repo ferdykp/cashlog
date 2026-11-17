@@ -10,7 +10,6 @@ const rootDir = path.dirname(fileURLToPath(import.meta.url));
 const iconPaths = ['/favicon.svg', '/pwa-192x192.png', '/pwa-512x512.png'];
 
 export default defineConfig({
-  base: '/',
   plugins: [
     vue(),
     laravel({ input: ['resources/js/main.js'], refresh: true }),
