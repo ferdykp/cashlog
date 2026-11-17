@@ -6,13 +6,16 @@ import { webcrypto } from "node:crypto";
 
 const source = (
   await readFile(new URL("../../resources/js/sw.js", import.meta.url), "utf8")
-).replace(/^import .*;$/m, "");
+).replace(/^import .*;$/gm, "");
 function setup({ failOpen = false, failWrite = false } = {}) {
   const stored = new Map();
   let handler;
   vm.runInNewContext(source, {
     precacheAndRoute() {},
     cleanupOutdatedCaches() {},
+    registerRoute() {},
+    CacheFirst: class CacheFirst {},
+    ExpirationPlugin: class ExpirationPlugin {},
     File,
     Blob,
     Request,

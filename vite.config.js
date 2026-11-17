@@ -60,6 +60,7 @@ export default defineConfig({
       injectManifest: {
         rollupFormat: 'iife',
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        globIgnores: ['**/chart-core-*.js', '**/charts-*.js'],
         additionalManifestEntries: [
           { url: '/', revision: `${Date.now()}` },
           ...iconPaths.map((url) => ({ url, revision: `${Date.now()}` })),

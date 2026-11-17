@@ -6,7 +6,6 @@ import { storeToRefs } from "pinia";
 import { useAccountStore } from "@/stores/account";
 import { useAuthStore } from "@/stores/auth";
 import { useBudgetStore } from "@/stores/budget";
-import { useGoalStore } from "@/stores/goal";
 import { formatRupiah } from "@/utils/formatters";
 import { addDecimal, compareDecimal } from "@/utils/decimal";
 const VueApexCharts = defineAsyncComponent(() => import("@/lib/charts"));
@@ -42,7 +41,6 @@ import api from "@/lib/axios";
 const accountStore = useAccountStore();
 const authStore = useAuthStore();
 const budgetStore = useBudgetStore();
-const goalStore = useGoalStore();
 
 const { cashAvailableTotal, savingsCashTotal } = storeToRefs(accountStore);
 const {
@@ -52,7 +50,6 @@ const {
   totalBudgetSpent,
   totalBudgetPercentage,
 } = storeToRefs(budgetStore);
-const { goals, isLoading: isLoadingGoals } = storeToRefs(goalStore);
 
 const recentTransactions = ref([]);
 const transactionsLoaded = ref(false);
@@ -64,6 +61,8 @@ const netWorth = ref({
   total_assets: "0.00",
 });
 const goalFundingSummaries = ref([]);
+const isLoadingGoals = ref(true);
+const goalSummaryError = ref(false);
 const balanceVisible = ref(
   localStorage.getItem("ledger:balance-visible") !== "false",
 );
@@ -157,15 +156,12 @@ const topSpendingCategory = computed(
 // 5. Goal prioritas — REAL, dari goal store (progress_percent & remaining_amount
 // sudah dihitung backend, sama seperti priorityGoal di Goal.vue)
 const activeGoal = computed(() => {
-  const goal = goals.value[0];
-  if (!goal) return null;
-  const funding = goalFundingSummaries.value.find(
-    (entry) => Number(entry.goal_id) === Number(goal.id),
-  );
+  const funding = goalFundingSummaries.value[0];
+  if (!funding) return null;
   return {
-    ...goal,
-    progress_percent: funding?.funding_coverage_percent ?? 0,
-    funding_coverage: funding?.funding_coverage ?? "0.00",
+    ...funding,
+    progress_percent: funding.funding_coverage_percent ?? 0,
+    funding_coverage: funding.funding_coverage ?? "0.00",
   };
 });
 
@@ -249,7 +245,6 @@ async function refreshDashboard() {
 function fetchPlanningData() {
   return Promise.all([
     budgetStore.fetchBudgets(localMonth()),
-    goalStore.fetchGoals(),
     fetchGoalFundingSummaries(),
   ]);
 }
@@ -266,6 +261,8 @@ async function fetchDashboardSummary() {
 }
 
 async function fetchGoalFundingSummaries() {
+  if (goalFundingSummaries.value.length === 0) isLoadingGoals.value = true;
+  goalSummaryError.value = false;
   try {
     const response = await api.get("/api/goals/funding-summary");
     goalFundingSummaries.value = Array.isArray(response.data.data)
@@ -273,7 +270,9 @@ async function fetchGoalFundingSummaries() {
       : [];
   } catch (err) {
     console.warn("Gagal memuat pendanaan target:", err.message);
-    goalFundingSummaries.value = [];
+    if (goalFundingSummaries.value.length === 0) goalSummaryError.value = true;
+  } finally {
+    isLoadingGoals.value = false;
   }
 }
 
@@ -602,6 +601,9 @@ async function fetchCashFlowData() {
           </div>
           <div v-if="isLoadingGoals" class="bank-loading small">
             Memuat target...
+          </div>
+          <div v-else-if="goalSummaryError" class="bank-empty-compact">
+            <p>Target belum dapat dimuat.</p>
           </div>
           <template v-else-if="activeGoal"
             ><div class="bank-goal-row">

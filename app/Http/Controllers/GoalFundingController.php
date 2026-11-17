@@ -18,7 +18,11 @@ class GoalFundingController extends Controller
             ->with(['items.obligations.payments'])
             ->orderByDesc('created_at')
             ->get()
-            ->map(fn (Goal $goal) => $service->forGoal($goal));
+            ->map(fn (Goal $goal) => [
+                ...$service->forGoal($goal),
+                'name' => $goal->name,
+                'icon' => $goal->icon,
+            ]);
 
         return response()->json(['data' => $rows]);
     }
