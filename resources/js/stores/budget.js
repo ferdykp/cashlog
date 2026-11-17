@@ -6,6 +6,7 @@ import api from "@/lib/axios";
 export const useBudgetStore = defineStore("budget", () => {
   const budgets = ref([]);
   const isLoading = ref(false);
+  const hasFetched = ref(false);
 
   // Total keseluruhan limit & pengeluaran bulan ini
   const totalBudgetLimit = computed(() => {
@@ -36,7 +37,7 @@ export const useBudgetStore = defineStore("budget", () => {
 
   // Fetch daftar budget berdasarkan bulan (e.g. YYYY-MM)
   async function fetchBudgets(month = null) {
-    isLoading.value = true;
+    isLoading.value = !hasFetched.value;
     try {
       const url = month ? `/api/budgets?month=${month}` : "/api/budgets";
       const response = await api.get(url);
@@ -45,6 +46,7 @@ export const useBudgetStore = defineStore("budget", () => {
     } catch (error) {
       console.warn("Gagal memuat budget:", error.message);
     } finally {
+      hasFetched.value = true;
       isLoading.value = false;
     }
   }

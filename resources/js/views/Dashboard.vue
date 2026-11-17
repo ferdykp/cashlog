@@ -1,7 +1,7 @@
 <!-- resources/js/views/Dashboard.vue -->
 <script setup>
 import { localDate, localMonth } from "@/utils/dates";
-import { ref, onMounted, onUnmounted, computed } from "vue";
+import { ref, onMounted, onUnmounted, computed, defineAsyncComponent } from "vue";
 import { storeToRefs } from "pinia";
 import { useAccountStore } from "@/stores/account";
 import { useAuthStore } from "@/stores/auth";
@@ -9,7 +9,7 @@ import { useBudgetStore } from "@/stores/budget";
 import { useGoalStore } from "@/stores/goal";
 import { formatRupiah } from "@/utils/formatters";
 import { addDecimal, compareDecimal } from "@/utils/decimal";
-import VueApexCharts from "@/lib/charts";
+const VueApexCharts = defineAsyncComponent(() => import("@/lib/charts"));
 import {
   Plus,
   TrendingUp,
@@ -55,6 +55,7 @@ const {
 const { goals, isLoading: isLoadingGoals } = storeToRefs(goalStore);
 
 const recentTransactions = ref([]);
+const transactionsLoaded = ref(false);
 const netWorth = ref({
   cash_total: "0.00",
   investment_total: "0.00",
@@ -92,6 +93,9 @@ const cashFlowMonths = ref([]);
 const cashFlowIncome = ref([]);
 const cashFlowExpense = ref([]);
 const isLoadingCashFlow = ref(true);
+const chartPanel = ref(null);
+const chartVisible = ref(false);
+let chartObserver;
 
 // Map Ikon untuk Transaksi
 const iconMap = {
@@ -209,7 +213,6 @@ function getLastNMonths(n) {
   return months;
 }
 
-let liveTimer;
 let refreshing = false;
 async function refreshDashboard() {
   if (refreshing) return;
@@ -252,18 +255,30 @@ async function fetchNetWorthData() {
 }
 onMounted(() => {
   refreshDashboard();
-  window.addEventListener("focus", refreshDashboard);
   window.addEventListener("ledger:data-changed", refreshDashboard);
-  liveTimer = setInterval(refreshDashboard, 30000);
+
+  if ("IntersectionObserver" in window && chartPanel.value) {
+    chartObserver = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          chartVisible.value = true;
+          chartObserver.disconnect();
+        }
+      },
+      { rootMargin: "200px" },
+    );
+    chartObserver.observe(chartPanel.value);
+  } else {
+    chartVisible.value = true;
+  }
 });
 onUnmounted(() => {
-  window.removeEventListener("focus", refreshDashboard);
   window.removeEventListener("ledger:data-changed", refreshDashboard);
-  clearInterval(liveTimer);
+  chartObserver?.disconnect();
 });
 
 async function fetchTransactionsData() {
-  isLoadingTransactions.value = true;
+  isLoadingTransactions.value = !transactionsLoaded.value;
   try {
     // Both requests are independent; run them together to shorten dashboard refresh.
     const [resRecent, resAll] = await Promise.all([
@@ -275,13 +290,17 @@ async function fetchTransactionsData() {
   } catch (err) {
     console.warn("Gagal memuat data transaksi:", err.message);
   } finally {
+    transactionsLoaded.value = true;
     isLoadingTransactions.value = false;
   }
 }
 
 async function fetchCashFlowData() {
-  isLoadingCashFlow.value = true;
-  cashFlowMonths.value = getLastNMonths(6);
+  // Keep the current chart visible during refreshes after a transaction change.
+  isLoadingCashFlow.value = cashFlowIncome.value.length === 0;
+  if (cashFlowMonths.value.length === 0) {
+    cashFlowMonths.value = getLastNMonths(6);
+  }
   try {
     const res = await api.get("/api/reports/cash-flow", {
       params: { months: 6 },
@@ -295,8 +314,10 @@ async function fetchCashFlowData() {
     cashFlowExpense.value = rows.map((r) => Number(r.expense || 0));
   } catch (err) {
     console.warn("Gagal memuat data arus kas:", err.message);
-    cashFlowIncome.value = cashFlowMonths.value.map(() => 0);
-    cashFlowExpense.value = cashFlowMonths.value.map(() => 0);
+    if (cashFlowIncome.value.length === 0) {
+      cashFlowIncome.value = cashFlowMonths.value.map(() => 0);
+      cashFlowExpense.value = cashFlowMonths.value.map(() => 0);
+    }
   } finally {
     isLoadingCashFlow.value = false;
   }
@@ -454,7 +475,7 @@ async function fetchCashFlowData() {
     </section>
 
     <section class="bank-content-grid">
-      <article class="bank-panel bank-chart-panel">
+      <article ref="chartPanel" class="bank-panel bank-chart-panel">
         <div class="bank-panel-head">
           <div>
             <span class="bank-section-kicker">ANALITIK</span>
@@ -473,12 +494,13 @@ async function fetchCashFlowData() {
           Memuat arus kas...
         </div>
         <VueApexCharts
-          v-else
+          v-else-if="chartVisible"
           type="area"
           height="285"
           :options="cashFlowChartOptions"
           :series="cashFlowSeries"
         />
+        <div v-else class="bank-chart-placeholder" aria-hidden="true"></div>
       </article>
 
       <aside class="bank-side-stack">

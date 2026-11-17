@@ -779,6 +779,9 @@ table {
 .bank-loading.small {
   min-height: 100px;
 }
+.bank-chart-placeholder {
+  min-height: 285px;
+}
 .bank-side-stack {
   display: flex;
   flex-direction: column;
