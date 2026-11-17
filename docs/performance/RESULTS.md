@@ -22,13 +22,13 @@ Build output: Vite 8.2.1, 2,157 client modules transformed; Workbox injectManife
 
 ## Browser and production result limits
 
-At the original baseline, no authenticated browser trace or Lighthouse metrics were captured. This follow-up captured one authenticated Chrome navigation and API waterfall, but not Lighthouse or LCP/CLS/TBT/INP metrics. There is no comparable post-release sample because this patch has not been deployed. The original public homepage sample was unauthenticated and is not Laravel-only processing time.
+At the original baseline, no authenticated browser trace or Lighthouse metrics were captured. The pre-release follow-up captured one authenticated Chrome navigation and API waterfall, but not Lighthouse or LCP/CLS/TBT/INP metrics. A post-deploy Chrome sample is now available below, but it is not a controlled comparison: device/cache state and the baseline run count differ. The original public homepage sample was unauthenticated and is not Laravel-only processing time.
 
-A post-deploy comparison should use the same browser/device/network, authenticated account, route, cache state, and test steps; collect several runs and compare medians and p75/p95. The first build's smaller local install precache and one fewer planning request are verified code/build changes, but they are not yet verified production speed gains.
+A controlled post-deploy comparison should use the same browser/device/network, authenticated account, route, cache state, and test steps; collect several runs and compare medians and p75/p95. The smaller precache and one fewer planning request are verified in the deployed build. User-perceived speed improvement is still unproven.
 
 ## Production validation and current before/after
 
-Validation date: 2026-11-17. Host: `https://ledger.fdevsite.cloud`. The production app has **not** been deployed from this worktree.
+Validation date: 2026-11-17. Host: `https://ledger.fdevsite.cloud`. This section records the **pre-release** production state, before commits `40d3860` and `bfb0c34` were deployed.
 
 | Metric | Earlier baseline | Current production observation | Conclusion |
 |---|---:|---:|---|
@@ -84,4 +84,34 @@ The live page is controlled by `/build/sw.js`. Its active Workbox precache cache
 4. Profile net-worth and cash-allocation endpoints under realistic asset and transaction counts.
 5. Capture repeat cold/warm browser traces and route-transition timings on the same machine and viewport; include LCP, long tasks, chart transfer and render duration.
 
-No new code optimization was applied in this follow-up: the remaining measured latency cannot yet be safely attributed to a code path. The first optimization patch is committed as `40d3860` and pushed to GitHub `main`, but remains undeployed. No production speedup is claimed until the server deploy and browser measurements are complete.
+No new code optimization was applied in this follow-up: the remaining measured latency cannot yet be safely attributed to a code path. The first optimization patch is committed as `40d3860` and deployed, but the single post-deploy sample below does not establish a production speedup.
+
+## Post-deploy validation
+
+The server pulled `main` through `bfb0c34` and completed `./deploy.sh` successfully. Composer reported no dependency changes, Laravel reported `Nothing to migrate`, Vite completed, and Laravel caches were rebuilt. The operator verified `public/build/sw.js` does not contain `chart-core-` or `charts-` precache URLs. No production data migration or reset occurred.
+
+The deployed build reported 78 Workbox precache entries / 648.55 KiB, versus the previous server build's 80 entries / 1,218.89 KiB: 570.34 KiB less reported precache payload (46.8%). The authenticated Chrome page loaded the new assets `main-DOTJMEt0.js`, `Dashboard-CcHX1i5B.js`, `charts-D6Llkrig.js`, and `chart-core-BhbnLxCR.js`; it was controlled by `https://ledger.fdevsite.cloud/build/sw.js`. The chart files were fetched as runtime assets and absent from the generated precache list.
+
+### One authenticated Chrome session sample
+
+Chrome used a 652 × 748 responsive viewport with no network throttling. This is a single session sample with pre-existing login/browser state, not a clean cold-device run.
+
+| Measure | Sample 1 | Warm reload sample | Notes |
+|---|---:|---:|---|
+| Navigation response start | 901.9 ms | 685 ms | Browser Navigation Timing; not Laravel-only TTFB |
+| DOMContentLoaded | 1,616.6 ms | 774 ms | Warm reload's document event precedes completion of async dashboard data |
+| Load event | 1,619 ms | 778 ms | Not equivalent to dashboard-ready time |
+| Separate `/api/goals` request | Not observed | Not observed | `/api/goals/funding-summary` was present in the first sample; consistent with one-request reduction |
+
+First sample API Resource Timing, sorted by observed duration: `/api/reports/cash-flow` 2,939 ms; `/api/budgets` 2,876 ms; `/api/goals/funding-summary` 2,822 ms; `/api/cash-allocations/accounts` 2,621 ms; `/api/reports/dashboard-summary` 1,812 ms; `/api/accounts` 1,802 ms; `/api/reports/net-worth` 1,801 ms; `/api/user` 1,168 ms. These durations include browser/network/origin wait and come from one page sample.
+
+The warm reload sample was captured before all deferred requests had completed. At capture, it included `/api/cash-allocations/accounts` 2,005 ms, `/api/reports/net-worth` 1,745 ms, `/api/reports/dashboard-summary` 1,504 ms, `/api/accounts` 1,425 ms, and `/api/user` 1,345 ms. The dashboard still showed loading placeholders during this interval, so the faster document events do not establish faster dashboard-ready time.
+
+### Conclusion and remaining issues
+
+- Deployment and the 46.8% build-level precache reduction are verified on the server.
+- The separate `/api/goals` request was absent in the authenticated sample, consistent with the intended reduction from three planning requests to two.
+- The dashboard is not yet proven faster for users. One sample still showed key API requests taking about 1.8–2.9 seconds, and deferred content remained in a loading state after the document load event.
+- No controlled cold/warm series, LCP/INP/long-task profile, Laravel request span, SQL timing, or post-deploy navigation median is available. Do not attribute the remaining API latency to a specific query or claim a production speedup from these samples.
+
+Next priority is protected server-side timing for the slow endpoints (`cash-flow`, `budgets`, and `goals/funding-summary`): record request wall time, SQL query count, and cumulative SQL time without logging financial payloads. Then capture repeat authenticated browser runs with identical viewport, cache state, and network conditions.
