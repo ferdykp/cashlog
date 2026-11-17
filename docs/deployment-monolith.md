@@ -4,6 +4,37 @@ Aplikasi web dan API sekarang dapat disajikan dari satu host Laravel. Atur `VITE
 
 ## Nginx dan PWA
 
+### MIME type untuk aset Vite
+
+Nginx harus mengirim JavaScript dengan MIME `application/javascript` atau `text/javascript`, dan stylesheet dengan `text/css`. Jika file `.js` dan `.css` dikirim sebagai `application/octet-stream`, browser menolak module JavaScript dan Vue tidak ter-mount sehingga halaman tampak putih.
+
+Pastikan file MIME bawaan Nginx dimuat di dalam blok `http { ... }` pada `nginx.conf`:
+
+```nginx
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    # server { ... }
+}
+```
+
+Jika konfigurasi sudah memuat `mime.types`, periksa apakah blok `server` atau `location` lain mengganti pemetaan MIME. Uji konfigurasi lalu muat ulang Nginx:
+
+```sh
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+Periksa header aset yang dirujuk halaman:
+
+```sh
+curl -I https://DOMAIN/build/assets/main-HASH.js
+curl -I https://DOMAIN/build/assets/main-HASH.css
+```
+
+Pastikan JavaScript membalas `application/javascript` atau `text/javascript`, dan CSS membalas `text/css`. Jika Cloudflare berada di depan server, purge cache untuk URL aset build yang sama setelah memperbaiki origin karena aset Vite memakai cache immutable.
+
 Vite membangun service worker ke `public/build/sw.js`, tetapi service worker perlu cakupan root. Tambahkan header berikut pada lokasi yang melayani file itu di konfigurasi Nginx, lalu reload Nginx setelah validasi konfigurasi:
 
 ```nginx
