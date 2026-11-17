@@ -19,7 +19,26 @@ http {
 }
 ```
 
-Jika konfigurasi sudah memuat `mime.types`, periksa apakah blok `server` atau `location` lain mengganti pemetaan MIME. Uji konfigurasi lalu muat ulang Nginx:
+Jangan mendefinisikan ulang `types` di level `server` hanya untuk menambahkan webmanifest. Pada konfigurasi seperti ini, blok `types` mengganti peta bawaan dari `mime.types`, sehingga `.js` dan `.css` jatuh ke `default_type` (seringnya `application/octet-stream`):
+
+```nginx
+# Hindari di dalam server {}:
+types {
+    application/manifest+json webmanifest;
+}
+```
+
+Hapus blok tersebut dan atur tipe webmanifest hanya pada lokasinya. File JavaScript dan CSS akan memakai peta MIME bawaan:
+
+```nginx
+location = /build/manifest.webmanifest {
+    default_type application/manifest+json;
+    add_header Cache-Control "no-cache, no-store, must-revalidate" always;
+    try_files $uri =404;
+}
+```
+
+Uji konfigurasi lalu muat ulang Nginx:
 
 ```sh
 sudo nginx -t
