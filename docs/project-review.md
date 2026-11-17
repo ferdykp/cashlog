@@ -14,7 +14,7 @@ Cashlog sudah meliputi lebih dari MVP pencatatan transaksi: selain akun, transak
 1. Tinjau autentikasi cookie HttpOnly Sanctum untuk SPA first-party, atau pertahankan bearer token dengan masa berlaku pendek dan kebijakan pencabutan yang jelas.
 2. Sediakan pemberitahuan dan kontrol pengguna untuk layanan pemrosesan eksternal. Groq saat ini nonaktif sampai pengelola mengaktifkan `GROQ_ENABLED`.
 3. Tetapkan retensi dan penghapusan untuk riwayat OCR, teks WhatsApp, dan akun pengguna.
-4. Pecah layar besar berdasarkan domain. Logika pemuatan detail tujuan dan pagination kontribusi kini ada di `ledger-web/src/composables/useGoalDetails.js`; pemisahan bagian lain bisa mengikuti pola ini.
+4. Pecah layar besar berdasarkan domain. Logika pemuatan detail tujuan dan pagination kontribusi kini ada di `resources/js/composables/useGoalDetails.js`; pemisahan bagian lain bisa mengikuti pola ini.
 5. Sederhanakan navigasi dan validasi alur transaksi mobile sebelum menambah fitur finansial baru.
 6. Lakukan audit aksesibilitas keyboard/kontras dan uji alur browser nyata sebelum rilis publik.
 
