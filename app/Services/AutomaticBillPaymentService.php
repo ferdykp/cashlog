@@ -6,7 +6,6 @@ use App\Models\Account;
 use App\Models\Bill;
 use App\Models\BillPayment;
 use App\Models\Category;
-use App\Models\Transaction;
 use App\Support\DecimalMath;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -46,7 +45,9 @@ class AutomaticBillPaymentService
 
             $period = $bill->due_date->format('Y-m-d');
             $payment = BillPayment::query()->where('bill_id', $bill->id)->whereDate('scheduled_for', $period)->lockForUpdate()->first();
-            if ($payment?->status === 'paid') return 'skipped';
+            if ($payment?->status === 'paid') {
+                return 'skipped';
+            }
             $payment ??= new BillPayment(['bill_id' => $bill->id, 'user_id' => $bill->user_id, 'scheduled_for' => $period]);
             $payment->amount = $bill->amount;
             $payment->attempted_at = now('Asia/Jakarta');
@@ -59,6 +60,7 @@ class AutomaticBillPaymentService
                 $payment->status = 'account_unavailable';
                 $payment->message = 'Rekening pembayaran tidak tersedia. Pilih rekening aktif di pengaturan tagihan.';
                 $payment->save();
+
                 return 'attention';
             }
 
@@ -67,6 +69,7 @@ class AutomaticBillPaymentService
                 $payment->status = 'insufficient_balance';
                 $payment->message = 'Saldo belum cukup. Ledger akan mencoba kembali pada jadwal berikutnya.';
                 $payment->save();
+
                 return 'attention';
             }
 
@@ -103,6 +106,7 @@ class AutomaticBillPaymentService
                 };
             }
             $bill->save();
+
             return 'paid';
         }, 3);
     }

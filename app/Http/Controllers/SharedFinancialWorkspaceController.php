@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\SharedFinancialWorkspaceService;
 use App\Notifications\SharedWorkspaceInvitationNotification;
+use App\Services\SharedFinancialWorkspaceService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\Rule;
 
 class SharedFinancialWorkspaceController extends Controller
@@ -19,18 +19,21 @@ class SharedFinancialWorkspaceController extends Controller
     public function store(Request $request, SharedFinancialWorkspaceService $service)
     {
         $data = $request->validate(['name' => ['required', 'string', 'max:120']]);
+
         return response()->json(['data' => $service->create($request->user(), $data['name'])], 201);
     }
 
     public function destroy(Request $request, int $workspace, SharedFinancialWorkspaceService $service)
     {
         $service->deleteWorkspace($request->user(), $workspace);
+
         return response()->json(['message' => 'Ruang bersama dan seluruh data kolaborasinya berhasil dihapus.']);
     }
 
     public function update(Request $request, int $workspace, SharedFinancialWorkspaceService $service)
     {
         $data = $request->validate(['name' => ['required', 'string', 'max:120']]);
+
         return response()->json(['data' => $service->updateWorkspace($request->user(), $workspace, $data['name'])]);
     }
 
@@ -59,12 +62,14 @@ class SharedFinancialWorkspaceController extends Controller
             Log::warning('Shared workspace invitation email could not be sent.', ['invitation_id' => $invitation['id'], 'exception' => $error::class]);
             $invitation['email_sent'] = false;
         }
+
         return response()->json(['data' => $invitation], 201);
     }
 
     public function revokeInvitation(Request $request, int $workspace, int $invitation, SharedFinancialWorkspaceService $service)
     {
         $service->revokeInvitation($request->user(), $workspace, $invitation);
+
         return response()->json(['message' => 'Undangan berhasil dibatalkan.']);
     }
 
@@ -76,6 +81,7 @@ class SharedFinancialWorkspaceController extends Controller
     public function acceptInvitation(Request $request, SharedFinancialWorkspaceService $service)
     {
         $data = $request->validate(['token' => ['required', 'string', 'size:64']]);
+
         return response()->json(['data' => $service->acceptInvitation($request->user(), $data['token'])]);
     }
 
@@ -92,12 +98,14 @@ class SharedFinancialWorkspaceController extends Controller
             'entry_date' => ['required', 'date'], 'note' => ['nullable', 'string', 'max:500'],
             'idempotency_key' => ['nullable', 'string', 'max:80'],
         ]);
+
         return response()->json(['data' => $service->contribute($request->user(), $workspace, $data)], 201);
     }
 
     public function createAsset(Request $request, int $workspace, SharedFinancialWorkspaceService $service)
     {
         $data = $request->validate(['name' => ['required', 'string', 'max:160'], 'provider' => ['nullable', 'string', 'max:160']]);
+
         return response()->json(['data' => $service->createAsset($request->user(), $workspace, $data)], 201);
     }
 
@@ -109,6 +117,7 @@ class SharedFinancialWorkspaceController extends Controller
     public function updateAsset(Request $request, int $workspace, int $asset, SharedFinancialWorkspaceService $service)
     {
         $data = $request->validate(['name' => ['required', 'string', 'max:160'], 'provider' => ['nullable', 'string', 'max:160']]);
+
         return response()->json(['data' => $service->updateAsset($request->user(), $workspace, $asset, $data)]);
     }
 
@@ -118,6 +127,7 @@ class SharedFinancialWorkspaceController extends Controller
             'name' => ['required', 'string', 'max:160'], 'target_amount' => ['required', 'numeric', 'gt:0', 'decimal:0,2', 'max:9999999999999.99'],
             'target_date' => ['nullable', 'date'],
         ]);
+
         return response()->json(['data' => $service->createGoal($request->user(), $workspace, $data)], 201);
     }
 
@@ -133,6 +143,7 @@ class SharedFinancialWorkspaceController extends Controller
             'target_amount' => ['required', 'numeric', 'gt:0', 'decimal:0,2', 'max:9999999999999.99'],
             'target_date' => ['nullable', 'date'],
         ]);
+
         return response()->json(['data' => $service->updateGoal($request->user(), $workspace, $goal, $data)]);
     }
 
@@ -143,6 +154,7 @@ class SharedFinancialWorkspaceController extends Controller
             'amount' => ['required', 'numeric', 'gt:0', 'decimal:0,2', 'max:9999999999999.99'],
             'allocation_date' => ['required', 'date'], 'note' => ['nullable', 'string', 'max:500'], 'idempotency_key' => ['nullable', 'string', 'max:80'],
         ]);
+
         return response()->json(['data' => $service->allocateGoal($request->user(), $workspace, $goal, $data)], 201);
     }
 
@@ -157,6 +169,7 @@ class SharedFinancialWorkspaceController extends Controller
             'transaction_date' => ['required', 'date'], 'note' => ['nullable', 'string', 'max:500'],
             'idempotency_key' => ['nullable', 'string', 'max:80'],
         ]);
+
         return response()->json(['data' => $service->transactAsset($request->user(), $workspace, $asset, $data)], 201);
     }
 
@@ -167,12 +180,14 @@ class SharedFinancialWorkspaceController extends Controller
             'amount' => ['required', 'numeric', 'gt:0', 'decimal:0,2', 'max:9999999999999.99'],
             'entry_date' => ['required', 'date'], 'note' => ['nullable', 'string', 'max:500'], 'idempotency_key' => ['nullable', 'string', 'max:80'],
         ]);
+
         return response()->json(['data' => $service->withdraw($request->user(), $workspace, $data)], 201);
     }
 
     public function removeMember(Request $request, int $workspace, int $member, SharedFinancialWorkspaceService $service)
     {
         $service->removeMember($request->user(), $workspace, $member);
+
         return response()->json(['message' => 'Anggota berhasil dikeluarkan.']);
     }
 }

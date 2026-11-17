@@ -14,6 +14,7 @@ class GoalObligationController extends Controller
     public function index(Request $request, Goal $goal, GoalItem $item)
     {
         $this->authorizeItem($request, $goal, $item);
+
         return GoalObligationResource::collection($item->obligations()->with('payments')->orderBy('due_date')->get());
     }
 
@@ -21,6 +22,7 @@ class GoalObligationController extends Controller
     {
         $this->authorizeItem($request, $goal, $item);
         $obligation = $item->obligations()->create($request->validated());
+
         return response()->json(['data' => new GoalObligationResource($obligation)], 201);
     }
 
@@ -28,6 +30,7 @@ class GoalObligationController extends Controller
     {
         $this->authorizeObligation($request, $goal, $item, $obligation);
         $obligation->update($request->validated());
+
         return response()->json(['data' => new GoalObligationResource($obligation->fresh()->load('payments'))]);
     }
 
@@ -36,6 +39,7 @@ class GoalObligationController extends Controller
         $this->authorizeObligation($request, $goal, $item, $obligation);
         abort_if($obligation->payments()->exists(), 409, 'Kewajiban yang memiliki transaksi pembayaran tidak dapat dihapus.');
         $obligation->delete();
+
         return response()->json(['message' => 'Jadwal pembayaran dihapus.']);
     }
 

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\AssetTransaction;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -87,7 +88,7 @@ class FinancialEcosystemTest extends TestCase
         $this->postJson("/api/assets/transactions/$redemptionId/status", ['status' => 'settled', 'amount' => '800.00', 'fees' => '10.00', 'cash_account_id' => $account->id])->assertOk();
         $asset = $this->getJson('/api/assets')->assertOk()->json('data.0');
         $this->assertSame('590.00000000', $asset['quantity']);
-        $assetTransaction = \App\Models\AssetTransaction::where('asset_id', $assetId)->where('type', 'redemption')->firstOrFail();
+        $assetTransaction = AssetTransaction::where('asset_id', $assetId)->where('type', 'redemption')->firstOrFail();
         $this->assertNotNull($assetTransaction->settlement_transaction_id);
         $this->assertSame('790.00', $user->transactions()->findOrFail($assetTransaction->settlement_transaction_id)->amount);
         $this->assertSame('3790.00', $account->fresh()->balance);
@@ -243,8 +244,8 @@ class FinancialEcosystemTest extends TestCase
         $this->assertSame('5000000.00', $asset['estimated_value']);
         $this->assertNull($asset['unrealized_profit_loss']);
         $this->assertSame('4000000.00', $account->fresh()->balance);
-        $this->assertSame(1, \App\Models\AssetTransaction::where('asset_id', $assetId)->whereNull('superseded_at')->count());
-        $this->assertSame(1, \App\Models\AssetTransaction::where('asset_id', $assetId)->whereNotNull('superseded_at')->count());
+        $this->assertSame(1, AssetTransaction::where('asset_id', $assetId)->whereNull('superseded_at')->count());
+        $this->assertSame(1, AssetTransaction::where('asset_id', $assetId)->whereNotNull('superseded_at')->count());
     }
 
     public function test_historical_import_reconciles_opening_and_never_creates_cash_transactions(): void
@@ -272,8 +273,8 @@ class FinancialEcosystemTest extends TestCase
         $this->assertSame('1000000.00', $asset['cost_basis']);
         $this->assertSame('100000.00', $asset['realized_profit_loss']);
         $this->assertSame('3000000.00', $account->fresh()->balance);
-        $this->assertSame(3, \App\Models\AssetTransaction::where('asset_id', $assetId)->whereNull('superseded_at')->count());
-        $this->assertSame(1, \App\Models\AssetTransaction::where('asset_id', $assetId)->whereNotNull('superseded_at')->count());
+        $this->assertSame(3, AssetTransaction::where('asset_id', $assetId)->whereNull('superseded_at')->count());
+        $this->assertSame(1, AssetTransaction::where('asset_id', $assetId)->whereNotNull('superseded_at')->count());
         $this->assertSame(0, $user->transactions()->count());
     }
 }

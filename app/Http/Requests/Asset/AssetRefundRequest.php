@@ -7,7 +7,11 @@ use Illuminate\Validation\Rule;
 
 class AssetRefundRequest extends FormRequest
 {
-    public function authorize(): bool { return true; }
+    public function authorize(): bool
+    {
+        return true;
+    }
+
     public function rules(): array
     {
         return [

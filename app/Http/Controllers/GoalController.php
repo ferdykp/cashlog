@@ -96,6 +96,7 @@ class GoalController extends Controller
                 $existing = $goal->contributions()->where('idempotency_key', $validated['idempotency_key'])->first();
                 if ($existing) {
                     abort_unless(DecimalMath::compare((string) $existing->amount, (string) $validated['amount']) === 0 && $existing->date->format('Y-m-d') === $validated['date'], 409, 'Kunci permintaan sudah digunakan untuk setoran yang berbeda.');
+
                     return false;
                 }
             }
@@ -106,6 +107,7 @@ class GoalController extends Controller
                 'idempotency_key' => $validated['idempotency_key'] ?? null,
             ]);
             $goal->increment('current_amount', $validated['amount']);
+
             return true;
         });
 
@@ -131,8 +133,10 @@ class GoalController extends Controller
             $lockedContribution->update($data);
             $lockedGoal->current_amount = DecimalMath::add($current, $delta);
             $lockedGoal->save();
+
             return $lockedGoal->fresh()->load(['items.obligations.payments']);
         }, 3);
+
         return response()->json(['data' => new GoalResource($updatedGoal)]);
     }
 
@@ -147,8 +151,10 @@ class GoalController extends Controller
             $lockedGoal->current_amount = DecimalMath::subtract((string) $lockedGoal->current_amount, (string) $lockedContribution->amount);
             $lockedGoal->save();
             $lockedContribution->delete();
+
             return $lockedGoal->fresh()->load(['items.obligations.payments']);
         }, 3);
+
         return response()->json(['data' => new GoalResource($updatedGoal)]);
     }
 

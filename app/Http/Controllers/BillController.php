@@ -64,6 +64,7 @@ class BillController extends Controller
         $data['auto_pay_enabled'] = (bool) ($data['auto_pay_enabled'] ?? false);
         $data['auto_pay_account_id'] = $data['auto_pay_enabled'] ? ($data['auto_pay_account_id'] ?? null) : null;
         abort_if($data['auto_pay_enabled'] && ($data['status'] ?? 'active') === 'paid', 422, 'Tagihan otomatis tidak dapat langsung dibuat dengan status lunas.');
+
         return response()->json(['data' => $this->bills->save($request->user(), $data)], 201);
     }
 

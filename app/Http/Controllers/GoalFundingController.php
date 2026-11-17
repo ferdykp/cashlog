@@ -30,6 +30,7 @@ class GoalFundingController extends Controller
     public function summary(Request $request, Goal $goal, GoalFinancialSummaryService $service)
     {
         abort_unless($goal->user_id === $request->user()->id, 404);
+
         return response()->json(['data' => $service->forGoal($goal)]);
     }
 
@@ -37,12 +38,14 @@ class GoalFundingController extends Controller
     {
         abort_unless($goal->user_id === $request->user()->id, 404);
         $rows = GoalAssetAllocation::where('goal_id', $goal->id)->with('asset')->latest()->paginate(50);
+
         return response()->json($rows);
     }
 
     public function allocateAsset(AssetAllocationRequest $request, Goal $goal, Asset $asset, AssetService $service)
     {
         $entry = $service->allocate($request->user(), $goal, $asset, $request->validated());
+
         return response()->json(['data' => $entry], 201);
     }
 }

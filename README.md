@@ -147,7 +147,9 @@ Jalankan pemeriksaan backend, frontend, dan build produksi dengan:
 
 ```bash
 php artisan test
+vendor/bin/pint --test
 npm test
+npm run format:check
 npm run build
 ```
 

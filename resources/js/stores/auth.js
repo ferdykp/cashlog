@@ -6,101 +6,101 @@ import api from "@/lib/axios";
 import { useNotificationStore } from "@/stores/notification";
 
 export const useAuthStore = defineStore("auth", () => {
-  const user = ref(null);
-  // Deklarasikan variabel token sebagai ref
-  const token = ref(localStorage.getItem("token") || "");
-  const isAuthenticated = computed(() => Boolean(token.value));
-  const notifyStore = useNotificationStore();
+    const user = ref(null);
+    // Deklarasikan variabel token sebagai ref
+    const token = ref(localStorage.getItem("token") || "");
+    const isAuthenticated = computed(() => Boolean(token.value));
+    const notifyStore = useNotificationStore();
 
-  async function fetchUser() {
-    // Gunakan token.value untuk membaca nilai ref
-    if (!token.value) {
-      user.value = null;
-      return false;
+    async function fetchUser() {
+        // Gunakan token.value untuk membaca nilai ref
+        if (!token.value) {
+            user.value = null;
+            return false;
+        }
+
+        try {
+            const response = await api.get("/api/user");
+            user.value = response.data;
+
+            return true;
+        } catch (error) {
+            if (error.response?.status === 401) logoutLocal();
+            return false;
+        }
     }
 
-    try {
-      const response = await api.get("/api/user");
-      user.value = response.data;
+    async function login(credentials) {
+        const response = await api.post("/api/login", credentials);
+        const authToken = response.data.data.token;
 
-      return true;
-    } catch (error) {
-      if (error.response?.status === 401) logoutLocal();
-      return false;
+        token.value = authToken;
+        localStorage.setItem("token", authToken);
+
+        user.value = response.data.data.user;
+
+        notifyStore.notify({
+            message: "Berhasil masuk ke akun Anda.",
+            type: "success",
+        });
+
+        return response.data;
     }
-  }
 
-  async function login(credentials) {
-    const response = await api.post("/api/login", credentials);
-    const authToken = response.data.data.token;
+    async function register(payload) {
+        const response = await api.post("/api/register", payload);
 
-    token.value = authToken;
-    localStorage.setItem("token", authToken);
+        notifyStore.notify({
+            message: "Registrasi berhasil! Silahkan Login.",
+            type: "success",
+        });
 
-    user.value = response.data.data.user;
-
-    notifyStore.notify({
-      message: "Berhasil masuk ke akun Anda.",
-      type: "success",
-    });
-
-    return response.data;
-  }
-
-  async function register(payload) {
-    const response = await api.post("/api/register", payload);
-
-    notifyStore.notify({
-      message: "Registrasi berhasil! Silahkan Login.",
-      type: "success",
-    });
-
-    return response.data;
-  }
-
-  async function logout() {
-    try {
-      if (token.value) {
-        await api.post("/api/logout");
-      }
-    } catch {
-      // Always finish local logout even if the network is unavailable.
-    } finally {
-      logoutLocal();
-      notifyStore.notify({
-        message: "Anda telah keluar dari aplikasi.",
-        type: "info",
-      });
-
-      await router.replace("/login");
+        return response.data;
     }
-  }
 
-  function logoutLocal() {
-    window.dispatchEvent(new Event("ledger:session-cleared"));
-    localStorage.removeItem("token");
-    token.value = "";
-    user.value = null;
-  }
-  // resources/js/stores/auth.js
+    async function logout() {
+        try {
+            if (token.value) {
+                await api.post("/api/logout");
+            }
+        } catch {
+            // Always finish local logout even if the network is unavailable.
+        } finally {
+            logoutLocal();
+            notifyStore.notify({
+                message: "Anda telah keluar dari aplikasi.",
+                type: "info",
+            });
 
-  async function updateProfile(formData) {
-    const response = await api.post("/api/user/profile", formData);
+            await router.replace("/login");
+        }
+    }
 
-    user.value = response.data.data || response.data;
-    return user.value;
-  }
+    function logoutLocal() {
+        window.dispatchEvent(new Event("ledger:session-cleared"));
+        localStorage.removeItem("token");
+        token.value = "";
+        user.value = null;
+    }
+    // resources/js/stores/auth.js
 
-  // Jangan lupa return updateProfile di bagian bawah store:
-  return {
-    user,
-    token,
-    isAuthenticated,
-    fetchUser,
-    login,
-    register,
-    updateProfile,
-    logout,
-    logoutLocal,
-  };
+    async function updateProfile(formData) {
+        const response = await api.post("/api/user/profile", formData);
+
+        user.value = response.data.data || response.data;
+        return user.value;
+    }
+
+    // Jangan lupa return updateProfile di bagian bawah store:
+    return {
+        user,
+        token,
+        isAuthenticated,
+        fetchUser,
+        login,
+        register,
+        updateProfile,
+        logout,
+        logoutLocal,
+    };
 });

@@ -89,4 +89,30 @@ class FinanceWorkflowTest extends TestCase
         $this->assertCount(1, $result);
         $this->assertEquals(10, $result[0]['spent_amount']);
     }
+
+    public function test_transaction_idempotency_compares_category_and_normalized_note(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $account = $user->accounts()->create(['name' => 'Cash', 'type' => 'cash', 'balance' => 1000]);
+        $food = $user->categories()->create(['name' => 'Makanan', 'type' => 'expense']);
+        $travel = $user->categories()->create(['name' => 'Transportasi', 'type' => 'expense']);
+        $payload = [
+            'type' => 'expense', 'account_id' => $account->id, 'category_id' => $food->id,
+            'amount' => '100.00', 'date' => '2026-11-17', 'note' => '  Makan siang  ',
+            'idempotency_key' => 'idem-finance-001',
+        ];
+
+        $firstId = $this->postJson('/api/transactions', $payload)
+            ->assertCreated()->json('data.id');
+        $this->postJson('/api/transactions', [...$payload, 'note' => 'Makan siang'])
+            ->assertCreated()->assertJsonPath('data.id', $firstId);
+        $this->postJson('/api/transactions', [...$payload, 'category_id' => $travel->id])
+            ->assertStatus(409);
+        $this->postJson('/api/transactions', [...$payload, 'note' => 'Makan malam'])
+            ->assertStatus(409);
+
+        $this->assertDatabaseCount('transactions', 1);
+        $this->assertDatabaseHas('accounts', ['id' => $account->id, 'balance' => '900.00']);
+    }
 }

@@ -20,9 +20,13 @@ class GoalFinancialSummaryService
         $paid = '0.00';
         foreach ($goal->items as $item) {
             $budget = DecimalMath::add($budget, $item->estimated_amount);
-            foreach ($item->obligations as $obligation) $paid = DecimalMath::add($paid, $obligation->paid_amount);
+            foreach ($item->obligations as $obligation) {
+                $paid = DecimalMath::add($paid, $obligation->paid_amount);
+            }
         }
-        if (DecimalMath::compare($budget, '0.00') === 0) $budget = (string) $goal->target_amount;
+        if (DecimalMath::compare($budget, '0.00') === 0) {
+            $budget = (string) $goal->target_amount;
+        }
 
         $cashRows = GoalCashAllocation::where('goal_id', $goal->id)->with('account')->get();
         $cashByAccount = [];
@@ -42,7 +46,9 @@ class GoalFinancialSummaryService
                 $allAllocated = DecimalMath::add($allAllocated, $delta);
             }
             $backing = $account ? (string) $account->balance : '0.00';
-            if (DecimalMath::compare($backing, '0.00') < 0) $backing = '0.00';
+            if (DecimalMath::compare($backing, '0.00') < 0) {
+                $backing = '0.00';
+            }
             $effective = DecimalMath::compare($allAllocated, $backing) > 0 && DecimalMath::compare($allAllocated, '0.00') > 0
                 ? DecimalMath::multiply($goalNominal, DecimalMath::divide($backing, $allAllocated, 8), 2)
                 : $goalNominal;
@@ -65,24 +71,34 @@ class GoalFinancialSummaryService
         ])->get()->keyBy('id');
         foreach ($assetRows->groupBy('asset_id') as $assetId => $rows) {
             $asset = $assets->get($assetId);
-            if (! $asset) continue;
+            if (! $asset) {
+                continue;
+            }
             $quantity = '0.00000000';
-            foreach ($rows as $row) $quantity = $row->action === 'allocate' ? DecimalMath::add($quantity, (string) $row->quantity, 8) : DecimalMath::subtract($quantity, (string) $row->quantity, 8);
+            foreach ($rows as $row) {
+                $quantity = $row->action === 'allocate' ? DecimalMath::add($quantity, (string) $row->quantity, 8) : DecimalMath::subtract($quantity, (string) $row->quantity, 8);
+            }
             $snapshot = $this->assets->snapshot($asset, false);
             $allocatedValue = $snapshot['allocated_value'];
-            if ($allocatedValue !== null) $assetValue = DecimalMath::add($assetValue, $allocatedValue);
+            if ($allocatedValue !== null) {
+                $assetValue = DecimalMath::add($assetValue, $allocatedValue);
+            }
             $assetSummary[] = ['asset_id' => $asset->id, 'name' => $asset->name, 'type' => $asset->type, 'quantity' => $quantity, 'value' => $allocatedValue, 'price_timestamp' => $snapshot['valuation_at']];
         }
 
         $coverage = DecimalMath::add(DecimalMath::add($paid, $cash), $assetValue);
         $gap = DecimalMath::subtract($budget, $coverage);
-        if (DecimalMath::compare($gap, '0.00') < 0) $gap = '0.00';
+        if (DecimalMath::compare($gap, '0.00') < 0) {
+            $gap = '0.00';
+        }
         $days = $goal->target_date ? max(0, Carbon::today()->diffInDays($goal->target_date, false)) : null;
         $months = $days === null ? null : ($days === 0 ? 0 : (int) ceil($days / 30));
         $monthly = null;
         if ($months > 0 && DecimalMath::compare($gap, '0.00') > 0) {
             $monthly = DecimalMath::divide($gap, (string) $months, 2);
-            if (DecimalMath::compare(DecimalMath::multiply($monthly, (string) $months), $gap) < 0) $monthly = DecimalMath::add($monthly, '0.01');
+            if (DecimalMath::compare(DecimalMath::multiply($monthly, (string) $months), $gap) < 0) {
+                $monthly = DecimalMath::add($monthly, '0.01');
+            }
         }
         $upcoming = collect();
         foreach ($goal->items as $item) {
@@ -97,11 +113,14 @@ class GoalFinancialSummaryService
         $upcoming = $upcoming->map(function (array $obligation) use (&$cashForObligations) {
             $cashAssigned = DecimalMath::compare($cashForObligations, $obligation['remaining_amount']) >= 0 ? $obligation['remaining_amount'] : $cashForObligations;
             $shortfall = DecimalMath::subtract($obligation['remaining_amount'], $cashAssigned);
-            if (DecimalMath::compare($shortfall, '0.00') < 0) $shortfall = '0.00';
+            if (DecimalMath::compare($shortfall, '0.00') < 0) {
+                $shortfall = '0.00';
+            }
             $obligation['cash_available'] = $cashAssigned;
             $obligation['cash_shortfall'] = $shortfall;
             $obligation['payment_ready'] = DecimalMath::compare($shortfall, '0.00') === 0;
             $cashForObligations = DecimalMath::subtract($cashForObligations, $cashAssigned);
+
             return $obligation;
         });
         $nextObligation = $upcoming->first();

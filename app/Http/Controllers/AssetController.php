@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Asset\AssetRefundRequest;
 use App\Http\Requests\Asset\AssetStatusRequest;
 use App\Http\Requests\Asset\CompleteRdpuUnitsRequest;
-use App\Http\Requests\Asset\AssetRefundRequest;
 use App\Http\Requests\Asset\StoreAssetPriceRequest;
 use App\Http\Requests\Asset\StoreAssetRequest;
 use App\Http\Requests\Asset\StoreAssetTransactionRequest;
 use App\Models\Asset;
 use App\Models\AssetTransaction;
 use App\Services\AssetService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -25,12 +26,14 @@ class AssetController extends Controller
     public function store(StoreAssetRequest $request, AssetService $service)
     {
         $asset = $service->create($request->user(), $request->validated());
+
         return response()->json(['data' => $service->snapshot($asset)], 201);
     }
 
     public function show(Request $request, Asset $asset, AssetService $service)
     {
         abort_unless($asset->user_id === $request->user()->id, 404);
+
         return response()->json(['data' => $service->snapshot($asset)]);
     }
 
@@ -45,18 +48,21 @@ class AssetController extends Controller
             'maturity_date' => ['nullable', 'date', 'after_or_equal:start_date'],
         ]);
         $updated = $service->updateMetadata($request->user(), $asset, $data);
+
         return response()->json(['data' => $service->snapshot($updated)]);
     }
 
     public function destroy(Request $request, Asset $asset, AssetService $service)
     {
         $service->delete($request->user(), $asset);
+
         return response()->json(['message' => 'Aset dan transaksi terkait berhasil dihapus. Saldo rekening sudah disesuaikan.']);
     }
 
     public function storeTransaction(StoreAssetTransactionRequest $request, Asset $asset, AssetService $service)
     {
         $transaction = $service->recordTransaction($request->user(), $asset, $request->validated());
+
         return response()->json(['data' => $transaction], 201);
     }
 
@@ -73,12 +79,14 @@ class AssetController extends Controller
     public function setPrice(StoreAssetPriceRequest $request, Asset $asset, AssetService $service)
     {
         $price = $service->setPrice($request->user(), $asset, $request->validated());
+
         return response()->json(['data' => $price]);
     }
 
     public function completeRdpuUnits(CompleteRdpuUnitsRequest $request, Asset $asset, AssetService $service)
     {
         $updated = $service->completeRdpuUnits($request->user(), $asset, $request->validated());
+
         return response()->json(['data' => $service->snapshot($updated)]);
     }
 
@@ -98,6 +106,7 @@ class AssetController extends Controller
             'transactions.*.notes' => ['nullable', 'string', 'max:2000'],
         ]);
         $result = $service->importHistory($request->user(), $asset, $data);
+
         return response()->json(['data' => $result], 201);
     }
 
@@ -112,11 +121,13 @@ class AssetController extends Controller
                 $query->where(fn ($q) => $q->where('type', 'purchase')->where('status', 'settled'))
                     ->orWhere(fn ($q) => $q->where('type', 'subscription')->where('status', 'confirmed'));
             });
-        $activeMonths = (clone $purchases)->pluck('transaction_date')->map(fn ($date) => \Carbon\Carbon::parse($date)->format('Y-m'))->unique()->values()->all();
+        $activeMonths = (clone $purchases)->pluck('transaction_date')->map(fn ($date) => Carbon::parse($date)->format('Y-m'))->unique()->values()->all();
         $active = array_fill_keys($activeMonths, true);
         $streak = 0;
         $cursor = $now->copy()->startOfMonth();
-        if (! isset($active[$cursor->format('Y-m')])) $cursor->subMonth(); // Current month stays open until month-end.
+        if (! isset($active[$cursor->format('Y-m')])) {
+            $cursor->subMonth();
+        } // Current month stays open until month-end.
         while (isset($active[$cursor->format('Y-m')])) {
             $streak++;
             $cursor->subMonth();
@@ -126,7 +137,7 @@ class AssetController extends Controller
         $months = collect($activeMonths)->sort()->values();
         $previous = null;
         foreach ($months as $month) {
-            $date = \Carbon\Carbon::createFromFormat('Y-m', $month)->startOfMonth();
+            $date = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
             $run = $previous && $previous->copy()->addMonth()->equalTo($date) ? $run + 1 : 1;
             $longest = max($longest, $run);
             $previous = $date;
@@ -144,9 +155,11 @@ class AssetController extends Controller
             $target = DB::table('asset_monthly_targets')->where('user_id', $user->id)->where('asset_type', $type)->value('amount');
             $actual = bcadd((string) ($monthlyTotals->get($type)?->total_amount ?? '0.00'), '0', 2);
             $normalizedTarget = $target === null ? null : bcadd((string) $target, '0', 2);
+
             return ['type' => $type, 'target' => $normalizedTarget, 'actual' => $actual,
                 'remaining' => $normalizedTarget === null || bccomp($normalizedTarget, $actual, 2) <= 0 ? '0.00' : bcsub($normalizedTarget, $actual, 2)];
         });
+
         return response()->json(['data' => ['current_streak' => $streak, 'longest_streak' => $longest, 'active_months' => count($activeMonths), 'monthly_targets' => $targets]]);
     }
 
@@ -160,6 +173,7 @@ class AssetController extends Controller
             ['user_id' => $request->user()->id, 'asset_type' => $data['type']],
             ['amount' => $data['amount'], 'updated_at' => now(), 'created_at' => now()],
         );
+
         return response()->json(['message' => 'Target investasi bulanan disimpan.']);
     }
 
@@ -168,6 +182,7 @@ class AssetController extends Controller
         $data = $request->validate(['type' => ['required', Rule::in(['gold', 'rdpu'])]]);
         $deleted = DB::table('asset_monthly_targets')->where('user_id', $request->user()->id)->where('asset_type', $data['type'])->delete();
         abort_unless($deleted, 404, 'Target bulanan tidak ditemukan.');
+
         return response()->json(['message' => 'Target investasi bulanan dihapus.']);
     }
 }

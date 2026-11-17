@@ -15,9 +15,15 @@ class GoalItem extends Model
 
     protected $appends = ['estimated_amount', 'paid_amount', 'remaining_amount'];
 
-    public function goal(): BelongsTo { return $this->belongsTo(Goal::class); }
+    public function goal(): BelongsTo
+    {
+        return $this->belongsTo(Goal::class);
+    }
 
-    public function obligations(): HasMany { return $this->hasMany(GoalObligation::class); }
+    public function obligations(): HasMany
+    {
+        return $this->hasMany(GoalObligation::class);
+    }
 
     public function getEstimatedAmountAttribute(): string
     {
@@ -30,12 +36,14 @@ class GoalItem extends Model
         foreach ($this->obligations as $obligation) {
             $sum = DecimalMath::add($sum, $obligation->paid_amount);
         }
+
         return $sum;
     }
 
     public function getRemainingAmountAttribute(): string
     {
         $remaining = DecimalMath::subtract($this->estimated_amount, $this->paid_amount);
+
         return DecimalMath::compare($remaining, '0.00') < 0 ? '0.00' : $remaining;
     }
 }

@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
+use App\Support\DecimalMath;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Support\DecimalMath;
 
 class Budget extends Model
 {

@@ -14,7 +14,7 @@ import { useAuthStore } from "@/stores/auth";
 import { useBudgetStore } from "@/stores/budget";
 import { formatRupiah } from "@/utils/formatters";
 import AnimatedMoney from "@/components/AnimatedMoney.vue";
-import { addDecimal, compareDecimal } from "@/utils/decimal";
+import { addDecimal, compareDecimal, subtractDecimal } from "@/utils/decimal";
 const VueApexCharts = defineAsyncComponent(() => import("@/lib/charts"));
 import {
     Plus,
@@ -85,10 +85,10 @@ function privateMoney(value) {
 }
 function privateTxMoney(tx) {
     if (!balanceVisible.value) return "Rp ••••••";
-    return `${tx.type === "income" ? "+" : "-"}${formatRupiah(Number(tx.amount || 0))}`;
+    return `${tx.type === "income" ? "+" : "-"}${formatRupiah(tx.amount || "0.00")}`;
 }
-const monthlySavings = computed(
-    () => monthlyIncome.value - monthlyExpense.value,
+const monthlySavings = computed(() =>
+    subtractDecimal(monthlyIncome.value, monthlyExpense.value),
 );
 const investmentAssets = computed(() =>
     addDecimal(
@@ -96,7 +96,7 @@ const investmentAssets = computed(() =>
         netWorth.value.investment_book_value_fallback || "0.00",
     ),
 );
-const monthlyReport = ref({ income: 0, expense: 0, categories: [] });
+const monthlyReport = ref({ income: "0.00", expense: "0.00", categories: [] });
 const cashFlowMonths = ref([]);
 const cashFlowIncome = ref([]);
 const cashFlowExpense = ref([]);
@@ -147,15 +147,22 @@ function getCurrentMonthStr() {
 const currentMonthStr = computed(() => getCurrentMonthStr());
 
 // 1. Total Pemasukan Bulan Ini (real, difilter bulan berjalan)
-const monthlyIncome = computed(() => Number(monthlyReport.value.income));
-const monthlyExpense = computed(() => Number(monthlyReport.value.expense));
+const monthlyIncome = computed(() =>
+    String(monthlyReport.value.income ?? "0.00"),
+);
+const monthlyExpense = computed(() =>
+    String(monthlyReport.value.expense ?? "0.00"),
+);
 
 // 3. Sisa Anggaran bulanan — REAL, dari budget store (bukan dihitung ulang dari transaksi,
 // karena totalBudgetSpent di store sudah dihitung per kategori yang di-budget-kan)
 const hasBudgetSet = computed(() => budgets.value.length > 0);
 const remainingBudget = computed(() => {
-    const remaining = totalBudgetLimit.value - totalBudgetSpent.value;
-    return remaining < 0 ? 0 : remaining;
+    const remaining = subtractDecimal(
+        totalBudgetLimit.value,
+        totalBudgetSpent.value,
+    );
+    return compareDecimal(remaining, "0.00") > 0 ? remaining : "0.00";
 });
 
 // 4. Kategori Pengeluaran Terbesar Bulan Ini (real, insight baru)
@@ -582,9 +589,7 @@ async function fetchCashFlowData() {
                             "
                         >
                             ·
-                            {{
-                                privateMoney(netWorth.investment_in_transit)
-                            }}
+                            {{ privateMoney(netWorth.investment_in_transit) }}
                             sedang diproses
                         </template>
                     </div>

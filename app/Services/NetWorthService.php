@@ -35,7 +35,9 @@ class NetWorthService
             } else {
                 // Before the first manual NAV/buyback price, retain invested principal net of disposals.
                 $bookValueFallback = DecimalMath::add($bookValueFallback, (string) $snapshot['book_value']);
-                if (DecimalMath::compare($snapshot['quantity'], '0.00000000', 8) > 0) $unpricedAssets++;
+                if (DecimalMath::compare($snapshot['quantity'], '0.00000000', 8) > 0) {
+                    $unpricedAssets++;
+                }
             }
         }
 
@@ -47,6 +49,7 @@ class NetWorthService
         }
 
         $investments = DecimalMath::add(DecimalMath::add($marketValue, $bookValueFallback), $inTransit);
+
         return [
             'cash_total' => $cash,
             'investment_market_value' => $marketValue,

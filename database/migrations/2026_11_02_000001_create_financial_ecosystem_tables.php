@@ -18,6 +18,7 @@ return new class extends Migration
             $toMinor = static function ($amount): int {
                 [$whole, $fraction] = array_pad(explode('.', (string) $amount, 2), 2, '');
                 $fraction = str_pad(substr($fraction, 0, 2), 2, '0');
+
                 return ((int) $whole * 100) + (int) $fraction;
             };
             $toDecimal = static fn (int $minor): string => intdiv($minor, 100).'.'.str_pad((string) ($minor % 100), 2, '0', STR_PAD_LEFT);

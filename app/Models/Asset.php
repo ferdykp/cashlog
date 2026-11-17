@@ -9,10 +9,31 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Asset extends Model
 {
     protected $fillable = ['user_id', 'type', 'valuation_mode', 'manual_current_value', 'name', 'provider', 'identifier', 'storage_type', 'start_date', 'maturity_date', 'currency'];
+
     protected $casts = ['start_date' => 'date:Y-m-d', 'maturity_date' => 'date:Y-m-d'];
-    public function user(): BelongsTo { return $this->belongsTo(User::class); }
-    public function transactions(): HasMany { return $this->hasMany(AssetTransaction::class); }
-    public function prices(): HasMany { return $this->hasMany(AssetPrice::class); }
-    public function allocations(): HasMany { return $this->hasMany(GoalAssetAllocation::class); }
-    public function auditHistory(): HasMany { return $this->hasMany(AssetTransaction::class)->whereNotNull('superseded_at')->orderByDesc('transaction_date'); }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(AssetTransaction::class);
+    }
+
+    public function prices(): HasMany
+    {
+        return $this->hasMany(AssetPrice::class);
+    }
+
+    public function allocations(): HasMany
+    {
+        return $this->hasMany(GoalAssetAllocation::class);
+    }
+
+    public function auditHistory(): HasMany
+    {
+        return $this->hasMany(AssetTransaction::class)->whereNotNull('superseded_at')->orderByDesc('transaction_date');
+    }
 }

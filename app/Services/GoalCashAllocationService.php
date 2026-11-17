@@ -25,6 +25,7 @@ class GoalCashAllocationService
                         && $existing->action === $data['action']
                         && DecimalMath::compare((string) $existing->amount, (string) $data['amount']) === 0;
                     abort_unless($same, 409, 'Kunci permintaan sudah digunakan untuk alokasi berbeda.');
+
                     return $existing;
                 }
             }
@@ -76,8 +77,11 @@ class GoalCashAllocationService
             $nominalAllocated = $this->sumAllocations($entries);
             $backing = DecimalMath::compare((string) $account->balance, '0.00') > 0 ? (string) $account->balance : '0.00';
             $allocated = DecimalMath::compare($nominalAllocated, '0.00') > 0 ? $nominalAllocated : '0.00';
-            if (DecimalMath::compare($allocated, $backing) > 0) $allocated = $backing;
+            if (DecimalMath::compare($allocated, $backing) > 0) {
+                $allocated = $backing;
+            }
             $available = DecimalMath::subtract($backing, $allocated);
+
             return [
                 'account_id' => $account->id,
                 'account_name' => $account->name,
@@ -102,6 +106,7 @@ class GoalCashAllocationService
             $delta = $entry->action === 'allocate' ? (string) $entry->amount : bcmul((string) $entry->amount, '-1', 2);
             $total = DecimalMath::add($total, $delta);
         }
+
         return $total;
     }
 }

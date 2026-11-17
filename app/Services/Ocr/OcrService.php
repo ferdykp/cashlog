@@ -2,8 +2,8 @@
 
 namespace App\Services\Ocr;
 
-use Carbon\Carbon;
 use App\Support\DecimalMath;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\Process\Process;
 

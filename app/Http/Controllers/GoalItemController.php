@@ -15,6 +15,7 @@ class GoalItemController extends Controller
     public function index(Request $request, Goal $goal)
     {
         $this->authorizeGoal($request, $goal);
+
         return GoalItemResource::collection($goal->items()->with('obligations.payments')->get());
     }
 
@@ -25,8 +26,10 @@ class GoalItemController extends Controller
             $goal = Goal::whereKey($goal->id)->lockForUpdate()->firstOrFail();
             $item = $goal->items()->create($request->validated() + ['quantity' => '1.0000']);
             $this->syncBudget($goal);
+
             return $item;
         }, 3);
+
         return response()->json(['data' => new GoalItemResource($item)], 201);
     }
 
@@ -38,6 +41,7 @@ class GoalItemController extends Controller
             $item->update($request->validated());
             $this->syncBudget($goal);
         }, 3);
+
         return response()->json(['data' => new GoalItemResource($item->fresh()->load('obligations.payments'))]);
     }
 
@@ -50,13 +54,16 @@ class GoalItemController extends Controller
             $item->delete();
             $this->syncBudget($goal);
         }, 3);
+
         return response()->json(['message' => 'Rincian target dihapus.']);
     }
 
     private function syncBudget(Goal $goal): void
     {
         $total = '0.00';
-        foreach ($goal->items()->get() as $item) $total = DecimalMath::add($total, $item->estimated_amount);
+        foreach ($goal->items()->get() as $item) {
+            $total = DecimalMath::add($total, $item->estimated_amount);
+        }
         $goal->update(['target_amount' => $total]);
     }
 

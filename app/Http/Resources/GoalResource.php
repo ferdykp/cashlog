@@ -15,7 +15,9 @@ class GoalResource extends JsonResource
         foreach ($this->resource->relationLoaded('items') ? $this->items : [] as $item) {
             $budget = DecimalMath::add($budget, $item->estimated_amount);
         }
-        if (DecimalMath::compare($budget, '0.00') === 0) $budget = (string) $this->target_amount;
+        if (DecimalMath::compare($budget, '0.00') === 0) {
+            $budget = (string) $this->target_amount;
+        }
         $remaining = DecimalMath::subtract($budget, $savings);
 
         return [

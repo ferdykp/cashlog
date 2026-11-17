@@ -36,6 +36,7 @@ final class DecimalMath
         // Add half of the last retained unit at one extra decimal place,
         // then truncate to the requested precision (bc math does not round).
         $offset = $scale === 0 ? '0.5' : '0.'.str_repeat('0', $scale).'5';
+
         return bcadd(bcadd((string) $value, $offset, $scale + 1), '0', $scale);
     }
 
@@ -48,6 +49,7 @@ final class DecimalMath
     {
         // Round half-up to the currency precision without passing through float.
         $raw = bcmul((string) $quantity, (string) $unitPrice, $quantityScale + 2);
+
         return bcadd(bcadd($raw, '0.005', 3), '0', 2);
     }
 }

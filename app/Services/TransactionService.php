@@ -3,15 +3,16 @@
 namespace App\Services;
 
 use App\Models\Account;
+use App\Models\BillPayment;
+use App\Models\GoalCashAllocation;
+use App\Models\GoalObligation;
 use App\Models\Transaction;
 use App\Models\User;
-use App\Models\GoalObligation;
-use App\Models\GoalCashAllocation;
-use App\Models\BillPayment;
 use App\Support\DecimalMath;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class TransactionService
 {
@@ -60,13 +61,21 @@ class TransactionService
             if (! empty($data['idempotency_key'])) {
                 $existing = Transaction::where('user_id', $user->id)->where('idempotency_key', $data['idempotency_key'])->first();
                 if ($existing) {
+                    $normalizeNote = static function ($note): ?string {
+                        $note = trim((string) ($note ?? ''));
+
+                        return $note === '' ? null : $note;
+                    };
                     $same = $existing->type === $data['type']
                         && (int) $existing->account_id === (int) $data['account_id']
                         && (int) ($existing->related_account_id ?? 0) === (int) ($data['related_account_id'] ?? $data['to_account_id'] ?? 0)
+                        && (int) ($existing->category_id ?? 0) === (int) ($data['category_id'] ?? 0)
                         && DecimalMath::compare((string) $existing->amount, (string) $data['amount']) === 0
                         && $existing->date->format('Y-m-d') === $data['date']
-                        && (int) ($existing->goal_obligation_id ?? 0) === (int) ($data['goal_obligation_id'] ?? 0);
+                        && (int) ($existing->goal_obligation_id ?? 0) === (int) ($data['goal_obligation_id'] ?? 0)
+                        && $normalizeNote($existing->note) === $normalizeNote($data['note'] ?? null);
                     abort_unless($same, 409, 'Kunci permintaan sudah digunakan untuk transaksi berbeda.');
+
                     return $existing->load(['account', 'relatedAccount', 'category']);
                 }
             }
@@ -84,7 +93,7 @@ class TransactionService
                     ->lockForUpdate()->findOrFail($data['goal_obligation_id']);
                 $remaining = (string) $obligation->remaining_amount;
                 if (DecimalMath::compare((string) $data['amount'], $remaining) > 0) {
-                    throw \Illuminate\Validation\ValidationException::withMessages(['amount' => 'Nominal pembayaran melebihi sisa kewajiban.']);
+                    throw ValidationException::withMessages(['amount' => 'Nominal pembayaran melebihi sisa kewajiban.']);
                 }
                 $allocationAmount = $this->consumeGoalAllocation($user, $obligation, $account, (string) $data['amount']);
             }
@@ -133,7 +142,7 @@ class TransactionService
                     $availableObligation = DecimalMath::add($availableObligation, (string) $transaction->amount);
                 }
                 if (DecimalMath::compare((string) $data['amount'], $availableObligation) > 0) {
-                    throw \Illuminate\Validation\ValidationException::withMessages(['amount' => 'Nominal pembayaran melebihi sisa kewajiban.']);
+                    throw ValidationException::withMessages(['amount' => 'Nominal pembayaran melebihi sisa kewajiban.']);
                 }
                 $allocationAmount = $this->consumeGoalAllocation($user, $obligation, $newAccount, (string) $data['amount']);
             }
@@ -299,14 +308,19 @@ class TransactionService
         if (DecimalMath::compare($consume, '0.00') > 0) {
             GoalCashAllocation::create(['user_id' => $user->id, 'goal_id' => $goalId, 'account_id' => $account->id, 'amount' => $consume, 'action' => 'payment', 'note' => 'Digunakan untuk pembayaran target']);
         }
+
         return $consume;
     }
 
     private function restoreGoalAllocation(User $user, Transaction $transaction): void
     {
-        if (! $transaction->goal_obligation_id || DecimalMath::compare((string) $transaction->goal_allocation_amount, '0.00') <= 0) return;
+        if (! $transaction->goal_obligation_id || DecimalMath::compare((string) $transaction->goal_allocation_amount, '0.00') <= 0) {
+            return;
+        }
         $obligation = GoalObligation::with('item')->find($transaction->goal_obligation_id);
-        if (! $obligation) return;
+        if (! $obligation) {
+            return;
+        }
         GoalCashAllocation::create([
             'user_id' => $user->id,
             'goal_id' => $obligation->item->goal_id,
