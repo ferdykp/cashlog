@@ -386,3 +386,21 @@ a,
         transition: none !important;
     }
 }
+
+.api-cache-status {
+    width: min(calc(100% - 2rem), 84rem);
+    margin: 0.75rem auto 0;
+    border: 1px solid rgb(217 119 6 / 24%);
+    border-radius: 0.8rem;
+    background: rgb(255 251 235 / 96%);
+    padding: 0.55rem 0.8rem;
+    color: #854d0e;
+    font-size: 0.76rem;
+    line-height: 1.35;
+}
+
+.dark .api-cache-status {
+    border-color: rgb(251 191 36 / 30%);
+    background: rgb(69 26 3 / 92%);
+    color: #fde68a;
+}
