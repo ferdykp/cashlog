@@ -70,8 +70,9 @@ function update(key, value) {
             class="mt-4 grid gap-2 sm:grid-cols-[1fr_1fr_auto]"
             @submit.prevent="emit('save')"
         >
-            <label class="financial-field"
+            <label class="financial-field investment-type-field"
                 >Jenis investasi<select
+                    class="investment-type-select"
                     :value="modelValue.type"
                     @change="update('type', $event.target.value)"
                 >

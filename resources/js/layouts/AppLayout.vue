@@ -2,12 +2,14 @@
 import { computed } from "vue";
 import { useRoute } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
+import { useTheme } from "@/composables/useTheme";
 import Sidebar from "@/components/Sidebar.vue";
 import BrandMark from "@/components/BrandMark.vue";
-import { ChevronRight } from "@lucide/vue";
+import { ChevronRight, Moon, Sun } from "@lucide/vue";
 
 const route = useRoute();
 const authStore = useAuthStore();
+const { isDark, toggleTheme } = useTheme();
 const pageTitle = computed(() => {
     const titles = {
         dashboard: "Beranda",
@@ -42,6 +44,10 @@ const pageTitle = computed(() => {
                     <strong>{{ pageTitle }}</strong>
                 </div>
                 <div class="desktop-header-actions">
+                    <button type="button" class="theme-toggle" @click="toggleTheme" :aria-label="isDark ? 'Beralih ke tema terang' : 'Beralih ke tema gelap'" :title="isDark ? 'Tema terang' : 'Tema gelap'">
+                        <Sun v-if="isDark" aria-hidden="true" />
+                        <Moon v-else aria-hidden="true" />
+                    </button>
                     <span class="desktop-profile-name">{{ authStore.user?.name || "Akun Anda" }}</span>
                     <router-link to="/settings" class="desktop-profile" :aria-label="`Pengaturan ${authStore.user?.name || 'akun'}`">
                         {{ (authStore.user?.name || "A").charAt(0).toUpperCase() }}

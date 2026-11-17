@@ -2,17 +2,19 @@
 import { ref, watch, computed } from "vue";
 import { useAuthStore } from "@/stores/auth";
 import { useRoute, useRouter } from "vue-router";
+import { useTheme } from "@/composables/useTheme";
 import BrandMark from "@/components/BrandMark.vue";
 import {
     LayoutDashboard, Wallet, PiggyBank, Target, BarChart3, History, Settings,
     Plus, ScanLine, Menu, X, ReceiptText, Tags, ChevronRight, MessageCircle,
     UsersRound, Activity, House, Ellipsis, ArrowDownLeft, ArrowUpRight,
-    ArrowLeftRight, Camera, Sparkles,
+    ArrowLeftRight, Camera, Sparkles, Moon, Sun,
 } from "@lucide/vue";
 
 const auth = useAuthStore();
 const route = useRoute();
 const router = useRouter();
+const { isDark, toggleTheme } = useTheme();
 const more = ref(false);
 const composer = ref(false);
 const sections = [
@@ -64,9 +66,15 @@ watch(() => route.path, () => { more.value = false; composer.value = false; });
         <router-link to="/dashboard" class="mobile-brand" aria-label="Cashlog, beranda">
             <BrandMark /><span class="mobile-brand-title">{{ title }}</span>
         </router-link>
-        <router-link to="/settings" class="mobile-profile" :aria-label="`Pengaturan ${auth.user?.name || 'akun'}`">
-            {{ (auth.user?.name || "A").charAt(0).toUpperCase() }}
-        </router-link>
+        <div class="mobile-header-actions">
+            <button type="button" class="theme-toggle" @click="toggleTheme" :aria-label="isDark ? 'Beralih ke tema terang' : 'Beralih ke tema gelap'" :title="isDark ? 'Tema terang' : 'Tema gelap'">
+                <Sun v-if="isDark" aria-hidden="true" />
+                <Moon v-else aria-hidden="true" />
+            </button>
+            <router-link to="/settings" class="mobile-profile" :aria-label="`Pengaturan ${auth.user?.name || 'akun'}`">
+                {{ (auth.user?.name || "A").charAt(0).toUpperCase() }}
+            </router-link>
+        </div>
     </header>
 
     <aside class="ledger-sidebar hidden lg:flex">

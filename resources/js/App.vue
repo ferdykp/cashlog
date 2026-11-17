@@ -1,12 +1,8 @@
 <script setup>
-import { onMounted } from "vue";
 import ToastContainer from "./components/ToastContainer.vue";
 import PwaInstallPrompt from "./components/PwaInstallPrompt.vue";
-const savedTheme = localStorage.getItem("theme") || "dark";
-document.documentElement.classList.toggle("dark", savedTheme === "dark");
-onMounted(() => {
-    document.documentElement.classList.toggle("dark", savedTheme === "dark");
-});
+import { useTheme } from "@/composables/useTheme";
+useTheme();
 </script>
 <template>
     <div class="app-root">

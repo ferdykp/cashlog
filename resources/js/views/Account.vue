@@ -181,7 +181,7 @@ async function handleDelete() {
         </div>
 
         <!-- Grid Kartu Akun -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="account-card-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <template v-if="isLoading">
                 <div
                     v-for="i in 3"
@@ -204,19 +204,20 @@ async function handleDelete() {
                 <div
                     v-for="acc in accounts"
                     :key="acc.id"
-                    class="bg-paper-0 border border-line-200 rounded-3xl pt-7 pb-6 px-6 shadow-soft hover:shadow-card hover:-translate-y-1.5 transition-all duration-300 relative overflow-hidden flex flex-col justify-between h-44 group cursor-pointer"
+                    class="wallet-card bg-paper-0 border border-line-200 rounded-3xl pt-7 pb-6 px-6 shadow-soft transition-all duration-300 relative flex flex-col justify-between h-44 group"
+                    :style="{ '--wallet-accent': acc.color || '#6C4CF1' }"
                 >
                     <!-- Aksen Warna Menyatu dengan Lengkungan Kartu Atas -->
                     <div
-                        class="absolute top-0 left-0 right-0 h-2 transition-colors duration-300"
+                        class="wallet-card-edge absolute top-0 left-0 right-0 h-2 transition-colors duration-300"
                         :style="{ backgroundColor: acc.color || '#6C4CF1' }"
                     ></div>
 
                     <!-- Header Kartu -->
-                    <div class="flex items-start justify-between">
+                    <div class="wallet-card-content flex items-start justify-between">
                         <div class="flex items-center gap-3">
                             <div
-                                class="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 shadow-soft group-hover:scale-105 transition-transform"
+                                class="wallet-card-emblem w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 shadow-soft group-hover:scale-105 transition-transform"
                                 :style="{
                                     backgroundColor: `${acc.color || '#6C4CF1'}18`,
                                     color: acc.color || '#6C4CF1',
@@ -274,7 +275,7 @@ async function handleDelete() {
                             <!-- Floating Menu Container -->
                             <div
                                 v-if="activeDropdownId === acc.id"
-                                class="absolute right-0 top-10 w-40 bg-paper-0/95 backdrop-blur-md border border-line-200/80 rounded-2xl shadow-card p-1.5 z-40 space-y-0.5 animate-in fade-in zoom-in-95 duration-150 origin-top-right"
+                                class="wallet-action-menu absolute right-0 top-10 w-40 bg-paper-0/95 backdrop-blur-md border border-line-200/80 rounded-2xl shadow-card p-1.5 z-40 space-y-0.5 animate-in fade-in zoom-in-95 duration-150 origin-top-right"
                             >
                                 <!-- Option: Edit -->
                                 <button
@@ -308,7 +309,7 @@ async function handleDelete() {
                     </div>
 
                     <!-- Saldo Kartu -->
-                    <div class="space-y-1">
+                    <div class="wallet-card-content wallet-card-balance space-y-1">
                         <span
                             class="text-[10px] font-bold text-ink-300 uppercase tracking-wider block"
                         >
@@ -326,7 +327,7 @@ async function handleDelete() {
                 <button
                     type="button"
                     @click="isCreateModalOpen = true"
-                    class="h-44 border-2 border-dashed border-line-300 hover:border-violet-600 bg-base-50/50 hover:bg-violet-50/30 rounded-3xl p-6 flex flex-col items-center justify-center gap-3 transition-all duration-300 hover:-translate-y-1 cursor-pointer group btn-bounce"
+                    class="wallet-add-card h-44 border-2 border-dashed border-line-300 hover:border-violet-600 bg-base-50/50 hover:bg-violet-50/30 rounded-3xl p-6 flex flex-col items-center justify-center gap-3 transition-all duration-300 cursor-pointer group btn-bounce"
                 >
                     <div
                         class="w-12 h-12 rounded-full bg-paper-0 border border-line-200 group-hover:border-violet-200 group-hover:bg-violet-600 group-hover:text-white flex items-center justify-center text-ink-600 shadow-soft transition-all duration-300"

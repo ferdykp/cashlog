@@ -35,6 +35,7 @@ import {
 
 import api from "@/lib/axios";
 import { useTransactionExport } from "@/composables/useTransactionExport";
+import { useTheme } from "@/composables/useTheme";
 
 const router = useRouter();
 
@@ -45,6 +46,7 @@ const notifyStore = useNotificationStore();
 const { user } = storeToRefs(authStore);
 const { exporting, handleExport } = useTransactionExport(user, notifyStore);
 const { categories } = storeToRefs(categoryStore);
+const { setTheme } = useTheme();
 
 /*
 |--------------------------------------------------------------------------
@@ -200,17 +202,12 @@ function getCategoryIcon(name) {
 function applyTheme(newTheme, persist = true) {
     theme.value = newTheme;
 
-    localStorage.setItem("theme", newTheme);
+    setTheme(newTheme);
 
     if (persist) {
         void savePreferences();
     }
 
-    if (newTheme === "dark") {
-        document.documentElement.classList.add("dark");
-    } else {
-        document.documentElement.classList.remove("dark");
-    }
 }
 
 async function savePreferences() {
