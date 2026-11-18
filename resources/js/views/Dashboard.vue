@@ -42,6 +42,10 @@ import {
     Send,
     ChevronRight,
     Sparkles,
+    UsersRound,
+    MessageCircle,
+    Tags,
+    Settings,
 } from "@lucide/vue";
 import api from "@/lib/axios";
 
@@ -136,6 +140,13 @@ const goalIconMap = {
     gift: Gift,
     coins: Coins,
 };
+const dashboardShortcuts = [
+    { label: "Keuangan bersama", detail: "Atur keuangan bareng", path: "/kolaborasi", icon: UsersRound },
+    { label: "Pindai bukti", detail: "Catat dari struk", path: "/scan", icon: ScanLine },
+    { label: "WhatsApp", detail: "Catat lewat chat", path: "/settings/whatsapp", icon: MessageCircle },
+    { label: "Kategori", detail: "Kelola kategori", path: "/categories", icon: Tags },
+    { label: "Pengaturan", detail: "Akun dan preferensi", path: "/settings", icon: Settings },
+];
 function getGoalIcon(iconName) {
     return goalIconMap[iconName] || Target;
 }
@@ -175,10 +186,14 @@ const topSpendingCategory = computed(
 const activeGoal = computed(() => {
     const funding = goalFundingSummaries.value[0];
     if (!funding) return null;
+    const remaining = subtractDecimal(
+        funding.target_amount || "0.00",
+        funding.current_amount || "0.00",
+    );
     return {
         ...funding,
-        progress_percent: funding.funding_coverage_percent ?? 0,
-        funding_coverage: funding.funding_coverage ?? "0.00",
+        progress_percent: funding.savings_progress_percent ?? 0,
+        remaining_to_target: compareDecimal(remaining, "0.00") > 0 ? remaining : "0.00",
     };
 });
 
@@ -437,24 +452,42 @@ async function fetchCashFlowData() {
             </div>
         </section>
 
-        <section class="home-plan-grid" aria-label="Rencana keuangan">
+        <article ref="activityPanel" class="home-activity home-activity-featured" aria-label="Aktivitas terbaru">
+            <div class="home-section-head"><div><span class="home-overline">TERBARU</span><h2>Aktivitas</h2></div><router-link to="/transactions" aria-label="Lihat semua aktivitas">Semua <ChevronRight /></router-link></div>
+            <div v-if="isLoadingTransactions" class="home-chart-loading" role="status">Memuat aktivitas…</div>
+            <div v-else-if="recentTransactions.length === 0" class="home-empty roomy">Belum ada transaksi.<router-link to="/transactions/create">Catat yang pertama <ArrowUpRight /></router-link></div>
+            <div v-else class="home-tx-list"><div v-for="tx in recentTransactions" :key="tx.id" class="home-tx-row"><span class="home-tx-mark" :class="tx.type"><component :is="getCategoryIcon(tx.category?.name)" /></span><div class="home-tx-info"><b>{{ tx.note || tx.category?.name || "Transaksi" }}</b><small>{{ tx.category?.name || "Umum" }} · {{ tx.date }}</small></div><strong :class="tx.type">{{ privateTxMoney(tx) }}</strong></div></div>
+        </article>
+
+        <section ref="planningPanel" class="home-plan-grid" aria-label="Rencana keuangan">
             <router-link to="/budget" class="home-budget">
                 <div class="home-section-head"><div><span class="home-overline">BATAS BELANJA</span><h2>Anggaran</h2></div><ChevronRight /></div>
                 <template v-if="isLoadingBudget"><div class="home-skeleton" aria-label="Memuat anggaran" /></template>
-                <template v-else-if="hasBudgetSet"><strong><AnimatedMoney :value="remainingBudget" :masked="!balanceVisible" /></strong><p>tersisa dari <AnimatedMoney :value="totalBudgetLimit" :masked="!balanceVisible" /></p><div class="home-meter" role="progressbar" :aria-valuenow="totalBudgetPercentage" aria-valuemin="0" aria-valuemax="100" :aria-label="`${totalBudgetPercentage}% anggaran terpakai`"><i :style="{ transform: `scaleX(${Math.min(100, totalBudgetPercentage) / 100})` }" /></div><small>{{ totalBudgetPercentage }}% sudah digunakan</small></template>
+                <template v-else-if="hasBudgetSet"><strong><AnimatedMoney :value="remainingBudget" :masked="!balanceVisible" /></strong><p>tersisa dari batas <AnimatedMoney :value="totalBudgetLimit" :masked="!balanceVisible" /></p><div class="home-meter" role="progressbar" :aria-valuenow="totalBudgetPercentage" aria-valuemin="0" aria-valuemax="100" :aria-label="`${totalBudgetPercentage}% anggaran terpakai`"><i :style="{ transform: `scaleX(${Math.min(100, totalBudgetPercentage) / 100})` }" /></div><small>{{ totalBudgetPercentage }}% digunakan · <AnimatedMoney :value="totalBudgetSpent" :masked="!balanceVisible" /> terpakai</small></template>
                 <div v-else class="home-empty">Belum ada batas belanja. <b>Atur anggaran <ArrowUpRight /></b></div>
             </router-link>
             <router-link to="/goals" class="home-goal">
                 <div class="home-section-head"><div><span class="home-overline">MOMENTUM MENABUNG</span><h2>Target utama</h2></div><ChevronRight /></div>
                 <div v-if="isLoadingGoals" class="home-skeleton" aria-label="Memuat target" />
                 <div v-else-if="goalSummaryError" class="home-empty">Target belum dapat dimuat.</div>
-                <template v-else-if="activeGoal"><div class="home-goal-name"><span class="goal-glyph"><component :is="getGoalIcon(activeGoal.icon)" /></span><div><b>{{ activeGoal.name }}</b><small>{{ activeGoal.progress_percent }}% tercapai</small></div></div><div class="home-meter goal-meter" role="progressbar" :aria-valuenow="activeGoal.progress_percent" aria-valuemin="0" aria-valuemax="100" :aria-label="`${activeGoal.progress_percent}% target tercapai`"><i :style="{ transform: `scaleX(${Math.min(100, activeGoal.progress_percent || 0) / 100})` }" /></div><small>Teruskan dari halaman target</small></template>
+                <template v-else-if="activeGoal"><div class="home-goal-name"><span class="goal-glyph"><component :is="getGoalIcon(activeGoal.icon)" /></span><div><b>{{ activeGoal.name }}</b><small><AnimatedMoney :value="activeGoal.current_amount" :masked="!balanceVisible" /> terkumpul dari <AnimatedMoney :value="activeGoal.target_amount" :masked="!balanceVisible" /></small></div></div><div class="home-meter goal-meter" role="progressbar" :aria-valuenow="activeGoal.progress_percent" aria-valuemin="0" aria-valuemax="100" :aria-label="`${activeGoal.progress_percent}% target tercapai`"><i :style="{ transform: `scaleX(${Math.min(100, activeGoal.progress_percent || 0) / 100})` }" /></div><small>{{ activeGoal.progress_percent }}% tercapai · kurang <AnimatedMoney :value="activeGoal.remaining_to_target" :masked="!balanceVisible" /></small></template>
                 <div v-else class="home-empty">Belum ada target tabungan. <b>Buat target <ArrowUpRight /></b></div>
             </router-link>
             <router-link to="/investasi" class="home-investments"><span class="home-overline">ASET TERCATAT</span><div class="investment-value"><span>Emas + RDPU</span><Wallet /><strong><AnimatedMoney :value="investmentAssets" :masked="!balanceVisible" /></strong></div><div class="investment-foot"><span>Nilai aset saat ini</span><span v-if="compareDecimal(netWorth.investment_in_transit, '0.00') > 0">{{ privateMoney(netWorth.investment_in_transit) }} diproses</span><span v-else>Kelola portofolio <ArrowUpRight /></span></div></router-link>
         </section>
 
-        <section class="home-activity-grid">
+        <section class="home-apps" aria-labelledby="home-apps-title">
+            <div class="home-section-head"><div><span class="home-overline">AKSES CEPAT</span><h2 id="home-apps-title">Aplikasi lainnya</h2></div></div>
+            <div class="home-app-grid">
+                <router-link v-for="shortcut in dashboardShortcuts" :key="shortcut.path" :to="shortcut.path" class="home-app-tile">
+                    <span class="home-app-icon"><component :is="shortcut.icon" aria-hidden="true" /></span>
+                    <span class="home-app-copy"><b>{{ shortcut.label }}</b><small>{{ shortcut.detail }}</small></span>
+                    <ChevronRight class="home-app-arrow" aria-hidden="true" />
+                </router-link>
+            </div>
+        </section>
+
+        <section class="home-cashflow-section">
             <article ref="chartPanel" class="home-cashflow">
                 <div class="home-section-head"><div><span class="home-overline">ENAM BULAN TERAKHIR</span><h2>Arus kas</h2><p>Pemasukan dan pengeluaran tercatat</p></div><router-link to="/report" aria-label="Buka laporan arus kas"><ArrowUpRight /></router-link></div>
                 <div class="home-chart-legend"><span><i class="income-dot" />Masuk</span><span><i class="expense-dot" />Keluar</span></div>
@@ -463,12 +496,6 @@ async function fetchCashFlowData() {
                 <div v-else-if="!isLoadingCashFlow && !hasCashFlowData" class="home-chart-empty"><span>Arus kas belum terbentuk</span><p>Catat pemasukan atau pengeluaran untuk melihat perubahan dari bulan ke bulan.</p><router-link to="/transactions/create">Catat transaksi <ArrowUpRight /></router-link></div>
                 <ul v-if="hasCashFlowData" class="sr-only" aria-label="Nilai arus kas per bulan"><li v-for="(month, index) in cashFlowMonths" :key="month.monthStr">{{ month.label }}: pemasukan {{ balanceVisible ? formatRupiah(cashFlowIncome[index]) : 'disembunyikan' }}, pengeluaran {{ balanceVisible ? formatRupiah(cashFlowExpense[index]) : 'disembunyikan' }}.</li></ul>
                 <div v-else class="home-chart-placeholder" aria-hidden="true" />
-            </article>
-            <article ref="activityPanel" class="home-activity">
-                <div class="home-section-head"><div><span class="home-overline">TERBARU</span><h2>Aktivitas</h2></div><router-link to="/transactions" aria-label="Lihat semua aktivitas">Semua <ChevronRight /></router-link></div>
-                <div v-if="isLoadingTransactions" class="home-chart-loading" role="status">Memuat aktivitas…</div>
-                <div v-else-if="recentTransactions.length === 0" class="home-empty roomy">Belum ada transaksi.<router-link to="/transactions/create">Catat yang pertama <ArrowUpRight /></router-link></div>
-                <div v-else class="home-tx-list"><div v-for="tx in recentTransactions" :key="tx.id" class="home-tx-row"><span class="home-tx-mark" :class="tx.type"><component :is="getCategoryIcon(tx.category?.name)" /></span><div class="home-tx-info"><b>{{ tx.note || tx.category?.name || "Transaksi" }}</b><small>{{ tx.category?.name || "Umum" }} · {{ tx.date }}</small></div><strong :class="tx.type">{{ privateTxMoney(tx) }}</strong></div></div>
             </article>
         </section>
     </div>

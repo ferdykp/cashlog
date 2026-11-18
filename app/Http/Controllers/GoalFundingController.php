@@ -22,6 +22,9 @@ class GoalFundingController extends Controller
                 ...$service->forGoal($goal),
                 'name' => $goal->name,
                 'icon' => $goal->icon,
+                'target_amount' => (string) $goal->target_amount,
+                'current_amount' => (string) $goal->current_amount,
+                'savings_progress_percent' => $goal->progress_percent,
             ]);
 
         return response()->json(['data' => $rows]);

@@ -357,9 +357,12 @@ input[type="radio"] {
 .auth-layout {
     min-height: 100dvh;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    padding: 20px;
-    gap: 20px;
+    width: 100%;
+    max-width: 1920px;
+    margin-inline: auto;
+    grid-template-columns: minmax(0, 1.08fr) minmax(400px, 0.92fr);
+    padding: clamp(12px, 1.2vw, 24px);
+    gap: clamp(12px, 1.2vw, 24px);
     background: var(--color-base-50);
 }
 .auth-story {
@@ -469,7 +472,8 @@ input[type="radio"] {
 }
 .auth-form-card {
     width: 100%;
-    max-width: 420px;
+    max-width: 480px;
+    padding: clamp(28px, 3vw, 40px);
 }
 .auth-form-card h1 {
     font-size: 30px;
@@ -661,7 +665,7 @@ input[type="radio"] {
             calc(100px + env(safe-area-inset-bottom));
     }
     .auth-layout {
-        grid-template-columns: 0.85fr 1fr;
+        grid-template-columns: minmax(0, 0.85fr) minmax(0, 1fr);
         padding: 12px;
         gap: 0;
     }

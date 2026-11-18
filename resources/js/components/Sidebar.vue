@@ -112,10 +112,13 @@ watch(() => route.path, () => { more.value = false; composer.value = false; });
         </section>
     </div>
 
-    <div v-if="more" v-dialog="() => (more = false)" class="dialog-backdrop menu-backdrop lg:hidden" @click.self="more = false">
-        <section id="mobile-menu" class="menu-panel" aria-labelledby="more-title">
-            <div class="flex items-center justify-between mb-5"><div><p class="eyebrow">CASHLOG</p><h2 id="more-title">Lainnya</h2><p class="text-sm text-ink-500 mt-1">Semua alat keuanganmu.</p></div><button @click="more = false" class="icon-button" aria-label="Tutup menu"><X class="w-5 h-5" /></button></div>
-            <section v-for="section in sections" :key="section.label" class="mb-5"><p class="nav-section-label">{{ section.label }}</p><div class="grid grid-cols-2 gap-2"><router-link v-for="item in section.items" :key="item.path" :to="item.path" class="menu-tile" :class="{ 'is-active': active(item.path) }"><component :is="item.icon" /><span>{{ item.name }}</span></router-link></div></section>
-        </section>
-    </div>
+    <Transition name="mobile-sheet">
+        <div v-if="more" v-dialog="() => (more = false)" class="dialog-backdrop menu-backdrop lg:hidden" @click.self="more = false">
+            <section id="mobile-menu" class="menu-panel" aria-labelledby="more-title">
+                <div class="sheet-handle" aria-hidden="true"></div>
+                <div class="flex items-center justify-between mb-5"><div><p class="eyebrow">CASHLOG</p><h2 id="more-title">Lainnya</h2><p class="text-sm text-ink-500 mt-1">Semua alat keuanganmu.</p></div><button @click="more = false" class="icon-button" aria-label="Tutup menu"><X class="w-5 h-5" /></button></div>
+                <section v-for="section in sections" :key="section.label" class="mb-5"><p class="nav-section-label">{{ section.label }}</p><div class="grid grid-cols-2 gap-2"><router-link v-for="item in section.items" :key="item.path" :to="item.path" class="menu-tile" :class="{ 'is-active': active(item.path) }"><component :is="item.icon" /><span>{{ item.name }}</span></router-link></div></section>
+            </section>
+        </div>
+    </Transition>
 </template>
