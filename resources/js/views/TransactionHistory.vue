@@ -24,6 +24,10 @@ import {
     AlertTriangle,
     Loader2,
     ArrowLeftRight,
+    CalendarDays,
+    ChevronLeft,
+    ChevronRight,
+    List,
 } from "@lucide/vue";
 import api from "@/lib/axios";
 import { previousMonth } from "@/utils/dates";
@@ -43,6 +47,9 @@ const page = ref(1),
 let requestVersion = 0;
 const notify = useNotificationStore();
 const isLoading = ref(true);
+const viewMode = ref("list");
+const calendarMonth = ref(localMonth());
+const selectedCalendarDate = ref(localDate());
 
 // Filter & Search State
 const searchQuery = ref("");
@@ -83,24 +90,40 @@ async function fetchTransactions(append = false) {
     const requestedPage = append === true ? page.value + 1 : 1;
     isLoading.value = true;
     try {
-        const params = { page: requestedPage, per_page: 50 };
+        const calendarView = viewMode.value === "calendar";
+        const params = { page: requestedPage, per_page: calendarView ? 100 : 50 };
         if (searchQuery.value.trim()) params.search = searchQuery.value.trim();
         if (selectedCategory.value !== "all")
             params.category_id = selectedCategory.value;
         if (selectedAccount.value !== "all")
             params.account_id = selectedAccount.value;
         if (selectedType.value !== "all") params.type = selectedType.value;
-        if (selectedTime.value === "this_month") params.month = localMonth();
-        if (selectedTime.value === "last_month") {
-            params.month = previousMonth();
+        if (calendarView) {
+            params.month = calendarMonth.value;
+        } else {
+            if (selectedTime.value === "this_month") params.month = localMonth();
+            if (selectedTime.value === "last_month") {
+                params.month = previousMonth();
+            }
         }
         const res = await api.get("/api/transactions", { params });
         if (version !== requestVersion) return;
-        const data = res.data.data || [];
+        let data = res.data.data || [];
+        let responseMeta = res.data.meta;
+        if (calendarView) {
+            for (let nextPage = 2; nextPage <= responseMeta.last_page; nextPage++) {
+                const next = await api.get("/api/transactions", {
+                    params: { ...params, page: nextPage },
+                });
+                if (version !== requestVersion) return;
+                data = [...data, ...(next.data.data || [])];
+                responseMeta = next.data.meta;
+            }
+        }
         transactions.value =
             append === true ? [...transactions.value, ...data] : data;
-        page.value = res.data.meta.current_page;
-        lastPage.value = res.data.meta.last_page;
+        page.value = responseMeta.current_page;
+        lastPage.value = responseMeta.last_page;
     } catch (err) {
         console.warn("Gagal memuat riwayat transaksi:", err.message);
     } finally {
@@ -116,6 +139,8 @@ watch(
         selectedCategory,
         selectedAccount,
         selectedType,
+        viewMode,
+        calendarMonth,
     ],
     () => {
         clearTimeout(filterTimer);
@@ -165,6 +190,86 @@ const groupedTransactions = computed(() => {
             new Date(b.transactions[0].date) - new Date(a.transactions[0].date),
     );
 });
+
+const calendarYear = computed(() => Number(calendarMonth.value.slice(0, 4)));
+const calendarMonthIndex = computed(() => Number(calendarMonth.value.slice(5, 7)) - 1);
+const calendarDays = computed(() => {
+    const first = new Date(calendarYear.value, calendarMonthIndex.value, 1);
+    const daysInMonth = new Date(calendarYear.value, calendarMonthIndex.value + 1, 0).getDate();
+    const offset = (first.getDay() + 6) % 7;
+    const cells = Array.from({ length: offset }, (_, index) => ({ key: `blank-${index}`, day: null }));
+    for (let day = 1; day <= daysInMonth; day++) {
+        const date = `${calendarMonth.value}-${String(day).padStart(2, "0")}`;
+        const dayTransactions = transactions.value.filter((tx) => tx.date === date);
+        const expense = dayTransactions
+            .filter((tx) => tx.type === "expense")
+            .reduce((total, tx) => addDecimal(total, tx.amount || "0"), "0");
+        cells.push({
+            key: date,
+            day,
+            date,
+            expense,
+            hasIncome: dayTransactions.some((tx) => tx.type === "income"),
+            transactions: dayTransactions,
+        });
+    }
+    while (cells.length % 7) cells.push({ key: `blank-${cells.length}`, day: null });
+    return cells;
+});
+
+const calendarDayMap = computed(() => new Map(calendarDays.value.filter((cell) => cell.day).map((cell) => [cell.date, cell])));
+const monthlyExpense = computed(() => calendarDays.value
+    .filter((cell) => cell.day)
+    .reduce((total, cell) => addDecimal(total, cell.expense || "0"), "0"));
+const maxDailyExpense = computed(() => Math.max(0, ...calendarDays.value.map((cell) => Number(cell.expense || 0))));
+const calendarScopeDays = computed(() => {
+    const daysInMonth = new Date(calendarYear.value, calendarMonthIndex.value + 1, 0).getDate();
+    const now = new Date();
+    if (calendarYear.value === now.getFullYear() && calendarMonthIndex.value === now.getMonth()) return now.getDate();
+    return calendarMonth.value < localMonth(now) ? daysInMonth : 0;
+});
+const daysWithoutExpenses = computed(() => {
+    if (!calendarScopeDays.value) return 0;
+    return calendarDays.value.filter((cell) => cell.day && cell.day <= calendarScopeDays.value && Number(cell.expense || 0) === 0).length;
+});
+const averageDailyExpense = computed(() => calendarScopeDays.value
+    ? formatRupiah((Number(monthlyExpense.value) / calendarScopeDays.value).toFixed(0), 0)
+    : formatRupiah(0, 0));
+const selectedDay = computed(() => calendarDayMap.value.get(selectedCalendarDate.value));
+const selectedDayTransactions = computed(() => selectedDay.value?.transactions || []);
+const calendarMonthLabel = computed(() => new Date(calendarYear.value, calendarMonthIndex.value, 1)
+    .toLocaleDateString("id-ID", { month: "long", year: "numeric" }));
+
+function shiftCalendarMonth(amount) {
+    const next = new Date(calendarYear.value, calendarMonthIndex.value + amount, 1);
+    calendarMonth.value = localMonth(next);
+    selectedCalendarDate.value = calendarMonth.value === localMonth()
+        ? localDate()
+        : `${calendarMonth.value}-01`;
+}
+
+function selectCalendarDate(date) {
+    if (date) selectedCalendarDate.value = date;
+}
+
+function calendarCellStyle(cell) {
+    if (!cell.day || !Number(cell.expense)) return {};
+    const intensity = maxDailyExpense.value ? 10 + Math.sqrt(Number(cell.expense) / maxDailyExpense.value) * 26 : 10;
+    return { "--calendar-spend-tint": `color-mix(in srgb, var(--negative) ${intensity}%, var(--surface))` };
+}
+
+function shortRupiah(amount) {
+    const value = Number(amount || 0);
+    if (value >= 1_000_000) return `${(value / 1_000_000).toLocaleString("id-ID", { maximumFractionDigits: 1 })} jt`;
+    if (value >= 1_000) return `${Math.round(value / 1_000).toLocaleString("id-ID")} rb`;
+    return value.toLocaleString("id-ID");
+}
+
+function formatCalendarDate(date) {
+    return new Date(`${date}T00:00:00`).toLocaleDateString("id-ID", {
+        weekday: "long", day: "numeric", month: "long",
+    });
+}
 
 function formatDateLabel(dateStr) {
     const today = localDate();
@@ -261,20 +366,30 @@ async function handleDelete() {
                 <h1
                     class="font-display text-2xl md:text-3xl font-bold text-ink-900"
                 >
-                    Transaksi
+                    Aktivitas
                 </h1>
                 <p class="text-ink-600 text-sm mt-1">
                     Kelola dan pantau semua aktivitas keuangan Anda.
                 </p>
             </div>
 
-            <router-link
-                to="/transactions/create"
-                class="inline-flex items-center justify-center gap-2 px-5 py-3 bg-violet-600 text-white rounded-2xl font-bold text-sm shadow-violet btn-bounce self-start sm:self-auto"
-            >
-                <Plus class="w-4 h-4 stroke-[2.5]" />
-                <span>Tambah Transaksi</span>
-            </router-link>
+            <div class="activity-header-actions">
+                <div class="activity-view-switch" role="group" aria-label="Tampilan riwayat transaksi">
+                    <button type="button" :aria-pressed="viewMode === 'list'" :class="{ 'is-active': viewMode === 'list' }" @click="viewMode = 'list'">
+                        <List class="w-4 h-4" /> <span>Daftar</span>
+                    </button>
+                    <button type="button" :aria-pressed="viewMode === 'calendar'" :class="{ 'is-active': viewMode === 'calendar' }" @click="viewMode = 'calendar'">
+                        <CalendarDays class="w-4 h-4" /> <span>Kalender</span>
+                    </button>
+                </div>
+                <router-link
+                    to="/transactions/create"
+                    class="inline-flex items-center justify-center gap-2 px-5 py-3 bg-violet-600 text-white rounded-2xl font-bold text-sm shadow-violet btn-bounce self-start sm:self-auto"
+                >
+                    <Plus class="w-4 h-4 stroke-[2.5]" />
+                    <span>Tambah Transaksi</span>
+                </router-link>
+            </div>
         </div>
 
         <!-- FILTER & SEARCH BAR -->
@@ -285,7 +400,7 @@ async function handleDelete() {
                 class="chip-scroll-rail flex items-center gap-2 overflow-x-auto no-scrollbar"
             >
                 <!-- Filter Waktu -->
-                <div class="relative shrink-0">
+                <div v-if="viewMode === 'list'" class="relative shrink-0">
                     <select
                         v-model="selectedTime"
                         aria-label="Filter waktu transaksi"
@@ -375,15 +490,86 @@ async function handleDelete() {
                     v-if="searchQuery"
                     @click="searchQuery = ''"
                     class="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400 hover:text-ink-900 cursor-pointer"
-                    aria-label="Tutup dialog"
+                    aria-label="Hapus pencarian"
                 >
                     <X class="w-3.5 h-3.5" />
                 </button>
             </div>
         </div>
 
+        <section v-if="viewMode === 'calendar'" class="activity-calendar" aria-label="Kalender aktivitas transaksi">
+            <div class="activity-calendar-toolbar">
+                <button type="button" class="activity-calendar-nav" aria-label="Bulan sebelumnya" @click="shiftCalendarMonth(-1)">
+                    <ChevronLeft class="w-5 h-5" />
+                </button>
+                <h2>{{ calendarMonthLabel }}</h2>
+                <button type="button" class="activity-calendar-nav" aria-label="Bulan berikutnya" @click="shiftCalendarMonth(1)">
+                    <ChevronRight class="w-5 h-5" />
+                </button>
+            </div>
+
+            <div class="activity-calendar-stats" aria-label="Ringkasan pengeluaran bulanan">
+                <div><span>Pengeluaran</span><strong>{{ formatRupiah(monthlyExpense, 0) }}</strong></div>
+                <div><span>Rata-rata / hari</span><strong>{{ averageDailyExpense }}</strong></div>
+                <div><span>Hari tanpa belanja</span><strong>{{ daysWithoutExpenses }} / {{ calendarScopeDays }}</strong></div>
+            </div>
+
+            <div v-if="isLoading" class="activity-calendar-loading" role="status">
+                <Loader2 class="w-5 h-5 animate-spin" /> Memuat kalender transaksi…
+            </div>
+            <div v-else class="activity-calendar-grid">
+                <div v-for="weekday in ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']" :key="weekday" class="activity-calendar-weekday">{{ weekday }}</div>
+                <template v-for="cell in calendarDays" :key="cell.key">
+                    <div v-if="!cell.day" class="activity-calendar-blank" aria-hidden="true"></div>
+                    <button
+                        v-else
+                        type="button"
+                        class="activity-calendar-day"
+                        :class="{ 'is-selected': selectedCalendarDate === cell.date, 'is-today': cell.date === localDate() }"
+                        :style="calendarCellStyle(cell)"
+                        :aria-label="`${formatCalendarDate(cell.date)}${Number(cell.expense) ? `, pengeluaran ${formatRupiah(cell.expense, 0)}` : ', tanpa pengeluaran'}${cell.hasIncome ? ', ada pemasukan' : ''}`"
+                        :aria-pressed="selectedCalendarDate === cell.date"
+                        @click="selectCalendarDate(cell.date)"
+                    >
+                        <span class="activity-calendar-day-number">{{ cell.day }}</span>
+                        <span v-if="cell.hasIncome" class="activity-calendar-income-dot" aria-hidden="true"></span>
+                        <span v-if="Number(cell.expense)" class="activity-calendar-day-amount">{{ shortRupiah(cell.expense) }}</span>
+                    </button>
+                </template>
+            </div>
+
+            <div class="activity-calendar-legend">
+                <span><i class="activity-calendar-heat-key" aria-hidden="true"></i>Warna lebih pekat menandakan pengeluaran lebih besar</span>
+                <span><i class="activity-calendar-income-dot" aria-hidden="true"></i>Ada pemasukan</span>
+            </div>
+
+            <div class="activity-calendar-detail">
+                <div class="activity-calendar-detail-head">
+                    <div><span class="activity-calendar-kicker">RINGKASAN HARI</span><h3>{{ selectedCalendarDate ? formatCalendarDate(selectedCalendarDate) : 'Pilih tanggal' }}</h3></div>
+                    <strong v-if="selectedDay && Number(selectedDay.expense)" class="activity-calendar-detail-total">- {{ formatRupiah(selectedDay.expense, 0) }}</strong>
+                </div>
+                <p v-if="isLoading" class="activity-calendar-empty" role="status">Memuat aktivitas…</p>
+                <p v-else-if="selectedDayTransactions.length === 0" class="activity-calendar-empty">Belum ada transaksi pada tanggal ini.</p>
+                <router-link
+                    v-for="tx in selectedDayTransactions"
+                    :key="tx.id"
+                    :to="`/transactions/${tx.id}/edit`"
+                    class="activity-calendar-transaction"
+                >
+                    <span class="activity-calendar-transaction-icon" :class="`is-${tx.type}`">
+                        <component :is="tx.type === 'transfer' ? ArrowLeftRight : getCategoryIcon(tx.category?.name)" class="w-4 h-4" />
+                    </span>
+                    <span class="activity-calendar-transaction-copy">
+                        <strong>{{ tx.note || tx.category?.name || (tx.type === 'transfer' ? 'Transfer antar dompet' : 'Transaksi') }}</strong>
+                        <small>{{ tx.type === 'income' ? 'Pemasukan' : tx.type === 'expense' ? 'Pengeluaran' : 'Transfer' }} · {{ tx.category?.name || tx.account?.name || 'Umum' }}</small>
+                    </span>
+                    <strong class="activity-calendar-transaction-amount" :class="`is-${tx.type}`">{{ tx.type === 'income' ? '+' : tx.type === 'expense' ? '−' : '' }} {{ formatRupiah(tx.amount, 0) }}</strong>
+                </router-link>
+            </div>
+        </section>
+
         <!-- LIST TRANSAKSI BERDASARKAN TANGGAL -->
-        <div class="space-y-6">
+        <div v-else class="space-y-6">
             <p
                 v-if="isLoading && transactions.length"
                 role="status"
@@ -650,5 +836,84 @@ async function handleDelete() {
 .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+}
+
+.activity-header-actions { display:flex;align-items:center;gap:10px; }
+.activity-view-switch { display:inline-flex;align-items:center;gap:3px;padding:4px;border:1px solid var(--line);border-radius:14px;background:var(--surface-muted); }
+.activity-view-switch button { display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:0 13px;border:0;border-radius:10px;color:var(--ink-muted);background:transparent;font-size:12px;font-weight:700;transition:color .18s ease,background .18s ease,box-shadow .18s ease; }
+.activity-view-switch button:hover { color:var(--ink); }
+.activity-view-switch button.is-active { color:var(--positive);background:var(--accent-soft);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 20%,transparent); }
+.activity-calendar { overflow:hidden;border:1px solid var(--line);border-radius:22px;background:var(--surface);box-shadow:var(--shadow-glass); }
+.activity-calendar-toolbar { display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid var(--line); }
+.activity-calendar-toolbar h2 { margin:0;text-align:center;text-transform:capitalize;font-size:16px;font-weight:750;letter-spacing:-.02em; }
+.activity-calendar-nav { display:grid;place-items:center;width:44px;height:44px;border:1px solid transparent;border-radius:14px;color:var(--ink-soft);background:transparent;transition:background .18s ease,color .18s ease,border-color .18s ease; }
+.activity-calendar-nav:hover { color:var(--positive);border-color:var(--line);background:var(--surface-muted); }
+.activity-calendar-stats { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:14px 18px;border-bottom:1px solid var(--line); }
+.activity-calendar-stats > div { display:flex;flex-direction:column;gap:5px;min-width:0; }
+.activity-calendar-stats span { color:var(--ink-muted);font-size:11px;font-weight:550; }
+.activity-calendar-stats strong { overflow:hidden;color:var(--ink);font-size:clamp(14px,2vw,20px);font-weight:760;text-overflow:ellipsis;white-space:nowrap;font-variant-numeric:tabular-nums; }
+.activity-calendar-stats > div:first-child strong { color:var(--negative); }
+.activity-calendar-grid { display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;padding:16px 18px 10px; }
+.activity-calendar-weekday { display:grid;place-items:center;min-height:28px;color:var(--ink-muted);font-size:11px;font-weight:700; }
+.activity-calendar-blank { min-height:86px; }
+.activity-calendar-day { position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0;min-height:86px;padding:9px;border:1px solid var(--line);border-radius:13px;color:var(--ink);background:var(--surface-muted);text-align:left;transition:transform .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease; }
+.activity-calendar-day:hover { transform:translateY(-1px);border-color:color-mix(in srgb,var(--accent) 40%,var(--line)); }
+.activity-calendar-day[style*="calendar-spend-tint"] { background:var(--calendar-spend-tint); }
+.activity-calendar-day.is-selected { border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent),0 0 0 2px color-mix(in srgb,var(--accent) 13%,transparent); }
+.activity-calendar-day.is-today .activity-calendar-day-number { color:var(--positive); }
+.activity-calendar-day-number { font-size:12px;font-weight:700;line-height:1.1; }
+.activity-calendar-day-amount { max-width:100%;overflow:hidden;color:var(--ink);font-size:11px;font-weight:750;text-overflow:ellipsis;white-space:nowrap; }
+.activity-calendar-income-dot { display:inline-block;width:7px;height:7px;flex:none;border-radius:50%;background:var(--positive);box-shadow:0 0 8px color-mix(in srgb,var(--positive) 48%,transparent); }
+.activity-calendar-day > .activity-calendar-income-dot { position:absolute;top:11px;right:10px; }
+.activity-calendar-legend { display:flex;flex-wrap:wrap;gap:8px 18px;padding:0 18px 16px;color:var(--ink-muted);font-size:11px; }
+.activity-calendar-legend > span { display:inline-flex;align-items:center;gap:7px; }
+.activity-calendar-heat-key { width:18px;height:10px;border:1px solid color-mix(in srgb,var(--negative) 35%,var(--line));border-radius:4px;background:color-mix(in srgb,var(--negative) 28%,var(--surface)); }
+.activity-calendar-detail { padding:18px;border-top:1px solid var(--line);background:color-mix(in srgb,var(--surface-muted) 75%,transparent); }
+.activity-calendar-detail-head { display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:12px; }
+.activity-calendar-kicker { color:var(--ink-muted);font-size:10px;font-weight:750;letter-spacing:.12em; }
+.activity-calendar-detail-head h3 { margin:4px 0 0;text-transform:capitalize;font-size:17px;font-weight:750; }
+.activity-calendar-detail-total { color:var(--negative);font-size:13px;white-space:nowrap; }
+.activity-calendar-empty { margin:0;padding:18px 12px;border:1px dashed var(--line);border-radius:14px;color:var(--ink-muted);font-size:13px;text-align:center; }
+.activity-calendar-transaction { display:flex;align-items:center;gap:11px;padding:11px 2px;border-top:1px solid var(--line);color:var(--ink);text-decoration:none; }
+.activity-calendar-transaction:first-of-type { border-top:0; }
+.activity-calendar-transaction-icon { display:grid;place-items:center;width:36px;height:36px;flex:none;border-radius:12px;color:var(--ink-soft);background:var(--surface-muted); }
+.activity-calendar-transaction-icon.is-expense { color:var(--negative);background:var(--negative-soft); }
+.activity-calendar-transaction-icon.is-income { color:var(--positive);background:var(--positive-soft); }
+.activity-calendar-transaction-icon.is-transfer { color:var(--cyan);background:color-mix(in srgb,var(--cyan) 12%,transparent); }
+.activity-calendar-transaction-copy { display:flex;flex:1;flex-direction:column;gap:3px;min-width:0; }
+.activity-calendar-transaction-copy strong { overflow:hidden;font-size:12px;text-overflow:ellipsis;white-space:nowrap; }
+.activity-calendar-transaction-copy small { color:var(--ink-muted);font-size:11px; }
+.activity-calendar-transaction-amount { flex:none;font-size:12px;white-space:nowrap; }
+.activity-calendar-transaction-amount.is-expense { color:var(--negative); }
+.activity-calendar-transaction-amount.is-income { color:var(--positive); }
+.activity-calendar-transaction-amount.is-transfer { color:var(--cyan); }
+.activity-calendar-loading { display:flex;align-items:center;justify-content:center;gap:9px;min-height:220px;color:var(--ink-muted);font-size:13px; }
+
+@media (max-width: 640px) {
+    .activity-header-actions { width:100%;align-items:stretch;flex-direction:column-reverse; }
+    .activity-header-actions > a { align-self:stretch!important; }
+    .activity-view-switch { display:grid;grid-template-columns:1fr 1fr;width:100%; }
+    .activity-view-switch button { min-height:44px; }
+    .activity-calendar { border-radius:18px; }
+    .activity-calendar-toolbar { grid-template-columns:40px minmax(0,1fr) 40px;gap:8px;padding:12px; }
+    .activity-calendar-toolbar h2 { font-size:15px; }
+    .activity-calendar-nav { width:40px;height:40px; }
+    .activity-calendar-stats { gap:8px;padding:12px; }
+    .activity-calendar-stats span { font-size:10px; }
+    .activity-calendar-stats strong { font-size:14px; }
+    .activity-calendar-grid { gap:4px;padding:12px 10px 8px; }
+    .activity-calendar-weekday { min-height:24px;font-size:10px; }
+    .activity-calendar-blank { min-height:60px; }
+    .activity-calendar-day { min-height:60px;padding:7px 6px;border-radius:10px; }
+    .activity-calendar-day-number { font-size:11px; }
+    .activity-calendar-day-amount { font-size:9px; }
+    .activity-calendar-day > .activity-calendar-income-dot { top:8px;right:7px;width:6px;height:6px; }
+    .activity-calendar-legend { gap:7px 12px;padding:0 12px 12px;font-size:10px; }
+    .activity-calendar-detail { padding:14px 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .activity-view-switch button,.activity-calendar-nav,.activity-calendar-day { transition:none; }
+    .activity-calendar-day:hover { transform:none; }
 }
 </style>
