@@ -20,16 +20,12 @@ const notificationStore = useNotificationStore();
             <div
                 v-for="toast in notificationStore.notifications"
                 :key="toast.id"
-                class="pointer-events-auto p-4 rounded-md shadow-float border flex items-start justify-between gap-3 text-xs md:text-sm"
+                class="toast-card pointer-events-auto p-4 rounded-2xl border flex items-start justify-between gap-3 text-xs md:text-sm"
                 :class="{
-                    'bg-income-100 border-income-600/30 text-income-600':
-                        toast.type === 'success',
-                    'bg-expense-100 border-expense-600/30 text-expense-600':
-                        toast.type === 'error',
-                    'bg-amber-100 border-amber-600/30 text-amber-600':
-                        toast.type === 'warning',
-                    'bg-indigo-100 border-indigo-600/30 text-indigo-600':
-                        toast.type === 'info',
+                    'is-success': toast.type === 'success',
+                    'is-error': toast.type === 'error',
+                    'is-warning': toast.type === 'warning',
+                    'is-info': toast.type === 'info',
                 }"
             >
                 <div class="flex items-center gap-2">
@@ -63,8 +59,13 @@ const notificationStore = useNotificationStore();
 }
 .toast-enter-active,
 .toast-leave-active {
-    transition: opacity 180ms ease, transform 180ms ease;
+    transition: opacity 220ms var(--ease-premium), transform 220ms var(--ease-premium);
 }
+.toast-card { color:var(--ink-soft);background:var(--surface-raised);border-color:var(--line-strong);box-shadow:var(--shadow-card);backdrop-filter:blur(16px) saturate(1.25);-webkit-backdrop-filter:blur(16px) saturate(1.25); }
+.toast-card.is-success { color:var(--positive);border-color:color-mix(in srgb,var(--positive) 28%,var(--line)); }
+.toast-card.is-error { color:var(--negative);border-color:color-mix(in srgb,var(--negative) 28%,var(--line)); }
+.toast-card.is-warning { color:var(--warning);border-color:color-mix(in srgb,var(--warning) 28%,var(--line)); }
+.toast-card.is-info { color:var(--cyan);border-color:color-mix(in srgb,var(--cyan) 28%,var(--line)); }
 .toast-icon { width: 18px; height: 18px; flex: none; }
 .toast-close { display: grid; place-items: center; width: 36px; height: 36px; flex: none; border: 0; border-radius: 7px; background: transparent; color: inherit; }
 .toast-close svg { width: 16px; height: 16px; }

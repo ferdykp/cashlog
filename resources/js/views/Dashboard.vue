@@ -27,6 +27,7 @@ import {
     Tag,
     Target,
     Wallet,
+    Building2,
     Flame,
     Plane,
     Laptop,
@@ -40,7 +41,10 @@ import {
     ArrowDownLeft,
     ScanLine,
     Send,
+    ChevronLeft,
     ChevronRight,
+    ChevronDown,
+    X,
     Sparkles,
     UsersRound,
     MessageCircle,
@@ -53,7 +57,7 @@ const accountStore = useAccountStore();
 const authStore = useAuthStore();
 const budgetStore = useBudgetStore();
 
-const { cashAvailableTotal, savingsCashTotal } = storeToRefs(accountStore);
+const { accounts, cashAvailableTotal, savingsCashTotal } = storeToRefs(accountStore);
 const {
     budgets,
     isLoading: isLoadingBudget,
@@ -63,6 +67,7 @@ const {
 } = storeToRefs(budgetStore);
 
 const recentTransactions = ref([]);
+const showAllApps = ref(false);
 const transactionsLoaded = ref(false);
 const isLoadingTransactions = ref(true);
 const netWorth = ref({
@@ -77,6 +82,19 @@ const goalSummaryError = ref(false);
 const balanceVisible = ref(
     localStorage.getItem("ledger:balance-visible") !== "false",
 );
+const activeWalletIndex = ref(0);
+const walletPointerStart = ref(null);
+const walletCards = computed(() => {
+    const visibleAccounts = accounts.value.filter(
+        (account) => !account.is_archived && ["cash", "bank", "ewallet"].includes(account.type),
+    );
+    if (!visibleAccounts.length) return [];
+    const start = activeWalletIndex.value % visibleAccounts.length;
+    return visibleAccounts.map((_, offset) => {
+        const accountIndex = (start + offset) % visibleAccounts.length;
+        return { ...visibleAccounts[accountIndex], accountIndex, depth: offset };
+    });
+});
 function toggleBalanceVisibility() {
     balanceVisible.value = !balanceVisible.value;
     localStorage.setItem(
@@ -86,6 +104,38 @@ function toggleBalanceVisibility() {
 }
 function privateMoney(value) {
     return balanceVisible.value ? formatRupiah(value) : "Rp ••••••••";
+}
+function getWalletIcon(type) {
+    if (type === "bank") return Building2;
+    if (type === "ewallet") return Smartphone;
+    return Wallet;
+}
+function getWalletTypeLabel(type) {
+    if (type === "bank") return "Rekening bank";
+    if (type === "ewallet") return "E-wallet";
+    return "Uang tunai";
+}
+function showWallet(index) {
+    const count = walletCards.value.length;
+    if (count < 2) return;
+    activeWalletIndex.value = (index + count) % count;
+}
+function moveWallet(direction) {
+    showWallet(activeWalletIndex.value + direction);
+}
+function startWalletSwipe(event) {
+    if (walletCards.value.length < 2) return;
+    walletPointerStart.value = event.clientX;
+}
+function endWalletSwipe(event) {
+    if (walletPointerStart.value === null) return;
+    const distance = event.clientX - walletPointerStart.value;
+    walletPointerStart.value = null;
+    if (Math.abs(distance) < 42) return;
+    moveWallet(distance < 0 ? 1 : -1);
+}
+function cancelWalletSwipe() {
+    walletPointerStart.value = null;
 }
 function privateTxMoney(tx) {
     if (!balanceVisible.value) return "Rp ••••••";
@@ -434,9 +484,73 @@ async function fetchCashFlowData() {
 
         <section class="home-overview" aria-label="Ringkasan keuangan hari ini">
             <div class="home-cash">
-                <div class="home-cash-head"><span>Kas tersedia</span><button class="home-visibility" @click="toggleBalanceVisibility" :aria-label="balanceVisible ? 'Sembunyikan nominal' : 'Tampilkan nominal'"><Eye v-if="balanceVisible"/><EyeOff v-else/></button></div>
-                <div class="home-balance"><AnimatedMoney :value="cashAvailableTotal" :masked="!balanceVisible" /></div>
-                <div class="home-cash-meta"><span>Di akun operasional</span><router-link to="/accounts">Lihat akun <ChevronRight /></router-link></div>
+                <div class="home-cash-head"><span>Dompetmu</span><button class="home-visibility" @click="toggleBalanceVisibility" :aria-label="balanceVisible ? 'Sembunyikan nominal' : 'Tampilkan nominal'"><Eye v-if="balanceVisible"/><EyeOff v-else/></button></div>
+
+                <div
+                    v-if="accountStore.isLoading"
+                    class="home-wallet-loading"
+                    role="status"
+                >Memuat dompet…</div>
+                <div
+                    v-else-if="walletCards.length"
+                    class="home-wallet-deck"
+                    :class="{ 'has-multiple-wallets': walletCards.length > 1 }"
+                    role="group"
+                    aria-label="Kartu saldo dompet. Geser untuk melihat dompet lain."
+                    @pointerdown="startWalletSwipe"
+                    @pointerup="endWalletSwipe"
+                    @pointercancel="cancelWalletSwipe"
+                >
+                    <div class="home-wallet-stack">
+                        <article
+                            v-for="wallet in walletCards"
+                            :key="wallet.id"
+                            class="home-wallet-card wallet-card"
+                            :class="{ 'is-front': wallet.depth === 0, 'is-hidden': wallet.depth > 2 }"
+                            :style="{ '--wallet-accent': wallet.color || 'var(--accent)', '--wallet-depth': Math.min(wallet.depth, 3), '--deck-offset': `${Math.min(wallet.depth, 3) * 10}px`, '--deck-zoffset': `${Math.min(wallet.depth, 3) * -8}px`, '--deck-scale': String(1 - Math.min(wallet.depth, 3) * 0.035), '--deck-z': String(4 - Math.min(wallet.depth, 3)) }"
+                            :aria-hidden="wallet.depth !== 0"
+                        >
+                            <span class="home-wallet-card-edge" :style="{ backgroundColor: wallet.color || 'var(--accent)' }"></span>
+                            <div class="home-wallet-card-top">
+                                <span class="home-wallet-emblem" :style="{ color: wallet.color || 'var(--accent)' }">
+                                    <component :is="getWalletIcon(wallet.type)" aria-hidden="true" />
+                                </span>
+                                <span class="home-wallet-type">{{ getWalletTypeLabel(wallet.type) }}</span>
+                                <span class="home-wallet-card-count">{{ String(wallet.accountIndex + 1).padStart(2, '0') }} / {{ String(walletCards.length).padStart(2, '0') }}</span>
+                            </div>
+                            <div class="home-wallet-card-balance">
+                                <span>Saldo {{ wallet.purpose === 'savings' ? 'tabungan' : 'tersedia' }}</span>
+                                <strong><AnimatedMoney :value="wallet.balance || '0'" :masked="!balanceVisible" /></strong>
+                            </div>
+                            <div class="home-wallet-card-bottom">
+                                <b>{{ wallet.name }}</b>
+                                <span>{{ wallet.purpose === 'savings' ? 'Tabungan' : 'Operasional' }}</span>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+                <div v-else class="home-wallet-empty">Tambahkan dompet untuk melihat saldo di sini.</div>
+
+                <div v-if="walletCards.length" class="home-wallet-controls" aria-label="Pilih dompet">
+                    <button type="button" class="home-wallet-step" :disabled="walletCards.length < 2" aria-label="Dompet sebelumnya" @click="moveWallet(-1)"><ChevronLeft /></button>
+                    <div class="home-wallet-dots">
+                        <button
+                            v-for="wallet in walletCards"
+                            :key="wallet.id"
+                            type="button"
+                            :class="{ 'is-active': wallet.depth === 0 }"
+                            :aria-label="`Tampilkan saldo ${wallet.name}`"
+                            :aria-pressed="wallet.depth === 0"
+                            @click="showWallet(wallet.accountIndex)"
+                        ></button>
+                    </div>
+                    <button type="button" class="home-wallet-step" :disabled="walletCards.length < 2" aria-label="Dompet berikutnya" @click="moveWallet(1)"><ChevronRight /></button>
+                </div>
+
+                <div class="home-cash-total">
+                    <div><span>Kas tersedia</span><strong><AnimatedMoney :value="cashAvailableTotal" :masked="!balanceVisible" /></strong></div>
+                    <router-link to="/accounts">Semua akun <ChevronRight /></router-link>
+                </div>
                 <div class="home-action-row">
                     <router-link to="/transactions/create?type=expense"><ArrowUpRight /><span>Keluar</span></router-link>
                     <router-link to="/transactions/create?type=income"><ArrowDownLeft /><span>Masuk</span></router-link>
@@ -477,15 +591,37 @@ async function fetchCashFlowData() {
         </section>
 
         <section class="home-apps" aria-labelledby="home-apps-title">
-            <div class="home-section-head"><div><span class="home-overline">AKSES CEPAT</span><h2 id="home-apps-title">Aplikasi lainnya</h2></div></div>
+            <div class="home-section-head"><div><span class="home-overline">AKSES CEPAT</span><h2 id="home-apps-title">Aplikasi pilihan</h2></div></div>
             <div class="home-app-grid">
-                <router-link v-for="shortcut in dashboardShortcuts" :key="shortcut.path" :to="shortcut.path" class="home-app-tile">
+                <router-link v-for="shortcut in dashboardShortcuts.slice(0, 4)" :key="shortcut.path" :to="shortcut.path" class="home-app-tile">
                     <span class="home-app-icon"><component :is="shortcut.icon" aria-hidden="true" /></span>
                     <span class="home-app-copy"><b>{{ shortcut.label }}</b><small>{{ shortcut.detail }}</small></span>
                     <ChevronRight class="home-app-arrow" aria-hidden="true" />
                 </router-link>
             </div>
+            <button type="button" class="home-apps-more" @click="showAllApps = true" aria-haspopup="dialog">
+                <span>Tampilkan semua menu</span><ChevronDown aria-hidden="true" />
+            </button>
         </section>
+
+        <Transition name="mobile-sheet">
+            <div v-if="showAllApps" v-dialog="() => (showAllApps = false)" class="dialog-backdrop menu-backdrop home-apps-backdrop" @click.self="showAllApps = false">
+                <section class="menu-panel home-apps-sheet" role="dialog" aria-modal="true" aria-labelledby="all-apps-title">
+                    <div class="sheet-handle" aria-hidden="true"></div>
+                    <div class="home-apps-sheet-head">
+                        <div><span class="home-overline">CASHLOG</span><h2 id="all-apps-title">Semua menu</h2><p>Pilih fitur yang ingin kamu buka.</p></div>
+                        <button type="button" class="icon-button" @click="showAllApps = false" aria-label="Tutup semua menu"><X class="w-5 h-5" /></button>
+                    </div>
+                    <div class="home-app-grid home-apps-sheet-grid">
+                        <router-link v-for="shortcut in dashboardShortcuts" :key="shortcut.path" :to="shortcut.path" class="home-app-tile">
+                            <span class="home-app-icon"><component :is="shortcut.icon" aria-hidden="true" /></span>
+                            <span class="home-app-copy"><b>{{ shortcut.label }}</b><small>{{ shortcut.detail }}</small></span>
+                            <ChevronRight class="home-app-arrow" aria-hidden="true" />
+                        </router-link>
+                    </div>
+                </section>
+            </div>
+        </Transition>
 
         <section class="home-cashflow-section">
             <article ref="chartPanel" class="home-cashflow">
