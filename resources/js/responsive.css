@@ -185,8 +185,10 @@ input[type="radio"] {
 
     .action-controls > button {
         display: grid;
-        width: 36px;
-        height: 36px;
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        min-height: 44px;
         flex: none;
         place-items: center;
         padding: 0;
@@ -199,7 +201,7 @@ input[type="radio"] {
 
     .transaction-category-manage-toggle {
         display: inline-flex;
-        min-height: 36px;
+        min-height: 44px;
         align-items: center;
     }
 
@@ -214,8 +216,8 @@ input[type="radio"] {
         .category-remove-action {
         top: 0;
         right: 0;
-        width: 24px;
-        height: 24px;
+        width: 44px;
+        height: 44px;
         visibility: visible;
         opacity: 1 !important;
         pointer-events: auto;

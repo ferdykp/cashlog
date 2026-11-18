@@ -303,10 +303,14 @@ onUnmounted(() => {
         <div
             v-if="loading && !report"
             role="status"
-            class="surface-card p-12 flex items-center justify-center gap-3 text-ink-500"
+            class="report-loading-grid"
+            aria-label="Memuat rekap keuangan"
         >
-            <LoaderCircle class="w-5 h-5 animate-spin" />Menghitung rekap
-            pengeluaran…
+            <div class="report-loading-stats">
+                <div v-for="i in 3" :key="i" class="surface-card p-5 space-y-3"><i class="skeleton-block skeleton-line" style="width:46%;height:8px"/><i class="skeleton-block skeleton-line" style="width:72%;height:22px"/></div>
+            </div>
+            <div class="surface-card report-loading-chart"><i v-for="i in 8" :key="i" class="skeleton-block" :style="{height:`${25 + ((i * 19) % 65)}%`}"/></div>
+            <span class="sr-only">Menghitung rekap pengeluaran…</span>
         </div>
         <div
             v-else-if="error && !report"

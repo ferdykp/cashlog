@@ -760,9 +760,13 @@ watch(
 
         <section
             v-if="loading && !hasLoadedData"
-            class="surface-card p-8 text-center text-sm text-ink-500"
+            class="shared-workspace-loading"
+            role="status"
+            aria-label="Memuat ruang bersama"
         >
-            Memuat ruang bersama…
+            <div class="grid gap-3 sm:grid-cols-3"><article v-for="i in 3" :key="i" class="surface-card p-5 space-y-3"><i class="skeleton-block skeleton-line" style="width:48%;height:9px"/><i class="skeleton-block skeleton-line" style="width:72%;height:22px"/></article></div>
+            <div class="surface-card p-6 space-y-4"><i class="skeleton-block skeleton-line" style="width:36%;height:16px"/><div v-for="i in 3" :key="i" class="skeleton-row"><i class="skeleton-block skeleton-dot"/><span class="skeleton-copy"><i class="skeleton-block skeleton-line" style="width:52%"/><i class="skeleton-block skeleton-line" style="width:36%;height:8px"/></span></div></div>
+            <span class="sr-only">Memuat ruang bersama…</span>
         </section>
         <section v-else-if="error && !hasLoadedData" class="surface-card p-6">
             <p class="text-sm text-expense-600">{{ error }}</p>

@@ -1363,9 +1363,13 @@ onMounted(async () => {
 
         <div
             v-if="loading && !hasLoadedData"
-            class="surface-card p-8 text-center text-sm text-ink-500"
+            class="financial-workspace-loading"
+            role="status"
+            aria-label="Memuat perencanaan keuangan"
         >
-            Memuat perencanaan keuangan…
+            <div class="grid gap-3 sm:grid-cols-3"><article v-for="i in 3" :key="i" class="surface-card p-5 space-y-3"><i class="skeleton-block skeleton-line" style="width:48%;height:9px"/><i class="skeleton-block skeleton-line" style="width:72%;height:22px"/></article></div>
+            <div class="surface-card p-6 space-y-5"><i class="skeleton-block skeleton-line" style="width:34%;height:16px"/><div v-for="i in 4" :key="i" class="skeleton-row"><i class="skeleton-block skeleton-dot"/><span class="skeleton-copy"><i class="skeleton-block skeleton-line" style="width:52%"/><i class="skeleton-block skeleton-line" style="width:35%;height:8px"/></span><i class="skeleton-block skeleton-line" style="width:62px"/></div></div>
+            <span class="sr-only">Memuat perencanaan keuangan…</span>
         </div>
         <div v-else-if="error && !hasLoadedData" class="surface-card p-6">
             <p class="text-sm text-expense-600">{{ error }}</p>

@@ -509,13 +509,14 @@ async function handleDelete() {
             </div>
 
             <div class="activity-calendar-stats" aria-label="Ringkasan pengeluaran bulanan">
-                <div><span>Pengeluaran</span><strong>{{ formatRupiah(monthlyExpense, 0) }}</strong></div>
-                <div><span>Rata-rata / hari</span><strong>{{ averageDailyExpense }}</strong></div>
-                <div><span>Hari tanpa belanja</span><strong>{{ daysWithoutExpenses }} / {{ calendarScopeDays }}</strong></div>
+                <div><span>Pengeluaran</span><i v-if="isLoading" class="skeleton-block skeleton-line" role="status" aria-label="Memuat ringkasan kalender"/><strong v-else>{{ formatRupiah(monthlyExpense, 0) }}</strong></div>
+                <div><span>Rata-rata / hari</span><i v-if="isLoading" class="skeleton-block skeleton-line" aria-hidden="true"/><strong v-else>{{ averageDailyExpense }}</strong></div>
+                <div><span>Hari tanpa belanja</span><i v-if="isLoading" class="skeleton-block skeleton-line" aria-hidden="true"/><strong v-else>{{ daysWithoutExpenses }} / {{ calendarScopeDays }}</strong></div>
             </div>
 
-            <div v-if="isLoading" class="activity-calendar-loading" role="status">
-                <Loader2 class="w-5 h-5 animate-spin" /> Memuat kalender transaksi…
+            <div v-if="isLoading" class="activity-calendar-grid" role="status" aria-label="Memuat kalender transaksi">
+                <div v-for="weekday in ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']" :key="weekday" class="activity-calendar-weekday">{{ weekday }}</div>
+                <i v-for="i in 35" :key="i" class="activity-calendar-skeleton skeleton-block" :style="{ opacity: String(.45 + (i % 4) * .12) }" />
             </div>
             <div v-else class="activity-calendar-grid">
                 <div v-for="weekday in ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']" :key="weekday" class="activity-calendar-weekday">{{ weekday }}</div>
@@ -548,7 +549,9 @@ async function handleDelete() {
                     <div><span class="activity-calendar-kicker">RINGKASAN HARI</span><h3>{{ selectedCalendarDate ? formatCalendarDate(selectedCalendarDate) : 'Pilih tanggal' }}</h3></div>
                     <strong v-if="selectedDay && Number(selectedDay.expense)" class="activity-calendar-detail-total">- {{ formatRupiah(selectedDay.expense, 0) }}</strong>
                 </div>
-                <p v-if="isLoading" class="activity-calendar-empty" role="status">Memuat aktivitas…</p>
+                <div v-if="isLoading" class="activity-calendar-detail-skeleton" role="status" aria-label="Memuat aktivitas tanggal">
+                    <i v-for="i in 3" :key="i" class="skeleton-row"><span class="skeleton-block skeleton-dot"/><span class="skeleton-copy"><i class="skeleton-block skeleton-line" style="width:62%"/><i class="skeleton-block skeleton-line" style="width:42%;height:8px"/></span></i>
+                </div>
                 <p v-else-if="selectedDayTransactions.length === 0" class="activity-calendar-empty">Belum ada transaksi pada tanggal ini.</p>
                 <router-link
                     v-for="tx in selectedDayTransactions"
@@ -579,12 +582,8 @@ async function handleDelete() {
             </p>
             <template v-if="isLoading && transactions.length === 0">
                 <div v-for="i in 3" :key="i" class="space-y-3">
-                    <div
-                        class="w-32 h-4 bg-base-100 rounded animate-pulse"
-                    ></div>
-                    <div
-                        class="h-16 bg-paper-0 border border-line-200 rounded-2xl animate-pulse"
-                    ></div>
+                    <div class="skeleton-block skeleton-line" style="width:128px;height:14px" />
+                    <div class="surface-card px-4"><div v-for="row in 3" :key="row" class="skeleton-row"><i class="skeleton-block skeleton-dot"/><span class="skeleton-copy"><i class="skeleton-block skeleton-line" style="width:55%"/><i class="skeleton-block skeleton-line" style="width:37%;height:8px"/></span><i class="skeleton-block skeleton-line" style="width:66px"/></div></div>
                 </div>
             </template>
 
@@ -899,14 +898,14 @@ async function handleDelete() {
     .activity-calendar-toolbar h2 { font-size:15px; }
     .activity-calendar-nav { width:40px;height:40px; }
     .activity-calendar-stats { gap:8px;padding:12px; }
-    .activity-calendar-stats span { font-size:10px; }
+    .activity-calendar-stats span { font-size:11px; }
     .activity-calendar-stats strong { font-size:14px; }
     .activity-calendar-grid { gap:4px;padding:12px 10px 8px; }
     .activity-calendar-weekday { min-height:24px;font-size:10px; }
     .activity-calendar-blank { min-height:60px; }
     .activity-calendar-day { min-height:60px;padding:7px 6px;border-radius:10px; }
     .activity-calendar-day-number { font-size:11px; }
-    .activity-calendar-day-amount { font-size:9px; }
+    .activity-calendar-day-amount { font-size:10px; }
     .activity-calendar-day > .activity-calendar-income-dot { top:8px;right:7px;width:6px;height:6px; }
     .activity-calendar-legend { gap:7px 12px;padding:0 12px 12px;font-size:10px; }
     .activity-calendar-detail { padding:14px 12px; }

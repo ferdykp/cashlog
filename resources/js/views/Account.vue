@@ -186,7 +186,7 @@ async function handleDelete() {
                 <div
                     v-for="i in 3"
                     :key="i"
-                    class="h-44 bg-paper-0 border border-line-200 rounded-3xl p-6 space-y-4 animate-pulse"
+                    class="h-44 bg-paper-0 border border-line-200 rounded-3xl p-6 space-y-4 skeleton-surface"
                 >
                     <div class="flex items-center justify-between">
                         <div class="w-10 h-10 rounded-2xl bg-base-100"></div>

@@ -287,9 +287,17 @@ onUnmounted(() => {
         <!-- Loading -->
         <div
             v-if="pageLoading"
-            class="flex min-h-72 items-center justify-center rounded-3xl border border-line-200 bg-paper-0"
+            class="whatsapp-loading-grid"
+            role="status"
+            aria-label="Memuat integrasi WhatsApp"
         >
-            <LoaderCircle :size="26" class="animate-spin text-ink-500" />
+            <section class="surface-card whatsapp-loading-main">
+                <div class="flex items-center gap-3 mb-7"><i class="skeleton-block skeleton-dot"/><div class="skeleton-copy"><i class="skeleton-block skeleton-line" style="width:180px;height:16px"/><i class="skeleton-block skeleton-line" style="width:74%;height:9px"/></div></div>
+                <i class="skeleton-block skeleton-line mb-4" style="width:94%;height:12px"/><i class="skeleton-block skeleton-line mb-8" style="width:70%;height:12px"/>
+                <i class="skeleton-block rounded-xl" style="display:block;width:100%;height:52px;margin-bottom:14px"/><i class="skeleton-block rounded-xl" style="display:block;width:100%;height:50px"/>
+            </section>
+            <aside class="surface-card whatsapp-loading-aside"><i class="skeleton-block skeleton-line mb-5" style="width:58%;height:14px"/><i v-for="i in 4" :key="i" class="skeleton-block skeleton-line mb-4" :style="{width:`${88 - i * 8}%`,height:'9px'}"/></aside>
+            <span class="sr-only">Memuat integrasi WhatsApp…</span>
         </div>
 
         <div

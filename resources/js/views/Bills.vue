@@ -53,13 +53,13 @@ const {
         <div class="grid sm:grid-cols-3 gap-3">
             <div class="surface-card p-5">
                 <span class="field-label">Tagihan aktif</span
-                ><strong class="text-2xl tracking-[-.04em]">{{
+                ><strong v-if="loading && !bills.length" class="skeleton-block skeleton-line metric-skeleton" role="status" aria-label="Memuat ringkasan tagihan"/><strong v-else class="text-2xl tracking-[-.04em]">{{
                     summary.active_count
                 }}</strong>
             </div>
             <div class="surface-card p-5 sm:col-span-2">
                 <span class="field-label">Estimasi biaya rutin / bulan</span
-                ><strong class="text-2xl tracking-[-.04em] font-mono-money">{{
+                ><strong v-if="loading && !bills.length" class="skeleton-block skeleton-line metric-skeleton" aria-hidden="true"/><strong v-else class="text-2xl tracking-[-.04em] font-mono-money">{{
                     formatRupiah(summary.monthly_total)
                 }}</strong>
             </div>
@@ -107,6 +107,13 @@ const {
                     >Tambahkan internet, listrik, subscription, cicilan, atau
                     tagihan lainnya.</span
                 >
+            </div>
+            <div v-if="loading && !bills.length" class="px-5 py-3" role="status" aria-label="Memuat daftar tagihan">
+                <div v-for="i in 4" :key="i" class="skeleton-row">
+                    <i class="skeleton-block skeleton-dot" />
+                    <span class="skeleton-copy"><i class="skeleton-block skeleton-line" style="width:46%"/><i class="skeleton-block skeleton-line" style="width:72%;height:8px"/></span>
+                    <i class="skeleton-block skeleton-line" style="width:74px"/>
+                </div>
             </div>
             <div class="divide-y divide-line-200">
                 <div

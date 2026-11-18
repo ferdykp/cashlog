@@ -251,10 +251,10 @@ async function handleDeleteGoal() {
         <template v-if="isLoading">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div
-                    class="lg:col-span-2 h-64 bg-paper-0 border border-line-200 rounded-3xl animate-pulse"
+                    class="lg:col-span-2 h-64 bg-paper-0 border border-line-200 rounded-3xl skeleton-surface"
                 ></div>
                 <div
-                    class="h-64 bg-paper-0 border border-line-200 rounded-3xl animate-pulse"
+                    class="h-64 bg-paper-0 border border-line-200 rounded-3xl skeleton-surface"
                 ></div>
             </div>
         </template>

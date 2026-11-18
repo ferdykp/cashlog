@@ -84,6 +84,7 @@ const balanceVisible = ref(
 const activeWalletIndex = ref(0);
 const walletDrag = ref(null);
 const walletDragOffset = ref(0);
+const lastWalletSwipeAt = ref(0);
 const walletCards = computed(() => {
     const visibleAccounts = accounts.value.filter(
         (account) => !account.is_archived && ["cash", "bank", "ewallet"].includes(account.type),
@@ -139,12 +140,19 @@ function endWalletSwipe(event) {
     if (walletDrag.value?.pointerId !== event.pointerId) return;
     const distance = event.clientX - walletDrag.value.startX;
     walletDrag.value = null;
-    if (Math.abs(distance) >= 48) moveWallet(distance < 0 ? 1 : -1);
+    if (Math.abs(distance) >= 48) {
+        lastWalletSwipeAt.value = Date.now();
+        moveWallet(distance < 0 ? 1 : -1);
+    }
     walletDragOffset.value = 0;
 }
 function cancelWalletSwipe() {
     walletDrag.value = null;
     walletDragOffset.value = 0;
+}
+function handleWalletDeckClick() {
+    if (walletCards.value.length < 2 || Date.now() - lastWalletSwipeAt.value < 350) return;
+    moveWallet(1);
 }
 function privateTxMoney(tx) {
     if (!balanceVisible.value) return "Rp ••••••";
@@ -497,20 +505,34 @@ async function fetchCashFlowData() {
 
                 <div
                     v-if="accountStore.isLoading"
-                    class="home-wallet-loading"
+                    class="home-wallet-loading skeleton-surface"
                     role="status"
-                >Memuat dompet…</div>
+                    aria-label="Memuat dompet"
+                >
+                    <div class="wallet-loading-card">
+                        <div class="flex items-center justify-between"><i class="skeleton-block skeleton-dot"/><i class="skeleton-block skeleton-line" style="width:48px"/></div>
+                        <i class="skeleton-block skeleton-line" style="width:34%;height:8px;margin-top:18px"/>
+                        <i class="skeleton-block skeleton-line" style="width:62%;height:22px;margin-top:9px"/>
+                        <i class="skeleton-block skeleton-line" style="width:100%;height:1px;margin-top:14px"/>
+                        <span class="sr-only">Memuat dompet…</span>
+                    </div>
+                </div>
                 <div
                     v-else-if="walletCards.length"
                     class="home-wallet-deck"
                     :class="{ 'has-multiple-wallets': walletCards.length > 1, 'is-dragging': walletDrag !== null }"
                     role="group"
-                    aria-label="Kartu saldo dompet. Geser untuk melihat dompet lain."
+                    aria-roledescription="kartu dompet"
+                    :aria-label="walletCards.length > 1 ? 'Kartu saldo dompet. Geser atau ketuk untuk melihat dompet lain; gunakan tombol panah saat fokus.' : 'Kartu saldo dompet.'"
+                    :tabindex="walletCards.length > 1 ? 0 : undefined"
                     @pointerdown="startWalletSwipe"
                     @pointermove="moveWalletSwipe"
                     @pointerup="endWalletSwipe"
                     @pointercancel="cancelWalletSwipe"
                     @lostpointercapture="cancelWalletSwipe"
+                    @click="handleWalletDeckClick"
+                    @keydown.left.prevent="moveWallet(-1)"
+                    @keydown.right.prevent="moveWallet(1)"
                 >
                     <div class="home-wallet-stack">
                         <article
@@ -563,7 +585,13 @@ async function fetchCashFlowData() {
 
         <article ref="activityPanel" class="home-activity home-activity-featured" aria-label="Aktivitas terbaru">
             <div class="home-section-head"><div><span class="home-overline">TERBARU</span><h2>Aktivitas</h2></div><router-link to="/transactions" aria-label="Lihat semua aktivitas">Semua <ChevronRight /></router-link></div>
-            <div v-if="isLoadingTransactions" class="home-chart-loading" role="status">Memuat aktivitas…</div>
+            <div v-if="isLoadingTransactions" class="home-tx-list" role="status" aria-label="Memuat aktivitas">
+                <div v-for="i in 4" :key="i" class="skeleton-row">
+                    <span class="skeleton-block skeleton-dot" />
+                    <span class="skeleton-copy"><i class="skeleton-block skeleton-line" style="width:58%"/><i class="skeleton-block skeleton-line" style="width:38%;height:8px"/></span>
+                    <i class="skeleton-block skeleton-line" style="width:68px"/>
+                </div>
+            </div>
             <div v-else-if="recentTransactions.length === 0" class="home-empty roomy">Belum ada transaksi.<router-link to="/transactions/create">Catat yang pertama <ArrowUpRight /></router-link></div>
             <div v-else class="home-tx-list"><div v-for="tx in recentTransactions" :key="tx.id" class="home-tx-row"><span class="home-tx-mark" :class="tx.type"><component :is="getCategoryIcon(tx.category?.name)" /></span><div class="home-tx-info"><b>{{ tx.note || tx.category?.name || "Transaksi" }}</b><small>{{ tx.category?.name || "Umum" }} · {{ tx.date }}</small></div><strong :class="tx.type">{{ privateTxMoney(tx) }}</strong></div></div>
         </article>
@@ -622,7 +650,10 @@ async function fetchCashFlowData() {
             <article ref="chartPanel" class="home-cashflow">
                 <div class="home-section-head"><div><span class="home-overline">ENAM BULAN TERAKHIR</span><h2>Arus kas</h2><p>Pemasukan dan pengeluaran tercatat</p></div><router-link to="/report" aria-label="Buka laporan arus kas"><ArrowUpRight /></router-link></div>
                 <div class="home-chart-legend"><span><i class="income-dot" />Masuk</span><span><i class="expense-dot" />Keluar</span></div>
-                <div v-if="isLoadingCashFlow" class="home-chart-loading" role="status">Memuat arus kas…</div>
+                <div v-if="isLoadingCashFlow" class="home-chart-loading" role="status" aria-label="Memuat arus kas">
+                    <div class="cashflow-skeleton-bars"><i v-for="i in 6" :key="i" class="skeleton-block" :style="{ height: `${24 + i * 11}%` }" /></div>
+                    <div class="cashflow-skeleton-labels"><i v-for="i in 6" :key="i" class="skeleton-block skeleton-line" /></div>
+                </div>
                 <VueApexCharts v-else-if="chartVisible && hasCashFlowData" type="area" height="270" :options="cashFlowChartOptions" :series="cashFlowSeries" />
                 <div v-else-if="!isLoadingCashFlow && !hasCashFlowData" class="home-chart-empty"><span>Arus kas belum terbentuk</span><p>Catat pemasukan atau pengeluaran untuk melihat perubahan dari bulan ke bulan.</p><router-link to="/transactions/create">Catat transaksi <ArrowUpRight /></router-link></div>
                 <ul v-if="hasCashFlowData" class="sr-only" aria-label="Nilai arus kas per bulan"><li v-for="(month, index) in cashFlowMonths" :key="month.monthStr">{{ month.label }}: pemasukan {{ balanceVisible ? formatRupiah(cashFlowIncome[index]) : 'disembunyikan' }}, pengeluaran {{ balanceVisible ? formatRupiah(cashFlowExpense[index]) : 'disembunyikan' }}.</li></ul>
