@@ -244,13 +244,14 @@ button, a { touch-action: manipulation; }
 .home-wallet-deck.has-multiple-wallets { cursor:grab; }
 .home-wallet-deck.has-multiple-wallets:active { cursor:grabbing; }
 .home-wallet-stack { position:absolute;inset:0;transform-style:preserve-3d; }
-.home-wallet-card.wallet-card { position:absolute;top:0;right:0;left:0;z-index:var(--deck-z);display:flex;height:154px;flex-direction:column;justify-content:space-between;overflow:hidden;padding:16px 18px 14px;border:1px solid color-mix(in srgb,var(--wallet-accent) 24%,var(--line));border-radius:22px;opacity:1;pointer-events:none;transform:translate3d(0,var(--deck-offset),var(--deck-zoffset)) scale(var(--deck-scale)) rotateX(.35deg);transform-origin:50% 0;box-shadow:0 2px 0 color-mix(in srgb,var(--wallet-accent) 28%,var(--canvas-raised)),0 10px 20px rgba(0,0,0,.17),0 18px 28px rgba(0,0,0,.1),inset 0 1px 0 rgba(255,255,255,.2);transition:transform 480ms cubic-bezier(.22,.8,.24,1),opacity 360ms ease,filter 360ms ease;will-change:transform,opacity; }
+.home-wallet-card.wallet-card { position:absolute;top:0;right:0;left:0;z-index:var(--deck-z);display:flex;height:154px;flex-direction:column;justify-content:space-between;overflow:hidden;padding:16px 18px 14px;border:1px solid color-mix(in srgb,var(--wallet-accent) 24%,var(--line));border-radius:22px;opacity:1;pointer-events:none;transform:translate3d(var(--deck-drag-x,0px),var(--deck-offset),var(--deck-zoffset)) scale(var(--deck-scale)) rotateX(.35deg);transform-origin:50% 0;box-shadow:0 2px 0 color-mix(in srgb,var(--wallet-accent) 28%,var(--canvas-raised)),0 10px 20px rgba(0,0,0,.17),0 18px 28px rgba(0,0,0,.1),inset 0 1px 0 rgba(255,255,255,.2);transition:transform 480ms cubic-bezier(.22,.8,.24,1),opacity 360ms ease,filter 360ms ease;will-change:transform,opacity; }
 :root:not(.dark) .home-wallet-card.wallet-card { box-shadow:0 2px 0 color-mix(in srgb,var(--wallet-accent) 23%,#d8e5e1),0 10px 20px rgba(30,63,57,.1),0 18px 28px rgba(30,63,57,.06),inset 0 1px 0 rgba(255,255,255,.96); }
 .home-wallet-card.wallet-card.is-front { pointer-events:auto; }
 .home-wallet-card.wallet-card.is-hidden { opacity:0;filter:blur(2px); }
 .home-wallet-card.wallet-card::after { inset:8px 9px -7px;transition:transform 480ms cubic-bezier(.22,.8,.24,1); }
 .home-wallet-card.wallet-card::before { opacity:.54;animation-duration:8s; }
-.home-wallet-card.wallet-card:hover { transform:translate3d(0,calc(var(--deck-offset) - 2px),var(--deck-zoffset)) scale(var(--deck-scale)) rotateX(.35deg); }
+.home-wallet-card.wallet-card:hover { transform:translate3d(var(--deck-drag-x,0px),calc(var(--deck-offset) - 2px),var(--deck-zoffset)) scale(var(--deck-scale)) rotateX(.35deg); }
+.home-wallet-deck.is-dragging .home-wallet-card.wallet-card { transition:none; }
 .home-wallet-card-edge { position:absolute;inset:0 0 auto;height:4px;z-index:2;border-radius:22px 22px 0 0;box-shadow:0 1px 10px color-mix(in srgb,var(--wallet-accent) 32%,transparent); }
 .home-wallet-card-top { position:relative;z-index:1;display:flex;align-items:center;gap:10px;min-width:0; }
 .home-wallet-emblem { display:grid;place-items:center;width:38px;height:38px;flex:none;border:1px solid color-mix(in srgb,var(--wallet-accent) 30%,transparent);border-radius:13px;background:color-mix(in srgb,var(--wallet-accent) 12%,transparent);box-shadow:0 5px 14px rgba(0,0,0,.12),inset 0 1px 0 rgba(255,255,255,.18);transform:translateZ(10px); }
@@ -263,15 +264,6 @@ button, a { touch-action: manipulation; }
 .home-wallet-card-bottom { position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:9px;border-top:1px solid color-mix(in srgb,var(--line-strong) 76%,transparent); }
 .home-wallet-card-bottom b { overflow:hidden;color:var(--ink-soft);font-size:12px;font-weight:730;text-overflow:ellipsis;white-space:nowrap; }
 .home-wallet-card-bottom span { flex:none;color:var(--ink-muted);font-size:10px; }
-.home-wallet-controls { display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px; }
-.home-wallet-step { display:grid;place-items:center;width:44px;height:44px;border:1px solid var(--line);border-radius:13px;color:var(--ink-soft);background:var(--surface-muted);transition:color 180ms ease,border-color 180ms ease,background 180ms ease; }
-.home-wallet-step:hover:not(:disabled) { color:var(--positive);border-color:color-mix(in srgb,var(--accent) 32%,var(--line));background:var(--accent-soft); }
-.home-wallet-step:disabled { opacity:.32; }
-.home-wallet-step svg { width:17px;height:17px; }
-.home-wallet-dots { display:flex;align-items:center;justify-content:center;gap:7px;flex:1; }
-.home-wallet-dots button { display:grid;place-items:center;width:44px;height:44px;padding:0;border:0;border-radius:999px;background:transparent; }
-.home-wallet-dots button::after { width:8px;height:8px;border-radius:999px;background:color-mix(in srgb,var(--ink-muted) 48%,transparent);content:"";transition:width 300ms cubic-bezier(.22,.8,.24,1),background 180ms ease; }
-.home-wallet-dots button.is-active::after { width:22px;background:var(--accent); }
 .home-cash-total { display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:2px;padding:13px 15px;border:1px solid color-mix(in srgb,var(--accent) 17%,var(--line));border-radius:16px;background:linear-gradient(125deg,color-mix(in srgb,var(--accent) 8%,var(--surface-muted)),var(--surface-muted));box-shadow:0 5px 14px rgba(0,0,0,.08),inset 0 1px 0 rgba(255,255,255,.08); }
 .home-cash-total > div { display:flex;min-width:0;flex-direction:column;gap:2px; }
 .home-cash-total > div > span { color:var(--ink-muted);font-size:10px;font-weight:650; }
@@ -447,7 +439,7 @@ button, a { touch-action: manipulation; }
 }
 @media (prefers-reduced-motion:reduce) {
     *,*::before,*::after { scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important; }
-    .home-wallet-card.wallet-card,.home-wallet-card.wallet-card::after,.home-wallet-dots button { transition:none!important; }
+    .home-wallet-card.wallet-card,.home-wallet-card.wallet-card::after { transition:none!important; }
 }
 @media (prefers-reduced-transparency:reduce) {
     .surface-card,.bank-panel,.bank-metric-card,.home-budget,.home-goal,.home-investments,.home-cashflow,.home-activity,.home-daily-brief,.ledger-sidebar,.ledger-mobile-header,.mobile-navigation,.menu-panel,.workspace-modal,.auth-form-card { backdrop-filter:none;-webkit-backdrop-filter:none;background-color:var(--color-paper-0); }

@@ -41,7 +41,6 @@ import {
     ArrowDownLeft,
     ScanLine,
     Send,
-    ChevronLeft,
     ChevronRight,
     ChevronDown,
     X,
@@ -83,7 +82,8 @@ const balanceVisible = ref(
     localStorage.getItem("ledger:balance-visible") !== "false",
 );
 const activeWalletIndex = ref(0);
-const walletPointerStart = ref(null);
+const walletDrag = ref(null);
+const walletDragOffset = ref(0);
 const walletCards = computed(() => {
     const visibleAccounts = accounts.value.filter(
         (account) => !account.is_archived && ["cash", "bank", "ewallet"].includes(account.type),
@@ -125,17 +125,26 @@ function moveWallet(direction) {
 }
 function startWalletSwipe(event) {
     if (walletCards.value.length < 2) return;
-    walletPointerStart.value = event.clientX;
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    walletDrag.value = { pointerId: event.pointerId, startX: event.clientX };
+    walletDragOffset.value = 0;
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+}
+function moveWalletSwipe(event) {
+    if (walletDrag.value?.pointerId !== event.pointerId) return;
+    const distance = event.clientX - walletDrag.value.startX;
+    walletDragOffset.value = Math.max(-128, Math.min(128, distance * 0.88));
 }
 function endWalletSwipe(event) {
-    if (walletPointerStart.value === null) return;
-    const distance = event.clientX - walletPointerStart.value;
-    walletPointerStart.value = null;
-    if (Math.abs(distance) < 42) return;
-    moveWallet(distance < 0 ? 1 : -1);
+    if (walletDrag.value?.pointerId !== event.pointerId) return;
+    const distance = event.clientX - walletDrag.value.startX;
+    walletDrag.value = null;
+    if (Math.abs(distance) >= 48) moveWallet(distance < 0 ? 1 : -1);
+    walletDragOffset.value = 0;
 }
 function cancelWalletSwipe() {
-    walletPointerStart.value = null;
+    walletDrag.value = null;
+    walletDragOffset.value = 0;
 }
 function privateTxMoney(tx) {
     if (!balanceVisible.value) return "Rp ••••••";
@@ -494,12 +503,14 @@ async function fetchCashFlowData() {
                 <div
                     v-else-if="walletCards.length"
                     class="home-wallet-deck"
-                    :class="{ 'has-multiple-wallets': walletCards.length > 1 }"
+                    :class="{ 'has-multiple-wallets': walletCards.length > 1, 'is-dragging': walletDrag !== null }"
                     role="group"
                     aria-label="Kartu saldo dompet. Geser untuk melihat dompet lain."
                     @pointerdown="startWalletSwipe"
+                    @pointermove="moveWalletSwipe"
                     @pointerup="endWalletSwipe"
                     @pointercancel="cancelWalletSwipe"
+                    @lostpointercapture="cancelWalletSwipe"
                 >
                     <div class="home-wallet-stack">
                         <article
@@ -507,7 +518,7 @@ async function fetchCashFlowData() {
                             :key="wallet.id"
                             class="home-wallet-card wallet-card"
                             :class="{ 'is-front': wallet.depth === 0, 'is-hidden': wallet.depth > 2 }"
-                            :style="{ '--wallet-accent': wallet.color || 'var(--accent)', '--wallet-depth': Math.min(wallet.depth, 3), '--deck-offset': `${Math.min(wallet.depth, 3) * 10}px`, '--deck-zoffset': `${Math.min(wallet.depth, 3) * -8}px`, '--deck-scale': String(1 - Math.min(wallet.depth, 3) * 0.035), '--deck-z': String(4 - Math.min(wallet.depth, 3)) }"
+                            :style="{ '--wallet-accent': wallet.color || 'var(--accent)', '--wallet-depth': Math.min(wallet.depth, 3), '--deck-offset': `${Math.min(wallet.depth, 3) * 10}px`, '--deck-zoffset': `${Math.min(wallet.depth, 3) * -8}px`, '--deck-scale': String(1 - Math.min(wallet.depth, 3) * 0.035), '--deck-z': String(4 - Math.min(wallet.depth, 3)), '--deck-drag-x': `${walletDragOffset * (wallet.depth === 0 ? 1 : 0.16)}px` }"
                             :aria-hidden="wallet.depth !== 0"
                         >
                             <span class="home-wallet-card-edge" :style="{ backgroundColor: wallet.color || 'var(--accent)' }"></span>
@@ -530,22 +541,6 @@ async function fetchCashFlowData() {
                     </div>
                 </div>
                 <div v-else class="home-wallet-empty">Tambahkan dompet untuk melihat saldo di sini.</div>
-
-                <div v-if="walletCards.length" class="home-wallet-controls" aria-label="Pilih dompet">
-                    <button type="button" class="home-wallet-step" :disabled="walletCards.length < 2" aria-label="Dompet sebelumnya" @click="moveWallet(-1)"><ChevronLeft /></button>
-                    <div class="home-wallet-dots">
-                        <button
-                            v-for="wallet in walletCards"
-                            :key="wallet.id"
-                            type="button"
-                            :class="{ 'is-active': wallet.depth === 0 }"
-                            :aria-label="`Tampilkan saldo ${wallet.name}`"
-                            :aria-pressed="wallet.depth === 0"
-                            @click="showWallet(wallet.accountIndex)"
-                        ></button>
-                    </div>
-                    <button type="button" class="home-wallet-step" :disabled="walletCards.length < 2" aria-label="Dompet berikutnya" @click="moveWallet(1)"><ChevronRight /></button>
-                </div>
 
                 <div class="home-cash-total">
                     <div><span>Kas tersedia</span><strong><AnimatedMoney :value="cashAvailableTotal" :masked="!balanceVisible" /></strong></div>
