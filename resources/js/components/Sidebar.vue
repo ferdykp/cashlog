@@ -42,7 +42,7 @@ const title = computed(() => {
         if (item) return item.name;
     }
     if (route.path.includes("transactions")) return "Catat transaksi";
-    return "Cashlog";
+    return "Ledger";
 });
 function openTransaction(type) {
     composer.value = false;
@@ -53,7 +53,7 @@ watch(() => route.path, () => { composer.value = false; });
 
 <template>
     <header class="ledger-mobile-header lg:hidden">
-        <router-link to="/dashboard" class="mobile-brand" aria-label="Cashlog, beranda">
+        <router-link to="/dashboard" class="mobile-brand" aria-label="Ledger, beranda">
             <BrandMark /><span class="mobile-brand-title">{{ title }}</span>
         </router-link>
         <div class="mobile-header-actions">
@@ -68,7 +68,7 @@ watch(() => route.path, () => { composer.value = false; });
     </header>
 
     <aside class="ledger-sidebar hidden lg:flex">
-        <router-link to="/dashboard" class="brand-lockup"><BrandMark /><span>Cashlog<span class="brand-caption">Keuangan pribadi</span></span></router-link>
+        <router-link to="/dashboard" class="brand-lockup"><BrandMark /><span>Ledger<span class="brand-caption">Keuangan pribadi</span></span></router-link>
         <router-link to="/transactions/create" class="primary-button sidebar-create"><Plus class="w-4 h-4" />Catat transaksi</router-link>
         <nav class="sidebar-navigation" aria-label="Navigasi utama">
             <section v-for="section in sections" :key="section.label">

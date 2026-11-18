@@ -632,7 +632,7 @@ async function fetchCashFlowData() {
                 <section class="menu-panel home-apps-sheet" role="dialog" aria-modal="true" aria-labelledby="all-apps-title">
                     <div class="sheet-handle" aria-hidden="true"></div>
                     <div class="home-apps-sheet-head">
-                        <div><span class="home-overline">CASHLOG</span><h2 id="all-apps-title">Semua menu</h2><p>Pilih fitur yang ingin kamu buka.</p></div>
+                        <div><span class="home-overline">LEDGER</span><h2 id="all-apps-title">Semua menu</h2><p>Pilih fitur yang ingin kamu buka.</p></div>
                         <button type="button" class="icon-button" @click="showAllApps = false" aria-label="Tutup semua menu"><X class="w-5 h-5" /></button>
                     </div>
                     <div class="home-app-grid home-apps-sheet-grid">

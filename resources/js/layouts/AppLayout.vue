@@ -39,7 +39,7 @@ const pageTitle = computed(() => {
             <header class="ledger-desktop-header">
                 <div class="desktop-context">
                     <BrandMark />
-                    <span>Cashlog</span>
+                    <span>Ledger</span>
                     <ChevronRight aria-hidden="true" />
                     <strong>{{ pageTitle }}</strong>
                 </div>

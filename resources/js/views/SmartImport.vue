@@ -563,8 +563,8 @@ onUnmounted(() => {
                 <h1>Masukkan transaksi tanpa mengetik ulang.</h1>
 
                 <p>
-                    Bagikan bukti dari m-banking ke Cashlog, ambil foto struk,
-                    atau upload file. Cashlog membaca data lalu meminta
+                    Bagikan bukti dari m-banking ke Ledger, ambil foto struk,
+                    atau upload file. Ledger membaca data lalu meminta
                     konfirmasi sebelum saldo berubah.
                 </p>
             </div>
@@ -586,11 +586,11 @@ onUnmounted(() => {
                 <b>Dibuka dari menu Share</b>
 
                 <p v-if="file">
-                    Bukti berhasil diterima dan sedang diproses oleh Cashlog.
+                    Bukti berhasil diterima dan sedang diproses oleh Ledger.
                 </p>
 
                 <p v-else>
-                    Cashlog sedang memeriksa data yang dikirim aplikasi sumber.
+                    Ledger sedang memeriksa data yang dikirim aplikasi sumber.
                 </p>
             </div>
         </div>
