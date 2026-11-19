@@ -13,6 +13,13 @@ class ProfileController extends Controller
         $user = $request->user();
         $data = $request->validated();
 
+        if ($user->google_id && isset($data['email']) && mb_strtolower(trim($data['email'])) !== mb_strtolower(trim($user->email))) {
+            return response()->json([
+                'message' => 'Email tidak dapat diubah selama akun Google terhubung.',
+                'errors' => ['email' => ['Putuskan hubungan Google terlebih dahulu sebelum mengubah email.']],
+            ], 422);
+        }
+
         $oldAvatar = $user->avatar;
         $newAvatar = null;
         try {

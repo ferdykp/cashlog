@@ -321,6 +321,29 @@ async function handleSubmit() {
                 </button>
             </form>
 
+            <div class="space-y-4">
+                <div class="flex items-center gap-3 text-xs text-ink-300">
+                    <span class="h-px flex-1 bg-line-200" />
+                    <span>atau daftar lebih cepat</span>
+                    <span class="h-px flex-1 bg-line-200" />
+                </div>
+                <a
+                    href="/auth/google/redirect?intent=login"
+                    class="w-full min-h-11 border border-line-200 rounded-md bg-paper-0 text-ink-900 font-medium text-sm hover:bg-paper-50 transition-colors flex items-center justify-center gap-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                >
+                    <svg aria-hidden="true" viewBox="0 0 48 48" class="w-5 h-5">
+                        <path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.7c3.9-3.6 6-8.8 6-15z" />
+                        <path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.8l-6.7-5.1c-1.8 1.2-4 1.9-6.8 1.9-5.2 0-9.7-3.5-11.3-8.2H5.8v5.2A20 20 0 0 0 24 44z" />
+                        <path fill="#FBBC05" d="M12.7 27.8a12 12 0 0 1 0-7.6V15H5.8a20 20 0 0 0 0 18z" />
+                        <path fill="#EA4335" d="M24 12.1c3 0 5.7 1 7.8 3.1l5.9-5.9C34.1 6.1 29.5 4 24 4A20 20 0 0 0 5.8 15l6.9 5.2c1.6-4.7 6.1-8.1 11.3-8.1z" />
+                    </svg>
+                    Daftar dengan Google
+                </a>
+                <p class="text-center text-xs text-ink-600">
+                    Kami akan mengirim kode verifikasi ke email Google Anda.
+                </p>
+            </div>
+
             <!-- Footer Link -->
             <div
                 class="pt-4 border-t border-line-200 text-center text-xs text-ink-600"

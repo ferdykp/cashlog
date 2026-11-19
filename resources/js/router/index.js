@@ -5,6 +5,7 @@ import { useAuthStore } from "@/stores/auth";
 const AppLayout = () => import("@/layouts/AppLayout.vue");
 const Login = () => import("@/views/Login.vue");
 const Register = () => import("@/views/Register.vue");
+const VerifyGoogle = () => import("@/views/VerifyGoogle.vue");
 const ForgotPassword = () => import("@/views/ForgotPassword.vue");
 const ResetPassword = () => import("@/views/ResetPassword.vue");
 const Dashboard = () => import("@/views/Dashboard.vue");
@@ -46,6 +47,11 @@ const routes = [
         name: "register",
         component: Register,
         meta: { requiresGuest: true },
+    },
+    {
+        path: "/verify-google",
+        name: "verify-google",
+        component: VerifyGoogle,
     },
     {
         path: "/",

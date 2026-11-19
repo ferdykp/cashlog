@@ -7,6 +7,7 @@ use App\Http\Controllers\BillController;
 use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ExpenseRecapController;
+use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\GoalCashAllocationController;
 use App\Http\Controllers\GoalController;
 use App\Http\Controllers\GoalFundingController;
@@ -29,6 +30,9 @@ Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10
 Route::post('/session/login', [AuthController::class, 'sessionLogin'])->middleware('throttle:10,1');
 Route::post('/forgot-password', [PasswordController::class, 'forgot'])->middleware('throttle:5,1');
 Route::post('/reset-password', [PasswordController::class, 'reset'])->middleware('throttle:5,1');
+Route::get('/auth/google/pending', [GoogleAuthController::class, 'pending'])->middleware('throttle:30,1');
+Route::post('/auth/google/otp/resend', [GoogleAuthController::class, 'resend'])->middleware('throttle:3,1');
+Route::post('/auth/google/otp/verify', [GoogleAuthController::class, 'verify'])->middleware('throttle:10,1');
 
 // Route::get('/ping', fn() => response()->json(['message' => 'pong']))->middleware('auth:sanctum');
 Route::post('/webhooks/whatsapp', WhatsAppWebhookController::class)->middleware('throttle:120,1');

@@ -3,7 +3,7 @@
 <script setup>
 import { ref, onMounted, watch } from "vue";
 import { storeToRefs } from "pinia";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 
 import { useAuthStore } from "@/stores/auth";
 import { useCategoryStore } from "@/stores/category";
@@ -38,6 +38,7 @@ import { useTransactionExport } from "@/composables/useTransactionExport";
 import { useTheme } from "@/composables/useTheme";
 
 const router = useRouter();
+const route = useRoute();
 
 const authStore = useAuthStore();
 const categoryStore = useCategoryStore();
@@ -357,6 +358,32 @@ async function handleLogout() {
             ><a href="#security">Keamanan &amp; data</a
             ><a href="#preferences">Preferensi</a>
         </nav>
+
+        <section
+            v-if="!user?.google_linked"
+            class="rounded-2xl border border-amber-200 bg-amber-50 p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+            aria-labelledby="google-link-heading"
+        >
+            <div>
+                <h2 id="google-link-heading" class="font-semibold text-ink-900">Hubungkan akun Google</h2>
+                <p class="text-sm text-ink-600 mt-1">Login berikutnya akan lebih mudah. Pastikan email Google sama dengan email akun Anda ({{ user?.email }}).</p>
+                <p v-if="route.query.google === 'email-mismatch'" role="alert" class="text-xs text-expense-600 mt-2">Email Google berbeda. Gunakan akun Google dengan email yang sama persis.</p>
+                <p v-else-if="route.query.google === 'already-linked'" role="alert" class="text-xs text-expense-600 mt-2">Akun Google ini sudah terhubung dengan akun lain.</p>
+                <p v-else-if="route.query.google === 'email-failed'" role="alert" class="text-xs text-expense-600 mt-2">Kode OTP belum dapat dikirim. Periksa pengaturan email lalu coba lagi.</p>
+                <p v-else-if="route.query.google === 'failed'" role="alert" class="text-xs text-expense-600 mt-2">Google gagal memverifikasi akun. Silakan coba lagi.</p>
+                <p v-else-if="route.query.google === 'not-configured'" role="alert" class="text-xs text-expense-600 mt-2">Login Google belum tersedia karena konfigurasi OAuth belum lengkap.</p>
+                <p v-else-if="route.query.google === 'cancelled'" role="status" class="text-xs text-ink-600 mt-2">Proses pengaitan Google dibatalkan.</p>
+            </div>
+            <a href="/auth/google/redirect?intent=link" class="shrink-0 min-h-11 px-4 rounded-lg bg-ink-900 text-white text-sm font-semibold flex items-center justify-center hover:bg-ink-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Hubungkan Google</a>
+        </section>
+
+        <section v-else class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 flex items-center gap-3" aria-label="Status akun Google">
+            <ShieldCheck class="w-5 h-5 text-emerald-700 shrink-0" />
+            <div>
+                <h2 class="font-semibold text-ink-900">Akun Google terhubung</h2>
+                <p class="text-sm text-ink-600">{{ user?.email }} dapat digunakan untuk login.</p>
+            </div>
+        </section>
         <!-- =========================================================
          MAIN GRID
     ========================================================== -->
@@ -445,9 +472,11 @@ async function handleLogout() {
                                 v-model="profileForm.email"
                                 type="email"
                                 required
+                                :disabled="user?.google_linked"
                                 placeholder="email@example.com"
                                 class="w-full px-4 h-11 border border-line-200 rounded-xl bg-paper-0 focus:border-violet-600 focus:outline-none text-xs font-semibold text-ink-900 transition-colors"
                             />
+                            <p v-if="user?.google_linked" class="text-xs text-ink-600">Email tidak dapat diubah selama akun Google terhubung agar keduanya tetap sama.</p>
                         </div>
 
                         <button

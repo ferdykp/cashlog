@@ -12,18 +12,27 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    protected $fillable = ['name', 'email', 'password', 'currency', 'theme', 'avatar'];
+    protected $fillable = ['name', 'email', 'password', 'currency', 'theme', 'avatar', 'google_id'];
 
     protected $hidden = ['password', 'remember_token'];
 
     protected $casts = ['email_verified_at' => 'datetime', 'password' => 'hashed'];
 
     // Append URL Avatar
-    protected $appends = ['avatar_url'];
+    protected $appends = ['avatar_url', 'google_linked'];
+
+    public function getGoogleLinkedAttribute(): bool
+    {
+        return filled($this->google_id);
+    }
 
     public function getAvatarUrlAttribute(): string
     {
         if ($this->avatar) {
+            if (filter_var($this->avatar, FILTER_VALIDATE_URL)) {
+                return $this->avatar;
+            }
+
             return asset('storage/'.$this->avatar);
         }
 
