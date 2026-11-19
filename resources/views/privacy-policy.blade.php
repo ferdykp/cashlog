@@ -9,7 +9,7 @@
         <h1>Kebijakan Privasi Ledger</h1>
         <p class="updated">Terakhir diperbarui: 19 November 2026</p>
 
-        <p>Kebijakan ini menjelaskan data yang diproses saat Anda menggunakan Ledger, alasan pemrosesannya, serta pilihan yang tersedia bagi Anda. Ledger adalah aplikasi untuk mencatat dan mengelola keuangan pribadi.</p>
+        <p>Kebijakan ini menjelaskan data yang diproses saat Anda menggunakan Ledger, alasan pemrosesannya, serta pilihan yang tersedia bagi Anda. <strong>Ledger adalah aplikasi pencatatan keuangan pribadi</strong> untuk mengelola transaksi, dompet, anggaran, tagihan, tujuan, dan aset.</p>
 
         <h2>1. Informasi yang kami proses</h2>
         <ul>
@@ -22,7 +22,8 @@
         </ul>
 
         <h2>2. Cara kami menggunakan informasi Google</h2>
-        <p>Data Google digunakan untuk mengenali akun, membuat akun Ledger baru setelah verifikasi, membantu login berikutnya, dan menghubungkan akun Google ke akun Ledger yang sudah ada. Pengaitan hanya berhasil jika email Google terverifikasi sama dengan email akun Ledger. Kami tidak menjual data Google, menggunakannya untuk iklan, atau menggunakannya untuk tujuan selain fitur yang dijelaskan di sini.</p>
+        <p>Ledger menerima ID akun Google yang stabil, nama, alamat email, dan foto profil untuk mengenali akun, membuat akun Ledger setelah OTP diverifikasi, membantu login berikutnya, dan menghubungkan Google ke akun Ledger yang sudah ada. Pengaitan hanya berhasil jika email Google terverifikasi sama dengan email akun Ledger. Data tersebut disimpan pada sistem Ledger selama akun digunakan dan hanya diproses untuk autentikasi, pengaitan akun, keamanan, serta dukungan terkait akun.</p>
+        <p>Data Google tidak dikirim ke penyedia AI atau WhatsApp Ledger, tidak dijual, tidak digunakan untuk iklan, dan tidak digunakan untuk membuat gambar atau konten intim tanpa persetujuan. Ledger tidak menggunakan Google APIs atau data Google untuk membuat maupun memfasilitasi AI-generated non-consensual intimate imagery. Ledger does not use Google user data or Google APIs to create, generate, or distribute AI-generated non-consensual intimate imagery. Kami tidak membaca Gmail, Drive, kontak, atau isi layanan Google lainnya.</p>
         <p class="notice">Penggunaan informasi yang diterima melalui Google Sign-In mengikuti <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, termasuk persyaratan Limited Use. Data Google hanya dipakai untuk fitur autentikasi dan pengaitan akun yang terlihat di Ledger.</p>
 
         <h2>3. Fitur opsional dan penyedia layanan</h2>
