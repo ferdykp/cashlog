@@ -9,6 +9,8 @@ Create an OAuth 2.0 Web application client and configure:
 - Authorized JavaScript origin: the deployed Cashlog origin, for example `https://ledger.example.com`.
 - Authorized redirect URI: the exact value of `GOOGLE_REDIRECT_URI`, for example `https://ledger.example.com/auth/google/callback`.
 - Scopes requested by Cashlog: `openid`, `email`, and `profile`.
+- Branding homepage: `https://ledger.fdevsite.cloud/`.
+- Branding privacy policy: `https://ledger.fdevsite.cloud/privacy-policy`.
 
 Set the client credentials on the server, never in frontend build variables:
 

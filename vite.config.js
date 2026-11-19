@@ -40,7 +40,7 @@ export default defineConfig({
                 background_color: "#0b0f17",
                 display: "standalone",
                 orientation: "any",
-                start_url: "/",
+                start_url: "/dashboard",
                 scope: "/",
                 categories: ["finance", "productivity"],
                 share_target: {
