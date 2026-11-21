@@ -52,7 +52,7 @@
         <p>Kami dapat memperbarui kebijakan ini jika fitur atau cara pemrosesan data berubah. Versi terbaru akan dipublikasikan di halaman ini beserta tanggal pembaruannya.</p>
 
         <h2>7. Kontak</h2>
-        <p>Untuk pertanyaan atau permintaan terkait privasi, hubungi <a href="mailto:kpfredy@gmail.com">kpfredy@gmail.com</a>.</p>
+        <p>Untuk pertanyaan atau permintaan terkait privasi, hubungi <a href="mailto:kpferdy@gmail.com">kpferdy@gmail.com</a>.</p>
     </article>
 </main>
 @endsection
