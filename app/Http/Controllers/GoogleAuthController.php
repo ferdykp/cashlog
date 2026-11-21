@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\GoogleOtpChallenge;
 use App\Models\User;
+use App\Mail\GoogleVerificationCodeMail;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -311,9 +312,7 @@ class GoogleAuthController extends Controller
 
     private function sendCode(string $email, string $code): void
     {
-        Mail::raw("Kode verifikasi Google Cashlog Anda: {$code}\n\nKode berlaku selama 10 menit dan hanya dapat digunakan satu kali. Jika Anda tidak meminta kode ini, abaikan email ini.", function ($message) use ($email): void {
-            $message->to($email)->subject('Kode verifikasi akun Cashlog');
-        });
+        Mail::to($email)->send(new GoogleVerificationCodeMail($code));
     }
 
     private function normalizeEmail(string $email): string

@@ -18,7 +18,10 @@ Set the client credentials on the server, never in frontend build variables:
 GOOGLE_CLIENT_ID=your-web-client-id
 GOOGLE_CLIENT_SECRET=your-web-client-secret
 GOOGLE_REDIRECT_URI=https://ledger.example.com/auth/google/callback
+LEDGER_PUBLIC_URL=https://ledger.example.com
 ```
+
+`LEDGER_PUBLIC_URL` supplies the absolute logo and Ledger link used in verification emails. The PNG logo must be publicly reachable at `/pwa-192x192.png` on that host.
 
 ## Email delivery
 

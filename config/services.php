@@ -41,6 +41,10 @@ return [
         'redirect_uri' => env('GOOGLE_REDIRECT_URI', env('APP_URL').'/auth/google/callback'),
     ],
 
+    'ledger' => [
+        'url' => rtrim(env('LEDGER_PUBLIC_URL', env('APP_URL', 'http://localhost')), '/'),
+    ],
+
     'groq' => [
         'enabled' => env('GROQ_ENABLED', false),
         'key' => env('GROQ_API_KEY'),
