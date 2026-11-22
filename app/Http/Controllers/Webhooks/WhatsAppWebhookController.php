@@ -38,20 +38,34 @@ class WhatsAppWebhookController extends Controller
 
         $payload = $request->all();
         $event = data_get($payload, 'event');
+        $normalizedEvent = is_string($event)
+            ? strtolower(str_replace('_', '.', $event))
+            : null;
+
+        $fromMe = data_get($payload, 'data.key.fromMe')
+            ?? data_get($payload, 'data.key.from_me')
+            ?? data_get($payload, 'data.fromMe')
+            ?? data_get($payload, 'data.from_me')
+            ?? data_get($payload, 'key.fromMe')
+            ?? data_get($payload, 'key.from_me')
+            ?? data_get($payload, 'fromMe')
+            ?? data_get($payload, 'from_me');
+
+        $isOutbound = filter_var(
+            $fromMe,
+            FILTER_VALIDATE_BOOLEAN,
+            FILTER_NULL_ON_FAILURE
+        ) === true;
 
         $remote = data_get($payload, 'data.key.remoteJid')
             ?? data_get($payload, 'data.sender')
             ?? data_get($payload, 'sender');
 
         if (
-            data_get($payload, 'data.key.fromMe')
+            $isOutbound
             || (
-                $event
-                && ! in_array(
-                    $event,
-                    ['messages.upsert', 'MESSAGES_UPSERT'],
-                    true
-                )
+                $normalizedEvent !== null
+                && $normalizedEvent !== 'messages.upsert'
             )
         ) {
             return response()->json([
