@@ -10,6 +10,8 @@ Ledger is a personal finance workspace for people in Indonesia. Its screens shou
 - **Palette:** forest green `#08796D` for primary actions and current state; deep green `#075F52` for the focused account card; sage `#E1F1EB` for secondary account cards; paper `#FFFFFF`; canvas `#F5F7F4`; ink `#172E2B`; muted ink `#64766F`; income `#16754B`; expense `#B8403E`.
 - **Typography:** Inter for labels, forms, and long reading; Space Grotesk only for high-value totals where its numeral shapes improve scanning.
 - **Surfaces:** matte and mostly flat. Use a thin border to group information; reserve a small shadow for elevation that affects interaction.
+- **Dark theme:** charcoal-green canvas `#101815`, lifted panels `#1B2923`, soft jade accent `#68C69F`, and warm green-white text. Keep contrast high through color separation, not glow.
+- **Containers:** shared panel radius of 20px, 18px on compact nested groups, and 14px on controls. Maintain 18–26px internal padding on feature panels and 18px on mobile.
 
 ## Composition
 
@@ -25,6 +27,8 @@ Ledger is a personal finance workspace for people in Indonesia. Its screens shou
 - **Green:** preserves Ledger's identity and marks money actions, active navigation, and positive movement.
 - **Layered account deck:** lets users preview that they have multiple accounts and interact with the currently selected account using touch, keyboard, or click.
 - **Flat paper surfaces and fine borders:** keep dense financial information readable and prevent every section from competing with account balances.
+- **Dark palette:** separates the page, panel, and nested surface by a small value shift, with jade reserved for active and important actions so it feels vivid without flooding the screen.
+- **Hover and touch feedback:** mouse hover changes the surface and lifts controls slightly; touch targets stay at least 44px high, with larger spacing on menu and quick-action items.
 - **Restrained motion:** motion is limited to user-triggered card changes, dialog transitions, and clear feedback.
 
 ## Dials
