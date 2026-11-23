@@ -3107,7 +3107,7 @@ onMounted(async () => {
                                         ? selectedAsset.unrealized_profit_loss
                                         : selectedAsset.total_profit_loss) ==
                                     null
-                                        ? "—"
+                                        ? "Belum tersedia"
                                         : formatRupiah(
                                               selectedAsset.type === "gold"
                                                   ? selectedAsset.unrealized_profit_loss

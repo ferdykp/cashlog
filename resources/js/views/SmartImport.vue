@@ -818,7 +818,7 @@ onUnmounted(() => {
                             <strong>
                                 {{
                                     result.draft?.amount == null
-                                        ? "—"
+                                        ? "Belum terbaca"
                                         : formatRupiah(result.draft.amount)
                                 }}
                             </strong>

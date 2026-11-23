@@ -44,7 +44,7 @@ import {
     ChevronRight,
     ChevronDown,
     X,
-    Sparkles,
+    CalendarDays,
     UsersRound,
     MessageCircle,
     Tags,
@@ -489,7 +489,7 @@ async function fetchCashFlowData() {
         <header class="home-heading">
             <div>
                 <p class="home-date">{{ new Date().toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long" }) }}</p>
-                <h1>Uangmu, <span>lebih jelas.</span></h1>
+                <h1>Ringkasan keuangan</h1>
                 <p class="home-subtitle">Hai {{ authStore.user?.name || "" }}, ini yang perlu kamu tahu hari ini.</p>
             </div>
         </header>
@@ -540,7 +540,7 @@ async function fetchCashFlowData() {
                             :key="wallet.id"
                             class="home-wallet-card wallet-card"
                             :class="{ 'is-front': wallet.depth === 0, 'is-hidden': wallet.depth > 2 }"
-                            :style="{ '--wallet-accent': wallet.color || 'var(--accent)', '--wallet-depth': Math.min(wallet.depth, 3), '--deck-offset': `${Math.min(wallet.depth, 3) * 10}px`, '--deck-zoffset': `${Math.min(wallet.depth, 3) * -8}px`, '--deck-scale': String(1 - Math.min(wallet.depth, 3) * 0.035), '--deck-z': String(4 - Math.min(wallet.depth, 3)), '--deck-drag-x': `${walletDragOffset * (wallet.depth === 0 ? 1 : 0.16)}px` }"
+                            :style="{ '--wallet-accent': wallet.color || 'var(--accent)', '--wallet-depth': Math.min(wallet.depth, 3), '--deck-offset': `${Math.min(wallet.depth, 3) * 8}px`, '--deck-offset-x': `${Math.min(wallet.depth, 3) * 12}px`, '--deck-zoffset': `${Math.min(wallet.depth, 3) * -3}px`, '--deck-scale': String(1 - Math.min(wallet.depth, 3) * 0.018), '--deck-z': String(4 - Math.min(wallet.depth, 3)), '--deck-drag-x': `${walletDragOffset * (wallet.depth === 0 ? 1 : 0.16)}px` }"
                             :aria-hidden="wallet.depth !== 0"
                         >
                             <span class="home-wallet-card-edge" :style="{ backgroundColor: wallet.color || 'var(--accent)' }"></span>
@@ -576,7 +576,7 @@ async function fetchCashFlowData() {
                 </div>
             </div>
             <div class="home-daily-brief">
-                <div class="brief-heading"><span class="brief-signal"><Sparkles /></span><div><span>Ringkasan bulan ini</span><small>{{ new Date().toLocaleDateString("id-ID", { month: "long", year: "numeric" }) }}</small></div></div>
+                <div class="brief-heading"><span class="brief-signal"><CalendarDays /></span><div><span>Ringkasan bulan ini</span><small>{{ new Date().toLocaleDateString("id-ID", { month: "long", year: "numeric" }) }}</small></div></div>
                 <div class="brief-net"><span>Selisih pemasukan dan pengeluaran</span><strong :class="compareDecimal(monthlySavings, '0') >= 0 ? 'positive' : 'negative'"><AnimatedMoney :value="monthlySavings" :masked="!balanceVisible" /></strong></div>
                 <div class="brief-pair"><div><span><i class="brief-dot income-dot"></i>Pemasukan</span><b><AnimatedMoney :value="monthlyIncome" :masked="!balanceVisible" /></b></div><div><span><i class="brief-dot expense-dot"></i>Pengeluaran</span><b><AnimatedMoney :value="monthlyExpense" :masked="!balanceVisible" /></b></div></div>
                 <router-link to="/report" class="brief-link">Telusuri arus kas <ArrowUpRight /></router-link>

@@ -276,7 +276,7 @@ async function handleDeleteGoal() {
                 <!-- FEATURED PRIORITY CARD (8/12) -->
                 <div
                     v-if="priorityGoal"
-                    class="lg:col-span-8 bg-gradient-to-br from-violet-100/80 via-violet-50/50 to-paper-0 border border-violet-200/60 rounded-3xl p-6 sm:p-8 shadow-soft relative overflow-visible flex flex-col md:flex-row items-center gap-6 group cursor-pointer"
+                    class="lg:col-span-8 bg-paper-0 border border-line-200 rounded-3xl p-6 sm:p-8 shadow-soft relative overflow-visible flex flex-col md:flex-row items-center gap-6 group cursor-pointer"
                     @click="openDepositModal(priorityGoal)"
                 >
                     <!-- Progress Ring Donut Left -->

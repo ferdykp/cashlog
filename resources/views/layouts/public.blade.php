@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#101a2c">
     <meta name="description" content="Ledger membantu Anda mencatat transaksi dan mengelola keuangan pribadi dengan lebih terarah.">
-    <title>@yield('title', 'Ledger — Keuangan pribadi, lebih terarah')</title>
+    <title>@yield('title', 'Ledger | Keuangan pribadi, lebih terarah')</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -105,6 +105,20 @@
         .policy ul { padding-left: 22px; }
         .policy li + li { margin-top: 7px; }
         .policy .notice { padding: 16px 18px; border-left: 4px solid var(--brand); border-radius: 8px; background: #eaf3ed; }
+        .site-header { color: var(--ink); background: var(--paper); border-bottom: 1px solid var(--line); }
+        .brand { color: var(--ink); }
+        .nav-links a { color: var(--muted); }
+        .nav-links a:hover, .footer a:hover { color: var(--brand-deep); }
+        .nav-links .nav-cta { border-color: var(--line); color: var(--brand-deep); background: var(--paper); }
+        .nav-links .nav-cta:hover { border-color: var(--brand); background: #f2f7f3; }
+        .hero { background: var(--night); }
+        .hero::after { display: none; }
+        .button-primary { color: var(--brand-deep); background: #fff; box-shadow: none; }
+        .button-primary:hover { color: var(--brand-deep); background: #eaf3ed; }
+        .preview-wrap { padding: 0; border: 0; border-radius: 15px; background: transparent; box-shadow: none; }
+        .preview-card { box-shadow: 0 3px 12px rgba(16, 42, 37, .12); }
+        .footer { color: var(--muted); background: var(--canvas); border-top: 1px solid var(--line); }
+        .footer a { color: var(--brand-deep); }
         @media (max-width: 900px) {
             .hero-layout { grid-template-columns: minmax(0, 1fr) minmax(310px, .85fr); gap: 34px; }
             .hero h1 { font-size: clamp(40px, 6vw, 58px); }

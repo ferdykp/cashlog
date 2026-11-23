@@ -30,7 +30,7 @@ const form = ref({
     type: "bank", // 'cash' | 'bank' | 'ewallet' | 'credit_card'
     purpose: "operational",
     balance: 0,
-    color: "#6C4CF1",
+    color: "#08796D",
     icon: "building-bank",
 });
 
@@ -44,12 +44,12 @@ const accountTypes = [
 
 // Swatch Warna Cepat
 const colorSwatches = [
-    "#6C4CF1", // Violet Default
-    "#17B978", // Emerald / Mint
-    "#FFB020", // Amber / Cash
-    "#00AED6", // GoPay Blue
-    "#F0473E", // Red Expense
-    "#EC4899", // Pink
+    "#08796D",
+    "#6D9B7A",
+    "#A97842",
+    "#536F83",
+    "#B75A4E",
+    "#6D7284",
 ];
 
 function selectAccountType(type) {

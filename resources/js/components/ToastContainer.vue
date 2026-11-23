@@ -61,7 +61,7 @@ const notificationStore = useNotificationStore();
 .toast-leave-active {
     transition: opacity 220ms var(--ease-premium), transform 220ms var(--ease-premium);
 }
-.toast-card { color:var(--ink-soft);background:var(--surface-raised);border-color:var(--line-strong);box-shadow:var(--shadow-card);backdrop-filter:blur(16px) saturate(1.25);-webkit-backdrop-filter:blur(16px) saturate(1.25); }
+.toast-card { color:var(--ink-soft);background:var(--surface-raised);border-color:var(--line-strong);box-shadow:var(--shadow-card);backdrop-filter:none;-webkit-backdrop-filter:none; }
 .toast-card.is-success { color:var(--positive);border-color:color-mix(in srgb,var(--positive) 28%,var(--line)); }
 .toast-card.is-error { color:var(--negative);border-color:color-mix(in srgb,var(--negative) 28%,var(--line)); }
 .toast-card.is-warning { color:var(--warning);border-color:color-mix(in srgb,var(--warning) 28%,var(--line)); }

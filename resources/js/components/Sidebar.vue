@@ -6,9 +6,10 @@ import { useTheme } from "@/composables/useTheme";
 import BrandMark from "@/components/BrandMark.vue";
 import {
     LayoutDashboard, Wallet, PiggyBank, Target, BarChart3, History,
-    Plus, ScanLine, X, ReceiptText, ChevronRight,
+    Plus, ScanLine, X, ReceiptText, ChevronRight, Tags, UsersRound,
+    MessageCircle,
     Activity, House, ArrowDownLeft, ArrowUpRight,
-    ArrowLeftRight, Camera, Sparkles, Moon, Sun,
+    ArrowLeftRight, Camera, Moon, Sun,
 } from "@lucide/vue";
 
 const auth = useAuthStore();
@@ -21,6 +22,7 @@ const sections = [
         { name: "Beranda", path: "/dashboard", icon: LayoutDashboard },
         { name: "Aktivitas", path: "/transactions", icon: History },
         { name: "Dompet & akun", path: "/accounts", icon: Wallet },
+        { name: "Kategori", path: "/categories", icon: Tags },
         { name: "Laporan", path: "/report", icon: BarChart3 },
     ] },
     { label: "Rencana", items: [
@@ -28,6 +30,11 @@ const sections = [
         { name: "Target tabungan", path: "/goals", icon: Target },
         { name: "Investasi", path: "/investasi", icon: Wallet },
         { name: "Tagihan", path: "/bills", icon: ReceiptText },
+    ] },
+    { label: "Lainnya", items: [
+        { name: "Pindai bukti", path: "/scan", icon: ScanLine },
+        { name: "Keuangan bersama", path: "/kolaborasi", icon: UsersRound },
+        { name: "WhatsApp", path: "/settings/whatsapp", icon: MessageCircle },
     ] },
 ];
 const active = (path) => path === "/settings"
@@ -82,11 +89,11 @@ watch(() => route.path, () => { composer.value = false; });
     </aside>
 
     <nav class="mobile-navigation lg:hidden" aria-label="Navigasi utama">
-        <router-link to="/dashboard" :class="{ 'is-active': active('/dashboard') }" :aria-current="active('/dashboard') ? 'page' : undefined"><House /><span>Home</span></router-link>
+        <router-link to="/dashboard" :class="{ 'is-active': active('/dashboard') }" :aria-current="active('/dashboard') ? 'page' : undefined"><House /><span>Beranda</span></router-link>
         <router-link to="/transactions" :class="{ 'is-active': active('/transactions') }" :aria-current="active('/transactions') ? 'page' : undefined"><Activity /><span>Aktivitas</span></router-link>
         <button class="mobile-create" @click="composer = true" :aria-expanded="composer" aria-controls="quick-action-sheet"><span class="mobile-create-icon"><Plus /></span><span>Catat</span></button>
         <router-link to="/goals" :class="{ 'is-active': inPlan }" :aria-current="inPlan ? 'page' : undefined"><Target /><span>Rencana</span></router-link>
-        <router-link to="/accounts" :class="{ 'is-active': active('/accounts') }" :aria-current="active('/accounts') ? 'page' : undefined"><Wallet /><span>Dompet</span></router-link>
+        <router-link to="/accounts" :class="{ 'is-active': active('/accounts') }" :aria-current="active('/accounts') ? 'page' : undefined"><Wallet /><span>Akun</span></router-link>
     </nav>
 
     <div v-if="composer" v-dialog="() => (composer = false)" class="dialog-backdrop menu-backdrop quick-action-backdrop lg:hidden" @click.self="composer = false">

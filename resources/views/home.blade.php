@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', 'Ledger — Keuangan pribadi, lebih terarah')
+@section('title', 'Ledger | Keuangan pribadi, lebih terarah')
 
 @section('content')
 <main>

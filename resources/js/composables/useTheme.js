@@ -1,7 +1,7 @@
 import { ref } from "vue";
 
 const storedTheme = typeof window !== "undefined" ? window.localStorage.getItem("theme") : null;
-const isDark = ref(storedTheme !== "light");
+const isDark = ref(storedTheme === "dark");
 
 function setTheme(mode) {
     const nextMode = mode === "light" ? "light" : "dark";

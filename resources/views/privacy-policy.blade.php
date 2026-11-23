@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', 'Kebijakan Privasi — Ledger')
+@section('title', 'Kebijakan Privasi | Ledger')
 
 @section('content')
 <main class="policy">

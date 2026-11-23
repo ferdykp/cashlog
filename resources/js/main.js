@@ -3,6 +3,7 @@ import "./design.css";
 import "./responsive.css";
 import "./premium.css";
 import "./precision.css";
+import "./redesign.css";
 import dialog from "./directives/dialog";
 
 import { createApp } from "vue";

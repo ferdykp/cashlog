@@ -2237,7 +2237,7 @@ watch(
     justify-content: center;
     background: rgb(12 25 23 / 58%);
     padding: 0;
-    backdrop-filter: blur(5px);
+    backdrop-filter: none;
 }
 .workspace-action-sheet {
     width: 100%;
@@ -2246,11 +2246,11 @@ watch(
     overscroll-behavior: contain;
     border: 1px solid var(--color-line-200);
     border-bottom: 0;
-    border-radius: 1.75rem 1.75rem 0 0;
+    border-radius: 1.25rem 1.25rem 0 0;
     background: var(--color-paper-0);
     padding: 1.25rem 1rem calc(1.25rem + env(safe-area-inset-bottom));
     color: var(--color-ink-900);
-    box-shadow: 0 -1rem 3rem rgb(0 0 0 / 18%);
+    box-shadow: 0 -0.5rem 1.5rem rgb(0 0 0 / 12%);
 }
 .workspace-modal-header {
     position: sticky;
@@ -2432,7 +2432,7 @@ watch(
     font-size: 0.75rem;
 }
 .workspace-overview-primary {
-    background: linear-gradient(135deg, #0b554e, #08796d);
+    background: #075f52;
     color: white;
 }
 .workspace-overview-primary p,
