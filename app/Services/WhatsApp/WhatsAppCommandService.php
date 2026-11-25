@@ -22,7 +22,7 @@ class WhatsAppCommandService
                 return WhatsAppMessageFormat::message('Dompet Anda', 'Belum ada dompet aktif.', 'Tambahkan dompet melalui menu *Akun & Dompet* di aplikasi Ledger.');
             }
             $total = (clone $query)->sum('balance');
-            $lines = $query->limit(20)->get()->map(fn ($account) => '• '.WhatsAppMessageFormat::text($account->name)."\n  *".WhatsAppMessageFormat::money($account->balance).'*')->implode("\n\n");
+            $lines = $query->limit(20)->get()->map(fn ($account) => '💳 *'.WhatsAppMessageFormat::text($account->name)."*\n".WhatsAppMessageFormat::money($account->balance))->implode("\n\n");
 
             return WhatsAppMessageFormat::message('Dompet Anda', $lines,
                 '*Total saldo aktif: '.WhatsAppMessageFormat::money($total).'*',
@@ -39,7 +39,7 @@ class WhatsAppCommandService
                 return WhatsAppMessageFormat::message('Dompet tidak ditemukan', 'Nama “'.WhatsAppMessageFormat::text($name).'” tidak cocok dengan dompet aktif Anda.', 'Ketik *dompet*, lalu gunakan nama yang tertera.');
             }
 
-            return WhatsAppMessageFormat::message('Saldo '.WhatsAppMessageFormat::text($account->name), '*'.WhatsAppMessageFormat::money($account->balance).'*', 'Saldo berdasarkan transaksi yang tercatat di Ledger.');
+            return WhatsAppMessageFormat::message('Saldo '.WhatsAppMessageFormat::text($account->name), '💳 *'.WhatsAppMessageFormat::money($account->balance).'*', 'Dihitung dari transaksi yang tercatat di Ledger.');
         }
         if (preg_match('/^ringkasan\s+(hari ini|bulan ini)$/u', $command, $matches)) {
             $today = WhatsAppMessageFormat::today();
@@ -55,7 +55,7 @@ class WhatsAppCommandService
 
             return WhatsAppMessageFormat::message('Ringkasan '.$matches[1],
                 $daily ? WhatsAppMessageFormat::date($today->toDateString()) : $today->locale('id')->translatedFormat('F Y'),
-                'Pemasukan: *'.WhatsAppMessageFormat::money($income)."*\nPengeluaran: *".WhatsAppMessageFormat::money($expense)."*\nSelisih: *".WhatsAppMessageFormat::money(DecimalMath::subtract($income, $expense)).'*',
+                '📈 Pemasukan: *'.WhatsAppMessageFormat::money($income)."*\n📉 Pengeluaran: *".WhatsAppMessageFormat::money($expense)."*\n➖ Selisih: *".WhatsAppMessageFormat::money(DecimalMath::subtract($income, $expense)).'*',
                 $count ? $count.' transaksi tercatat.' : 'Belum ada transaksi pada periode ini.',
                 '_Transfer antar-dompet tidak dihitung. Selisih periode bukan saldo dompet._');
         }
@@ -73,7 +73,7 @@ class WhatsAppCommandService
                     $wallet .= ' → '.WhatsAppMessageFormat::text($tx->relatedAccount?->name ?? 'Dompet tidak tersedia');
                 }
 
-                return ($index + 1).'. *'.$type.' · '.WhatsAppMessageFormat::money($tx->amount)."*\n".WhatsAppMessageFormat::date($tx->date->toDateString()).' · '.$wallet
+                return ($index + 1).'. *'.$type.' · '.WhatsAppMessageFormat::money($tx->amount)."*\n📅 ".WhatsAppMessageFormat::date($tx->date->toDateString()).' · '.$wallet
                     .($tx->note ? "\n".WhatsAppMessageFormat::text($tx->note, 100) : '');
             })->implode("\n\n");
 
@@ -85,10 +85,10 @@ class WhatsAppCommandService
 
     public function help(): string
     {
-        return WhatsAppMessageFormat::message('Panduan WhatsApp', 'Catat transaksi, cek saldo, dan lihat ringkasan keuangan lewat chat.',
-            "*Catat transaksi*\n• Pengeluaran: makan 35rb gopay\n• Pemasukan: gaji 5jt masuk bca\n• Transfer: transfer 100rb bca ke gopay",
-            "*Pantau keuangan*\n• dompet\n• saldo bca\n• ringkasan hari ini\n• ringkasan bulan ini\n• 5 transaksi terakhir",
-            "*Periksa sebelum menyimpan*\nSetiap transaksi ditampilkan sebagai draf. Balas *1* untuk menyimpan atau *3* untuk membatalkan. Draf berlaku 30 menit.",
-            'Gunakan nama dompet Anda di Ledger. Nominal dapat ditulis *50rb*, *50k*, *50000*, atau *1,5jt*.');
+        return WhatsAppMessageFormat::message('Panduan WhatsApp', 'Catat transaksi, cek saldo, dan pantau ringkasan keuangan langsung lewat chat.',
+            "*🧾 Catat transaksi*\n• Pengeluaran: makan 35rb gopay\n• Pemasukan: gaji 5jt masuk bca\n• Transfer: transfer 100rb bca ke gopay",
+            "*📊 Pantau keuangan*\n• dompet\n• saldo bca\n• ringkasan hari ini\n• ringkasan bulan ini\n• 5 transaksi terakhir",
+            "*✅ Periksa sebelum menyimpan*\nSetiap transaksi muncul sebagai draf. Balas *1* untuk simpan atau *3* untuk batalkan. Draf aktif 30 menit.\nUntuk mengubah detail, batalkan draf lalu kirim ulang transaksi.",
+            'Gunakan nama dompet yang terdaftar di Ledger. Contoh nominal: *50rb*, *50k*, *50000*, atau *1,5jt*.');
     }
 }

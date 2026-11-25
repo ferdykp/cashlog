@@ -45,20 +45,25 @@ final class WhatsAppMessageFormat
 
     public static function details(array $data): string
     {
-        $type = match ($data['type']) {
-            'income' => 'Pemasukan', 'transfer' => 'Transfer antar-dompet', default => 'Pengeluaran',
+        [$icon, $type] = match ($data['type']) {
+            'income' => ['💰', 'Pemasukan'],
+            'transfer' => ['🔄', 'Transfer'],
+            default => ['🧾', 'Pengeluaran'],
         };
         $wallet = self::text($data['account_name'] ?? 'Dompet tidak tersedia');
         if ($data['type'] === 'transfer') {
             $wallet .= ' → '.self::text($data['related_account_name'] ?? 'Dompet tidak tersedia');
         }
-        $lines = [$type.' · *'.self::money($data['amount']).'*', 'Dompet: '.$wallet];
-        if ($data['type'] !== 'transfer') {
-            $lines[] = 'Kategori: '.self::text($data['category_name'] ?? 'Tanpa kategori');
+        $lines = [$icon.' *'.$type.' · '.self::money($data['amount']).'*'];
+        if ($data['type'] === 'transfer') {
+            $lines[] = '💳 '.$wallet;
+        } else {
+            $lines[] = '💳 '.$wallet;
+            $lines[] = '🏷️ '.self::text($data['category_name'] ?? 'Tanpa kategori');
         }
-        $lines[] = 'Tanggal: '.self::date($data['date']);
+        $lines[] = '📅 '.self::date($data['date']);
         if (! empty($data['note'])) {
-            $lines[] = 'Catatan: '.self::text($data['note']);
+            $lines[] = '📝 '.self::text($data['note']);
         }
 
         return implode("\n", $lines);
@@ -66,14 +71,14 @@ final class WhatsAppMessageFormat
 
     public static function actions(): string
     {
-        return "*1* — Simpan transaksi\n*3* — Batalkan\n_Berlaku 30 menit sejak ringkasan dibuat._";
+        return "Balas *1* untuk simpan · *3* untuk batalkan\n_Draf aktif selama 30 menit._";
     }
 
     public static function welcome(): string
     {
-        return self::message('WhatsApp terhubung', 'Nomor Anda sudah terverifikasi. Mulai catat transaksi dengan pesan singkat.',
+        return self::message('WhatsApp terhubung', '✅ Nomor Anda sudah terverifikasi. Mulai catat transaksi lewat chat.',
             "*Coba kirim*\n• makan 35rb gopay\n• gaji 5jt masuk bca\n• transfer 100rb bca ke gopay",
-            'Gunakan nama dompet yang terdaftar di Ledger. Detail transaksi akan ditampilkan untuk Anda konfirmasi sebelum disimpan.',
-            'Ketik *bantuan* untuk panduan atau *dompet* untuk melihat akun Anda.');
+            'Setiap transaksi akan muncul sebagai draf untuk Anda periksa sebelum disimpan.',
+            'Balas *1* untuk simpan atau *3* untuk batalkan. Ketik *bantuan* untuk melihat semua perintah.');
     }
 }
