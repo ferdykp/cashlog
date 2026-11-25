@@ -50,7 +50,7 @@ Ledger mencatat pembelian dan penjualan emas maupun RDPU, termasuk biaya transak
 
 ### Catat transaksi dari pesan WhatsApp
 
-Quick Add memahami pesan seperti `makan 35rb gopay` atau `transfer 50rb bca ke gopay`. Transaksi ditinjau dan dikonfirmasi sebelum dicatat; pesan webhook yang sama juga dideduplikasi agar percobaan ulang tidak membuat transaksi ganda. Parser Groq tersedia sebagai opsi dan nonaktif secara default.
+Quick Add memahami pesan seperti `makan 35rb gopay` atau `transfer 50rb bca ke gopay`. Transaksi ditinjau dan dikonfirmasi sebelum dicatat; pesan webhook yang sama juga dideduplikasi agar percobaan ulang tidak membuat transaksi ganda. Parser Gemini tersedia melalui endpoint OpenAI-compatible; konfigurasi `DEVFLOW_AI_*` mengatur model, endpoint, dan API key.
 
 ### Struk menjadi draft, bukan transaksi otomatis
 
@@ -137,7 +137,7 @@ Panduan lengkap: [docs/ocr.md](docs/ocr.md).
 
 ### WhatsApp
 
-Integrasi memerlukan Evolution API dan konfigurasi `EVOLUTION_API_URL`, `EVOLUTION_API_KEY`, `EVOLUTION_INSTANCE`, serta `EVOLUTION_WEBHOOK_SECRET`. Parser Groq nonaktif secara default. Jika diaktifkan, teks pesan dan nama akun/kategori dapat dikirim ke Groq untuk parsing.
+Integrasi memerlukan Evolution API dan konfigurasi `EVOLUTION_API_URL`, `EVOLUTION_API_KEY`, `EVOLUTION_INSTANCE`, serta `EVOLUTION_WEBHOOK_SECRET`. Parser Gemini dikendalikan oleh `DEVFLOW_AI_ENABLED`. Jika diaktifkan dan API key tersedia, teks pesan serta nama akun/kategori dapat dikirim ke endpoint Gemini untuk parsing.
 
 Panduan lengkap: [docs/whatsapp.md](docs/whatsapp.md).
 

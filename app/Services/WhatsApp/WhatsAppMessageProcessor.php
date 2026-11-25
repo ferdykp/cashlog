@@ -5,7 +5,7 @@ namespace App\Services\WhatsApp;
 use App\Models\ConversationSession;
 use App\Models\User;
 use App\Models\WhatsAppConnection;
-use App\Services\AI\GroqParser;
+use App\Services\AI\GeminiParser;
 use App\Services\QuickAdd\QuickAddParser;
 use App\Services\TransactionService;
 use App\Support\TransactionRules;
@@ -31,7 +31,7 @@ class WhatsAppMessageProcessor
 
     public function __construct(
         private QuickAddParser $parser,
-        private GroqParser $groq,
+        private GeminiParser $aiParser,
         private TransactionService $transactions,
         private WhatsAppCommandService $commands,
     ) {}
@@ -173,7 +173,7 @@ class WhatsAppMessageProcessor
             }
 
             // Jika field inti sudah lengkap, tidak perlu
-            // memanggil Groq hanya karena confidence rendah.
+            // memanggil Gemini hanya karena confidence rendah.
             if (
                 ! empty($draft['amount'])
                 && ! empty($draft['account_id'])
@@ -189,7 +189,7 @@ class WhatsAppMessageProcessor
         }
 
         /*
-         * Groq handles missing fields, unclassified descriptions, and
+         * Gemini handles missing fields, unclassified descriptions, and
          * explicit names that did not match. It selects only canonical
          * values from the user's lists.
          *
@@ -454,7 +454,7 @@ class WhatsAppMessageProcessor
         array $draft,
         string $text
     ): array {
-        $ai = $this->groq->parse($user, $text);
+        $ai = $this->aiParser->parse($user, $text);
 
         if (! $ai) {
             return $draft;
@@ -497,7 +497,7 @@ class WhatsAppMessageProcessor
             $draft['category_name'] = $category?->name;
         }
 
-        $draft['source'] = 'rule+groq';
+        $draft['source'] = 'rule+gemini';
 
         return $draft;
     }

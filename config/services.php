@@ -45,10 +45,11 @@ return [
         'url' => rtrim(env('LEDGER_PUBLIC_URL', env('APP_URL', 'http://localhost')), '/'),
     ],
 
-    'groq' => [
-        'enabled' => env('GROQ_ENABLED', false),
-        'key' => env('GROQ_API_KEY'),
-        'model' => env('GROQ_MODEL', 'openai/gpt-oss-20b'),
+    'devflow_ai' => [
+        'enabled' => env('DEVFLOW_AI_ENABLED', false),
+        'endpoint' => env('DEVFLOW_AI_ENDPOINT', 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions'),
+        'key' => env('DEVFLOW_AI_API_KEY'),
+        'model' => env('DEVFLOW_AI_MODEL', 'gemini-3.1-flash-lite'),
     ],
 
     'whatsapp' => [

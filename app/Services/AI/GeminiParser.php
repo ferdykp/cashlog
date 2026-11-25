@@ -7,12 +7,13 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 
-class GroqParser
+class GeminiParser
 {
     public function parse(User $user, string $text): ?array
     {
-        $key = config('services.groq.key');
-        if (! config('services.groq.enabled') || ! $key) {
+        $key = config('services.devflow_ai.key');
+        $endpoint = config('services.devflow_ai.endpoint');
+        if (! config('services.devflow_ai.enabled') || ! $key || ! $endpoint) {
             return null;
         }
         $context = [
@@ -21,8 +22,8 @@ class GroqParser
         ];
         try {
             $response = Http::connectTimeout(3)->timeout(12)->withToken($key)
-                ->post('https://api.groq.com/openai/v1/chat/completions', [
-                    'model' => config('services.groq.model'), 'temperature' => 0,
+                ->post($endpoint, [
+                    'model' => config('services.devflow_ai.model'), 'temperature' => 0,
                     'response_format' => ['type' => 'json_object'],
                     'messages' => [
                         ['role' => 'system', 'content' => 'Parse Indonesian finance messages. Normalize capitalization and spacing. Understand obvious typos in transaction descriptions when they clearly point to an available category. Correct a typo in an account or category only when it clearly matches one available value, and return that value with its exact canonical spelling. Never invent or guess between ambiguous values; use null when unsure. Never determine or change transfer direction. Return a JSON object with type, amount, account_name, category_name, note, date. Use null for unknown fields. Available values: '.json_encode($context)],

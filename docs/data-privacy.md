@@ -9,11 +9,11 @@ Dokumen sumber OCR disimpan pada private disk. Dokumen baru dihapus setelah peri
 - Data akun, kategori, transaksi, anggaran, tujuan, dan aset disimpan di database aplikasi.
 - Gambar OCR disimpan pada disk privat selama dan setelah pemrosesan berhasil; hasil teks dan hasil parsing disimpan sebagai riwayat impor.
 - Webhook WhatsApp menyimpan nomor telepon, isi pesan, status pemrosesan, dan balasan untuk deduplikasi serta retry. Webhook baru tidak lagi menyimpan payload mentah provider; payload yang tersimpan dari versi sebelumnya tetap ada sampai pengelola menetapkan prosedur penghapusannya.
-- Parser Groq dapat menerima teks pesan WhatsApp dan nama akun/kategori milik pengguna. Integrasi ini nonaktif secara default; pengelola deployment harus mengaktifkannya secara sadar.
+- Parser Gemini dapat menerima teks pesan WhatsApp dan nama akun/kategori milik pengguna saat `DEVFLOW_AI_ENABLED` aktif dan API key tersedia. Pastikan pemberitahuan privasi menjelaskan pemrosesan oleh Google Gemini sebelum fitur ini digunakan oleh pengguna.
 
 ## Pengaturan yang harus dikonfirmasi sebelum penggunaan publik
 
-1. Tampilkan pemberitahuan yang mudah ditemukan tentang data yang dikirim ke Evolution API dan, bila diaktifkan, Groq.
+1. Tampilkan pemberitahuan yang mudah ditemukan tentang data yang dikirim ke Evolution API dan, bila diaktifkan, Google Gemini.
 2. Tentukan retensi untuk teks pesan WhatsApp dan hasil OCR. Saat ini aplikasi tidak menghapus riwayat tersebut secara otomatis.
 3. Tetapkan prosedur penghapusan akun dan ekspor data pengguna.
 4. Batasi akses staf ke database dan backup; enkripsi backup dan gunakan HTTPS untuk semua integrasi.

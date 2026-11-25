@@ -6,7 +6,7 @@ use App\Models\ConversationSession;
 use App\Models\User;
 use App\Models\WhatsAppConnection;
 use App\Models\WhatsAppMessage;
-use App\Services\AI\GroqParser;
+use App\Services\AI\GeminiParser;
 use App\Services\QuickAdd\QuickAddParser;
 use App\Services\WhatsApp\EvolutionProvider;
 use App\Services\WhatsApp\WhatsAppMessageFormat;
@@ -31,7 +31,7 @@ class WhatsAppWorkflowTest extends TestCase
     {
         parent::setUp();
         Http::preventStrayRequests();
-        config(['services.evolution.webhook_secret' => 'test-secret', 'services.groq.key' => null]);
+        config(['services.evolution.webhook_secret' => 'test-secret', 'services.devflow_ai.key' => null]);
         $this->user = User::factory()->create();
         // Deliberately create destination first, to catch database-order transfers.
         $this->user->accounts()->create(['name' => 'gopay', 'type' => 'ewallet', 'balance' => 100000]);
@@ -304,21 +304,21 @@ class WhatsAppWorkflowTest extends TestCase
 
     public function test_ai_timeout_and_invalid_output_do_not_crash_or_create_transactions(): void
     {
-        config(['services.groq.key' => 'test-key']);
-        Http::fake(['api.groq.com/*' => Http::failedConnection()]);
-        $this->assertNull(app(GroqParser::class)->parse($this->user, 'makan'));
+        config(['services.devflow_ai.enabled' => true, 'services.devflow_ai.key' => 'test-key']);
+        Http::fake(['generativelanguage.googleapis.com/*' => Http::failedConnection()]);
+        $this->assertNull(app(GeminiParser::class)->parse($this->user, 'makan'));
         foreach (['[]', '"text"', '{"amount":-1}', '{"amount":1,"account_name":[]}'] as $content) {
-            Http::fake(['api.groq.com/*' => Http::response(['choices' => [['message' => ['content' => $content]]]])]);
-            $this->assertNull(app(GroqParser::class)->parse($this->user, 'makan'));
+            Http::fake(['generativelanguage.googleapis.com/*' => Http::response(['choices' => [['message' => ['content' => $content]]]])]);
+            $this->assertNull(app(GeminiParser::class)->parse($this->user, 'makan'));
         }
     }
 
     public function test_ai_can_correct_obvious_wallet_and_category_typos_to_registered_values(): void
     {
         $category = $this->user->categories()->create(['name' => 'Transportasi', 'type' => 'expense']);
-        config(['services.groq.enabled' => true, 'services.groq.key' => 'test-key']);
+        config(['services.devflow_ai.enabled' => true, 'services.devflow_ai.key' => 'test-key']);
         Http::fake([
-            'api.groq.com/*' => Http::response([
+            'generativelanguage.googleapis.com/*' => Http::response([
                 'choices' => [[
                     'message' => [
                         'content' => json_encode([
@@ -348,12 +348,17 @@ class WhatsAppWorkflowTest extends TestCase
         ]);
         $this->assertSame($category->id, ConversationSession::first()->context['category_id']);
         Http::assertSentCount(1);
+        Http::assertSent(fn (\Illuminate\Http\Client\Request $request) =>
+            $request->url() === config('services.devflow_ai.endpoint')
+            && $request->hasHeader('Authorization', 'Bearer test-key')
+            && ($request->data()['model'] ?? null) === 'gemini-3.1-flash-lite'
+        );
     }
 
     public function test_capitalization_does_not_need_ai_to_match_accounts_and_categories(): void
     {
         $category = $this->user->categories()->create(['name' => 'Transportasi', 'type' => 'expense']);
-        config(['services.groq.enabled' => true, 'services.groq.key' => 'test-key']);
+        config(['services.devflow_ai.enabled' => true, 'services.devflow_ai.key' => 'test-key']);
         Http::fake();
 
         $reply = app(WhatsAppMessageProcessor::class)->handle($this->phone, 'BENSIN 50RB BCA');
@@ -367,9 +372,9 @@ class WhatsAppWorkflowTest extends TestCase
     public function test_ai_can_classify_a_transaction_description_with_a_typo(): void
     {
         $category = $this->user->categories()->create(['name' => 'Transportasi', 'type' => 'expense']);
-        config(['services.groq.enabled' => true, 'services.groq.key' => 'test-key']);
+        config(['services.devflow_ai.enabled' => true, 'services.devflow_ai.key' => 'test-key']);
         Http::fake([
-            'api.groq.com/*' => Http::response([
+            'generativelanguage.googleapis.com/*' => Http::response([
                 'choices' => [[
                     'message' => [
                         'content' => json_encode([
@@ -514,7 +519,7 @@ class WhatsAppWorkflowTest extends TestCase
 
     public function test_ambiguous_wallet_or_amount_never_uses_ai_to_guess(): void
     {
-        $this->mock(GroqParser::class)->shouldNotReceive('parse');
+        $this->mock(GeminiParser::class)->shouldNotReceive('parse');
         $processor = app(WhatsAppMessageProcessor::class);
         foreach (['makan 35rb bca gopay', 'makan -50rb bca', 'makan 35rb dan 50rb bca'] as $text) {
             $processor->handle($this->phone, $text);
