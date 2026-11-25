@@ -19,7 +19,7 @@
 
 ## Parsing and validation
 
-Examples: `gaji 1.000.000 bca`, `gaji 1,5jt bca`, `makan 35k gopay`, `transfer 50rb bca ke gopay`. Transfer accounts follow text order with `ke`/`to` between them. The confirmation includes both source and destination. Ambiguous values require clarification. AI fallback cannot override transfer direction or an already classified type, and invalid/timeout responses are ignored.
+Examples: `gaji 1.000.000 bca`, `gaji 1,5jt bca`, `makan 35k gopay`, `transfer 50rb bca ke gopay`. Transfer accounts follow text order with `ke`/`to` between them. The confirmation includes both source and destination. Ambiguous values require clarification. For income/expense messages, the enabled AI fallback can interpret an obvious typo in a description and correct account/category typos only to values in the user's list; canonical values are shown in the draft for confirmation. Transfers use fixed local rules, so AI cannot alter their direction. Invalid/timeout responses are ignored.
 
 Optional transaction fields can be written as directives after the transaction: `catatan: ...`, `kategori: [nama persis]`, and `tanggal: ...`. Example: `makan 35rb gopay catatan: makan siang kategori: Makanan tanggal: 24-11-2026`. The category must match one of the user's expense/income categories; transfers do not use categories. Dates accept `hari ini`, `kemarin`, `DD-MM-YYYY`, or `YYYY-MM-DD`; omitted dates default to today. The `kategori`, `kategori pengeluaran`, and `kategori pemasukan` commands list available categories.
 

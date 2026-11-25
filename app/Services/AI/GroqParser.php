@@ -25,7 +25,7 @@ class GroqParser
                     'model' => config('services.groq.model'), 'temperature' => 0,
                     'response_format' => ['type' => 'json_object'],
                     'messages' => [
-                        ['role' => 'system', 'content' => 'Parse Indonesian finance messages. Never invent an account or category. Return a JSON object with type, amount, account_name, category_name, note, date. Use null for unknown fields. Available values: '.json_encode($context)],
+                        ['role' => 'system', 'content' => 'Parse Indonesian finance messages. Normalize capitalization and spacing. Understand obvious typos in transaction descriptions when they clearly point to an available category. Correct a typo in an account or category only when it clearly matches one available value, and return that value with its exact canonical spelling. Never invent or guess between ambiguous values; use null when unsure. Never determine or change transfer direction. Return a JSON object with type, amount, account_name, category_name, note, date. Use null for unknown fields. Available values: '.json_encode($context)],
                         ['role' => 'user', 'content' => $text],
                     ],
                 ]);

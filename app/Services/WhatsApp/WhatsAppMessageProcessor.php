@@ -188,6 +188,32 @@ class WhatsAppMessageProcessor
             return WhatsAppMessageFormat::message('Kategori tidak diperlukan', 'Transfer antar-dompet tidak memakai kategori.', 'Contoh: *transfer 50rb bca ke gopay*.');
         }
 
+        /*
+         * Groq handles missing fields, unclassified descriptions, and
+         * explicit names that did not match. It selects only canonical
+         * values from the user's lists.
+         *
+         * Jangan mengubah arah transfer menggunakan AI.
+         */
+        $needsAi = $draft['type'] !== 'transfer'
+            && (
+                empty($draft['amount'])
+                || empty($draft['account_id'])
+                || (empty($draft['category_id']) && $user->categories()->where('type', $draft['type'])->exists())
+                || (
+                    ($draft['confidence'] ?? 0) < 0.75
+                    && ! $this->isIncomingMoney($text)
+                )
+            );
+
+        if ($needsAi) {
+            $draft = $this->mergeAi(
+                $user,
+                $draft,
+                $text
+            );
+        }
+
         if (($draft['category_requested'] ?? null) !== null && empty($draft['category_id'])) {
             $typeLabel = $draft['type'] === 'income' ? 'pemasukan' : 'pengeluaran';
             $categoryNames = $user->categories()
@@ -202,10 +228,6 @@ class WhatsAppMessageProcessor
                 'Kirim ulang dengan format *kategori: [nama persis]*. Ketik *kategori* untuk melihat daftar kategori.');
         }
 
-        /*
-         * Transfer antar-dompet tetap menggunakan
-         * QuickAddParser untuk menentukan arah transfer.
-         */
         if (
             $draft['type'] !== 'transfer'
             && empty($draft['account_id'])
@@ -217,32 +239,7 @@ class WhatsAppMessageProcessor
                 $match
             )
         ) {
-
-            return WhatsAppMessageFormat::message('Dompet belum ditemukan', 'Nama “'.WhatsAppMessageFormat::text(trim($match[1])).'” belum cocok dengan dompet aktif.', 'Ketik *dompet* untuk melihat daftar, lalu kirim ulang dengan nama yang tertera.');
-        }
-
-        /*
-         * Groq hanya digunakan jika data inti belum
-         * lengkap atau parser tidak yakin.
-         *
-         * Jangan mengubah arah transfer menggunakan AI.
-         */
-        $needsAi = $draft['type'] !== 'transfer'
-            && (
-                empty($draft['amount'])
-                || empty($draft['account_id'])
-                || (
-                    ($draft['confidence'] ?? 0) < 0.75
-                    && ! $this->isIncomingMoney($text)
-                )
-            );
-
-        if ($needsAi) {
-            $draft = $this->mergeAi(
-                $user,
-                $draft,
-                $text
-            );
+            return WhatsAppMessageFormat::message('Dompet belum ditemukan', '“'.WhatsAppMessageFormat::text(trim($match[1])).'” belum cocok dengan nama dompet terdaftar.', 'Ketik *dompet* untuk melihat daftar. Jika tadi ada typo, kirim ulang dengan ejaan yang benar.');
         }
 
         $payload = $this->payload($draft);

@@ -128,7 +128,7 @@ class WhatsAppCommandService
         return WhatsAppMessageFormat::message('Panduan WhatsApp', 'Catat transaksi, cek saldo, dan pantau ringkasan keuangan langsung lewat chat.',
             "*🧾 Catat transaksi*\n• Pengeluaran: makan 35rb gopay\n• Dengan kategori: makan 35rb gopay kategori: [nama kategori]\n• Dengan catatan dan tanggal: makan 35rb gopay catatan: makan siang kategori: [nama kategori] tanggal: 24-11-2026\n• Pemasukan: gaji 5jt masuk bca\n• Transfer: transfer 100rb bca ke gopay",
             "*📊 Pantau keuangan*\n• dompet\n• saldo bca\n• kategori / kategori pengeluaran / kategori pemasukan\n• ringkasan hari ini\n• ringkasan bulan ini\n• riwayat",
-            "*✅ Periksa sebelum menyimpan*\nSetiap transaksi muncul sebagai draf. Balas *1* untuk simpan atau *3* untuk batalkan. Draf aktif 30 menit.\nUntuk mengubah detail, batalkan draf lalu kirim ulang transaksi.",
+            "*✅ Periksa sebelum menyimpan*\nSetiap transaksi muncul sebagai draf. Balas *1* untuk simpan atau *3* untuk batalkan. Draf aktif 30 menit.\nUntuk pemasukan/pengeluaran, AI dapat membantu memahami typo ringan pada deskripsi, dompet, atau kategori jika tersedia. Transfer diproses dengan aturan tetap. Pastikan detail draf sudah benar.\nUntuk mengubah detail, batalkan draf lalu kirim ulang transaksi.",
             'Ganti [nama kategori] dengan nama persis dari perintah *kategori*. Catatan opsional memakai *catatan: ...*. Tanggal opsional: *tanggal: hari ini*, *tanggal: kemarin*, *tanggal: 24-11-2026*, atau *tanggal: 2026-11-24*. Tanpa tanggal, transaksi memakai hari ini. Nominal: *50rb*, *50k*, *50000*, atau *1,5jt*.');
     }
 }

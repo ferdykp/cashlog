@@ -313,6 +313,85 @@ class WhatsAppWorkflowTest extends TestCase
         }
     }
 
+    public function test_ai_can_correct_obvious_wallet_and_category_typos_to_registered_values(): void
+    {
+        $category = $this->user->categories()->create(['name' => 'Transportasi', 'type' => 'expense']);
+        config(['services.groq.enabled' => true, 'services.groq.key' => 'test-key']);
+        Http::fake([
+            'api.groq.com/*' => Http::response([
+                'choices' => [[
+                    'message' => [
+                        'content' => json_encode([
+                            'type' => 'expense',
+                            'amount' => 50000,
+                            'account_name' => 'bca',
+                            'category_name' => 'Transportasi',
+                            'note' => null,
+                            'date' => null,
+                        ], JSON_THROW_ON_ERROR),
+                    ],
+                ]],
+            ]),
+        ]);
+
+        $reply = app(WhatsAppMessageProcessor::class)->handle(
+            $this->phone,
+            'bensim 50rb bcaa kategori: Transporatsi'
+        );
+
+        $this->assertStringContainsString('💳 bca', $reply);
+        $this->assertStringContainsString('🏷️ Transportasi', $reply);
+        $this->assertStringContainsString('Balas *1* untuk simpan', $reply);
+        $this->assertDatabaseHas('conversation_sessions', [
+            'user_id' => $this->user->id,
+            'state' => 'waiting_confirmation',
+        ]);
+        $this->assertSame($category->id, ConversationSession::first()->context['category_id']);
+        Http::assertSentCount(1);
+    }
+
+    public function test_capitalization_does_not_need_ai_to_match_accounts_and_categories(): void
+    {
+        $category = $this->user->categories()->create(['name' => 'Transportasi', 'type' => 'expense']);
+        config(['services.groq.enabled' => true, 'services.groq.key' => 'test-key']);
+        Http::fake();
+
+        $reply = app(WhatsAppMessageProcessor::class)->handle($this->phone, 'BENSIN 50RB BCA');
+
+        $this->assertStringContainsString('💳 bca', $reply);
+        $this->assertStringContainsString('🏷️ Transportasi', $reply);
+        $this->assertSame($category->id, ConversationSession::first()->context['category_id']);
+        Http::assertNothingSent();
+    }
+
+    public function test_ai_can_classify_a_transaction_description_with_a_typo(): void
+    {
+        $category = $this->user->categories()->create(['name' => 'Transportasi', 'type' => 'expense']);
+        config(['services.groq.enabled' => true, 'services.groq.key' => 'test-key']);
+        Http::fake([
+            'api.groq.com/*' => Http::response([
+                'choices' => [[
+                    'message' => [
+                        'content' => json_encode([
+                            'type' => 'expense',
+                            'amount' => 50000,
+                            'account_name' => 'bca',
+                            'category_name' => 'Transportasi',
+                            'note' => null,
+                            'date' => null,
+                        ], JSON_THROW_ON_ERROR),
+                    ],
+                ]],
+            ]),
+        ]);
+
+        $reply = app(WhatsAppMessageProcessor::class)->handle($this->phone, 'bensim 50rb bca');
+
+        $this->assertStringContainsString('🏷️ Transportasi', $reply);
+        $this->assertSame($category->id, ConversationSession::first()->context['category_id']);
+        Http::assertSentCount(1);
+    }
+
     public function test_financial_information_commands_are_scoped_and_do_not_create_transactions(): void
     {
         $processor = app(WhatsAppMessageProcessor::class);
