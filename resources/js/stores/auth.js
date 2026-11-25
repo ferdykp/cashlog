@@ -7,9 +7,11 @@ import { useNotificationStore } from "@/stores/notification";
 
 export const useAuthStore = defineStore("auth", () => {
     const user = ref(null);
-    // Deklarasikan variabel token sebagai ref
-    const token = ref(localStorage.getItem("token") || "");
-    const isAuthenticated = computed(() => Boolean(user.value || token.value));
+    // The first-party SPA now authenticates only with HttpOnly session cookies.
+    // Purge bearer tokens left by older SPA versions; external API clients can
+    // continue using the backend's Sanctum bearer-token endpoints.
+    localStorage.removeItem("token");
+    const isAuthenticated = computed(() => Boolean(user.value));
     const notifyStore = useNotificationStore();
     let authResolved = false;
     let userRequest = null;
@@ -27,8 +29,6 @@ export const useAuthStore = defineStore("auth", () => {
             } catch (error) {
                 if (error.response?.status === 401) {
                     user.value = null;
-                    localStorage.removeItem("token");
-                    token.value = "";
                 }
                 authResolved = true;
                 return false;
@@ -42,8 +42,6 @@ export const useAuthStore = defineStore("auth", () => {
 
     async function login(credentials) {
         const response = await api.post("/api/session/login", credentials);
-        localStorage.removeItem("token");
-        token.value = "";
         user.value = response.data.data.user;
         authResolved = true;
         window.dispatchEvent(new Event("ledger:session-changed"));
@@ -69,7 +67,7 @@ export const useAuthStore = defineStore("auth", () => {
 
     async function logout() {
         try {
-            await api.post(token.value ? "/api/logout" : "/api/session/logout");
+            await api.post("/api/session/logout");
         } catch {
             // Always finish local logout even if the network is unavailable.
         } finally {
@@ -85,8 +83,16 @@ export const useAuthStore = defineStore("auth", () => {
 
     function logoutLocal() {
         window.dispatchEvent(new Event("ledger:session-cleared"));
-        localStorage.removeItem("token");
-        token.value = "";
+        navigator.serviceWorker?.controller?.postMessage({
+            type: "CLEAR_SENSITIVE_SHARE_CACHE",
+        });
+        if ("serviceWorker" in navigator) {
+            void navigator.serviceWorker.ready.then((registration) => {
+                registration.active?.postMessage({
+                    type: "CLEAR_SENSITIVE_SHARE_CACHE",
+                });
+            }).catch(() => {});
+        }
         user.value = null;
         authResolved = true;
     }
@@ -102,7 +108,6 @@ export const useAuthStore = defineStore("auth", () => {
     // Jangan lupa return updateProfile di bagian bawah store:
     return {
         user,
-        token,
         isAuthenticated,
         fetchUser,
         login,

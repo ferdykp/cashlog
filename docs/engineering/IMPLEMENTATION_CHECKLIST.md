@@ -7,7 +7,7 @@ State: in progress. Source: the engineering audit documents in this directory, v
 - [x] Record baseline test/build/format results; production DB engine remains unverified (never read live secrets).
 - [x] Add regression tests for exact money aggregation and transaction idempotency.
 - [ ] Add balance-adjustment regression contract (gated by automatic review; no production behavior changed).
-- [x] Change API payload caching from sessionStorage to page-lifetime memory; full reload now fetches fresh server data.
+- [x] Remove authenticated API response caching; every page load reads current financial data from the server.
 - [x] Add CI for the existing PHP and JavaScript/build suites.
 - [ ] Add Playwright browser coverage only with isolated services/accounts; Playwright is not configured in this repository yet.
 

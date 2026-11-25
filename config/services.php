@@ -62,6 +62,10 @@ return [
         'instance' => env('EVOLUTION_INSTANCE', 'ledger'),
         'webhook_secret' => env('EVOLUTION_WEBHOOK_SECRET'),
         'webhook_jwt_secret' => env('EVOLUTION_WEBHOOK_JWT_SECRET'),
+        'webhook_allow_shared_secret' => (bool) env(
+            'EVOLUTION_WEBHOOK_ALLOW_SHARED_SECRET',
+            env('APP_ENV', 'production') === 'local'
+        ),
     ],
 
     'ocr' => [

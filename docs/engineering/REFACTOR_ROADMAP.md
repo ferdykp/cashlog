@@ -40,7 +40,7 @@ This roadmap is based on `ARCHITECTURE_AUDIT.md`, `SECURITY_REVIEW.md`, `FINANCI
 
 ## Phase 2 — Browser security and retention
 
-1. Evaluate migration from localStorage bearer tokens to first-party Sanctum cookie sessions. Plan CSRF, CORS, PWA, API-client compatibility, session revocation, and rollout before implementation.
+1. Completed: migrate the first-party SPA from localStorage bearer tokens to Sanctum cookie sessions with CSRF, credentialed CORS, browser-cache cleanup, and compatibility retained for external API clients. Production rollout still requires the deployment checks in `AUTHENTICATION.md`.
 2. Reassess client-side persistence of finance responses; minimize fields and TTL or use memory-only cache if speed requirements allow.
 3. Define OCR document retention, deletion, and backup policy.
 4. Use provider-supported webhook signature/timestamp validation if available; preserve dedupe and retry semantics.

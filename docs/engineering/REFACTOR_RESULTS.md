@@ -4,18 +4,18 @@ Date: 2026-11-17. No deployment or production data/infrastructure change.
 
 ## Implemented
 
-- Added first-party Sanctum cookie authentication for the Vue SPA: stateful API middleware, CSRF bootstrap/XSRF Axios credentials, session-ID regeneration on login, session invalidation on logout, session-aware route guards, and successful-login removal of legacy browser bearer tokens. Kept `/api/login` PAT support for existing external clients.
-- Added additive OCR source retention: configurable 30-day default expiry for new imports, owner-checked source deletion, a dry-run-capable cleanup command scheduled daily, and metadata retention. Legacy imports with no expiry remain untouched.
+- Added first-party Sanctum cookie authentication for the Vue SPA: stateful API middleware, CSRF bootstrap/XSRF Axios credentials, session-ID regeneration on login, session invalidation on logout, session-aware route guards, removal of legacy browser bearer tokens at startup, and no bearer-token persistence in Axios. Kept `/api/login` PAT support for existing external clients.
+- Added OCR source retention: configurable 30-day default expiry for new imports, owner-checked source deletion, a dry-run-capable cleanup command scheduled daily, and sensitive OCR-result scrubbing. Legacy source files with no expiry remain untouched while extracted results are scrubbed by age.
 - Added regression coverage for session/PAT auth and OCR ownership, cleanup selection, metadata preservation, and dry-run behavior.
 - Added/update security, authentication, deployment, testing, and privacy documentation, including staging rollout requirements.
-- Removed the “Menampilkan data sesi terakhir…” and offline stale-cache banner from the app shell while retaining background cache refresh and request-error handling.
-- Added opt-in Evolution HS256 JWT verification with a 10-minute claim window and one-message-ID replay binding, while preserving the existing shared-secret mode and idempotent retries.
+- Removed the “Menampilkan data sesi terakhir…” and offline stale-cache banner from the app shell. The later security update removed API response caching entirely.
+- Added Evolution HS256 JWT verification with a 10-minute claim window and one-message-ID replay binding. Shared-secret mode is now disabled by default outside local development.
 
 - Added exact decimal subtraction/sum/percentage helpers and regression cases for fractional totals, large amounts, negatives, and zero denominator.
 - Replaced floating-point money aggregation in goal/budget stores, dashboard savings/remaining totals, transaction daily totals, and report expense comparison.
 - Preserved monetary values as strings in reviewed bill, quick-add transaction, and related input boundaries.
 - Transaction idempotency now compares category and normalized note as well as existing transaction identity/amount/date/goal fields; changed values return HTTP 409.
-- Authenticated API response caching is page-memory only; a full reload no longer reads prior financial payloads from `sessionStorage`, and a regression test covers expiry and clearing.
+- Authenticated API response caching was later removed entirely; each request reads from the server and no prior financial payload is read from browser storage.
 - Removed six empty frontend placeholder files, the unreferenced scaffold `HelloWorld.vue`, seven unreferenced frontend assets, and the unreferenced public SVG icon sprite after verifying no source/config references.
 - Consolidated the unlinked, superseded `docs/project-review.md` priorities into `REFACTOR_ROADMAP.md`; retained referenced deployment, privacy, OCR, WhatsApp, financial-domain, and performance documentation.
 - Added GitHub Actions CI jobs for PHP tests/Pint and JS tests/Prettier/build.

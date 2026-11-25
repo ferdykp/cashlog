@@ -1,5 +1,15 @@
 <?php
 
+$allowedOrigins = ['https://ledger.fdevsite.cloud'];
+
+if (env('APP_ENV', 'production') === 'local') {
+    $allowedOrigins = [
+        'http://localhost:5173',
+        'http://127.0.0.1:5173',
+        ...$allowedOrigins,
+    ];
+}
+
 return [
 
     'paths' => ['api/*', 'sanctum/csrf-cookie'],
@@ -7,15 +17,10 @@ return [
     'allowed_methods' => ['*'],
 
     /*
-    | Tambahkan origin lokal dan produksi (baik HTTP maupun HTTPS).
-    | Menggunakan '*' juga bisa untuk menguji, namun mendaftarkan domain secara spesifik jauh lebih aman.
+    | Origin localhost hanya diizinkan saat APP_ENV=local. Produksi memakai
+    | origin HTTPS aplikasi secara eksplisit karena credentials aktif.
     */
-    'allowed_origins' => [
-        'http://localhost:5173',
-        'http://127.0.0.1:5173',
-        'http://ledger.fdevsite.cloud',
-        'https://ledger.fdevsite.cloud',
-    ],
+    'allowed_origins' => $allowedOrigins,
 
     'allowed_origins_patterns' => [],
 

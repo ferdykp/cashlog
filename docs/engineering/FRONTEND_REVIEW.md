@@ -39,7 +39,7 @@ Audit date: 2026-11-17. Source review only; no UI code was changed and no build/
 ## Positive implementation evidence
 
 - Pages are lazy-loaded through `resources/js/router/index.js:5-23,25-143`.
-- Axios is shared across the app and authentication interceptor reads the token from localStorage (`resources/js/lib/axios.js:277-285`).
+- Axios is shared across the app and uses credentialed Sanctum session cookies with CSRF bootstrap; the SPA no longer reads or sends bearer tokens from localStorage.
 - Pinia stores and reusable money/decimal utilities exist.
 - PWA worker excludes `/api/` responses from shared runtime caching; hashed static assets are cached at runtime (`resources/js/sw.js:12-26`).
 - Reduced-motion styles are present in `resources/js/premium.css`.

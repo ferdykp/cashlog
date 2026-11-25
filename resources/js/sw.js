@@ -37,6 +37,44 @@ registerRoute(
 
 const SHARE_CACHE = "ledger-share-target-v3";
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+const SHARE_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
+self.addEventListener("activate", (event) => {
+    event.waitUntil(
+        caches
+            .open(SHARE_CACHE)
+            .then(cleanupExpiredShareEntries)
+            .then(() => self.clients.claim()),
+    );
+});
+
+self.addEventListener("message", (event) => {
+    if (event.data?.type === "CLEAR_SENSITIVE_SHARE_CACHE") {
+        event.waitUntil(caches.delete(SHARE_CACHE));
+    }
+});
+
+async function cleanupExpiredShareEntries(cache) {
+    const expiredBefore = Date.now() - SHARE_CACHE_MAX_AGE_MS;
+
+    for (const request of await cache.keys()) {
+        const response = await cache.match(request);
+        if (!response) continue;
+
+        let createdAt = Number(response.headers.get("X-Ledger-Created"));
+        if (!createdAt) {
+            try {
+                createdAt = Number((await response.clone().json()).createdAt);
+            } catch {
+                createdAt = 0;
+            }
+        }
+
+        if (!Number.isFinite(createdAt) || createdAt <= expiredBefore) {
+            await cache.delete(request);
+        }
+    }
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -55,6 +93,16 @@ self.addEventListener("fetch", (event) => {
 
     if (event.request.method === "POST" && url.pathname === "/share-target") {
         event.respondWith(handleShare(event.request));
+    } else if (
+        event.request.mode === "navigate" &&
+        url.origin === self.location.origin
+    ) {
+        event.waitUntil(
+            caches
+                .open(SHARE_CACHE)
+                .then(cleanupExpiredShareEntries)
+                .catch(() => {}),
+        );
     }
 });
 
@@ -95,6 +143,7 @@ async function handleShare(request) {
 
     try {
         cache = await caches.open(SHARE_CACHE);
+        await cleanupExpiredShareEntries(cache);
         // Parse once: cloning and buffering the whole multipart request doubles memory
         // use before the file size limit can be checked on low-memory Android devices.
         /*

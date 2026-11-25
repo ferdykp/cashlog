@@ -1,6 +1,6 @@
 # OCR invoice / bukti transaksi
 
-Successful uploads now receive an expiry based on `OCR_RETENTION_DAYS` (default 30 days). `ocr:cleanup-expired` deletes only the private source document and retains import/OCR metadata. Owners can remove their own source through `DELETE /api/imports/{id}/document`. New imports only receive expiry; old imports with `file_expires_at = null` remain untouched. The scheduled cleanup includes a `--dry-run` preview.
+Successful uploads now receive an expiry based on `OCR_RETENTION_DAYS` (default 30 days). `ocr:cleanup-expired` deletes expired private source documents and scrubs raw OCR text, parsed financial details, and confidence while retaining compact import status. Owners can remove their own source through `DELETE /api/imports/{id}/document`; this also scrubs the OCR results immediately. Legacy source files without `file_expires_at` are not assigned a guessed expiry, while their extracted results are scrubbed after the configured retention period. The scheduled cleanup includes a `--dry-run` preview.
 
 Endpoint `POST /api/imports/scan` menerima `document` berupa JPG, PNG, WEBP hingga 10 MB dan 20 megapiksel. PDF belum didukung. Gambar diperkecil bila sisi terpanjang melewati 2000 piksel, diratakan di latar putih, lalu dibaca satu kali oleh Tesseract. Hasil selalu berupa draft; pengguna tetap perlu memeriksa nominal dan tanggal.
 

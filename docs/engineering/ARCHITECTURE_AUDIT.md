@@ -13,7 +13,7 @@ Cashlog has a credible Laravel/Vue application structure: API routes are protect
 |---|---|
 | Backend | Good Laravel baseline: dependency-injected services, Form Requests, Resources, auth middleware, and ownership checks exist. Validation and business rules are not consistently separated across all controllers. Some service classes have broad responsibilities and are large. |
 | Frontend | Vue Router lazy-loads pages; Pinia, shared Axios, and reusable utilities/components are used. Several views are very large, and cache/data-loading behavior is centralized in Axios with implicit app-wide effects that need stronger tests. |
-| Security | Sanctum-protected routes, ownership validation, rate limiting, private OCR storage, and constant-time comparison for the WhatsApp webhook secret are present. Browser-accessible bearer token/cache storage creates an XSS blast-radius risk; active XSS was not confirmed in this review. Production headers were not verifiable from repository files alone. |
+| Security | Sanctum-protected routes, ownership validation, rate limiting, private OCR storage, CSRF-protected cookie authentication, and constant-time webhook secret comparison are present. The first-party SPA no longer stores bearer tokens or authenticated API responses in browser storage. Production security headers and infrastructure controls still require deployment verification. |
 | Financial integrity | Strong foundations include BCMath helpers, decimal database columns, transactions, ordered account locks, and idempotency constraints. Direct balance editing, incomplete idempotency payload comparison, and frontend floating-point totals remain gaps. |
 | Database | Foreign keys, unique constraints, decimal amounts, and indexes are used. Cross-user ownership relationships are primarily enforced in application code; SQLite test configuration cannot establish production locking behavior. |
 | Performance | Lazy chunks, chart precache exclusion, and tab-scoped API response caching exist. The cache intentionally returns a recent cached response while revalidating it; this is visible to users through the “Menampilkan data sesi terakhir…” status. Repository review alone cannot establish current production latency. |
@@ -33,15 +33,11 @@ Cashlog has a credible Laravel/Vue application structure: API routes are protect
 - **Modification risk:** High. Existing users may rely on editing balances; introducing adjustment entries changes history and can affect aggregates. Do not backfill or alter production records without a reviewed migration/reconciliation plan.
 - **Required regression tests:** Reject direct balance updates; adjustment is atomic and attributable; history/report totals reconcile; owner isolation; concurrent adjustments serialize; rollback leaves both balance and history unchanged.
 
-### F-02 — Authenticated API cache intentionally serves the last tab response during refresh
+### F-02 — Authenticated API response cache (resolved)
 
-- **Severity:** Medium (financial UX/data freshness; confirmed behavior).
-- **Location:** `resources/js/lib/axios.js:15-26,188-259`; `resources/js/layouts/AppLayout.vue:22-34`.
-- **Evidence:** GET responses under `/api/` are cached in `sessionStorage` for up to 30 minutes. On a cache hit, Axios returns cached data immediately and refreshes it in the background. AppLayout shows “Menampilkan data sesi terakhir sambil memperbarui N sumber data…” while refreshes are pending, and another message if refresh fails.
-- **Why it matters:** Users may briefly see a previously fetched financial value before the server response arrives. The status banner explains the behavior, but can be surprising and does not itself make cached values fresh. Hiding only the message would remove transparency while retaining stale display.
-- **Recommended solution:** Decide explicitly between network-authoritative rendering (show a skeleton until fresh data arrives) and stale-while-revalidate (retain fast cache display but mark freshness unobtrusively and show an offline/error state). For financial amounts, prefer a small “Memperbarui” indicator or skeleton at the affected data region rather than a global amber banner, and never label stale values as current. Document cache maximum age and invalidation guarantees.
-- **Modification risk:** Medium. Removing cache-first responses can make reload visibly slower and increase API load; changing the UI alone has low data-path risk but can conceal stale state. Test the chosen policy across cold load, warm load, offline, 401, logout, user switch, mutations, and multi-request pages.
-- **Required regression tests:** Cached response is visibly marked until successful revalidation; offline failure is accessible; mutation/logout/account change clears cache; cache hit cannot cross auth tokens; fresh server response replaces cached values; no stale state survives after all requests complete.
+- **Status:** Resolved on 2026-11-25. Axios no longer persists or returns cached authenticated API responses; all GET requests use the server response.
+- **Security impact addressed:** Financial API data is no longer persisted in `sessionStorage` or served stale from a tab cache.
+- **Follow-up:** Keep authenticated API responses out of Cache Storage and browser persistence. Revisit only if a future cache design has explicit account isolation, retention, and invalidation controls.
 
 ### F-03 — Financial total idempotency comparison omits some persisted fields
 

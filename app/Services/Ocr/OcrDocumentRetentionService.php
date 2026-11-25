@@ -29,6 +29,23 @@ class OcrDocumentRetentionService
     {
         $deleted = 0;
 
+        // OCR text and parsed financial details are only needed while the
+        // source document is available for review. Also scrub legacy rows
+        // without an expiry after the configured retention window.
+        $legacyCutoff = now()->subDays((int) config('services.ocr.retention_days', 30));
+        TransactionImport::query()
+            ->where(function ($query) use ($legacyCutoff) {
+                $query->where(function ($expiring) {
+                    $expiring->whereNotNull('file_expires_at')->where('file_expires_at', '<=', now());
+                })->orWhere('created_at', '<=', $legacyCutoff);
+            })
+            ->where(function ($query) {
+                $query->whereNotNull('ocr_raw_text')
+                    ->orWhereNotNull('parsed_data')
+                    ->orWhereNotNull('confidence');
+            })
+            ->update(['ocr_raw_text' => null, 'parsed_data' => null, 'confidence' => null]);
+
         TransactionImport::query()
             ->whereNotNull('file_expires_at')
             ->whereNull('file_deleted_at')
@@ -55,7 +72,12 @@ class OcrDocumentRetentionService
             throw new RuntimeException('Unable to delete the private OCR source file.');
         }
 
-        $import->forceFill(['file_deleted_at' => now()])->save();
+        $import->forceFill([
+            'file_deleted_at' => now(),
+            'ocr_raw_text' => null,
+            'parsed_data' => null,
+            'confidence' => null,
+        ])->save();
 
         return true;
     }

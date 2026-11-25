@@ -50,9 +50,9 @@ return [
     |
     */
 
-    // Personal access tokens expire after 30 days by default. Override in
-    // production when the deployment has a stricter session policy.
-    'expiration' => (int) env('SANCTUM_EXPIRATION', 43200),
+    // Personal access tokens expire after 7 days by default. Deployments may
+    // shorten this further; browser SPA authentication uses session cookies.
+    'expiration' => (int) env('SANCTUM_EXPIRATION', 10080),
 
     /*
     |--------------------------------------------------------------------------

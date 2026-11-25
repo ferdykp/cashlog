@@ -30,7 +30,7 @@ These changes target code-level query and render barriers found during source re
 
 ## Not changed
 
-Financial formulas and persisted records were not changed. A tab-scoped `sessionStorage` cache for authenticated JSON GET requests under `/api/` is now added in `resources/js/lib/axios.js`. It uses a 30-minute freshness window, scopes entries by a one-way hash of the current bearer token and normalized request, skips large responses, and is cleared on logout, any non-GET request, or the existing `ledger:data-changed` event. It is not a service-worker/shared cache. On reload, a matching response is shown immediately and revalidated in the background; the app displays a status while that happens and indicates when refresh failed. Cache use is best-effort when browser storage is unavailable. Production nginx/cache/database settings are not part of this local code patch.
+Financial formulas and persisted records were not changed. The SPA uses HttpOnly Sanctum sessions and does not persist authenticated API responses in browser storage. Authenticated GET requests are fetched from the server; mutation responses are not cached by the service worker. Production nginx/cache/database settings are not part of this local code patch.
 
 This client cache reduces the wait before previously loaded values reappear; it does not make the Laravel request itself faster and it cannot show data that has never been loaded in the current tab session. Verify storage behavior, logout clearing, mutation invalidation, and stale/offline messaging in a browser before release. Do not claim production speed improvement until the new build is deployed and cold/warm authenticated page timings are compared.
 

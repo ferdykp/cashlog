@@ -29,6 +29,11 @@ class WhatsAppWebhookController extends Controller
             $providerJwt = $this->providerJwtContext($request, $jwtSecret);
             abort_unless($providerJwt !== null, 401);
         } else {
+            abort_unless(
+                config('services.evolution.webhook_allow_shared_secret'),
+                503,
+                'WhatsApp webhook memerlukan JWT provider di lingkungan produksi.'
+            );
             abort_if($sharedSecret === '', 503, 'WhatsApp webhook belum dikonfigurasi.');
             abort_unless(
                 hash_equals($sharedSecret, (string) $request->header('X-Ledger-Webhook-Secret')),

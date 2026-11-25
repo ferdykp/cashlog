@@ -124,8 +124,6 @@ The Financial Workspace now renders its active primary list as soon as that endp
 
 The current local Workbox build reports 79 precache entries / 657.34 KiB. This is build output only; no production asset version, before/after request duration, dashboard-ready time, LCP, or page-transition timing was captured. Production remains on the previously observed asset until deployed.
 
-## Cross-page session cache follow-up (local, not deployed)
+## Authenticated response cache removal (2026-11-25)
 
-Authenticated JSON GET requests to `/api/` now use a best-effort tab-scoped response cache in `sessionStorage`, keyed by a one-way token hash and normalized URL/parameters. On a reload in the same tab, any unexpired matching response (30-minute maximum age) is returned immediately and updated from the network in the background. This applies globally through the shared Axios client, so it covers all data pages that use that client, not just Dashboard. Large entries are skipped, total storage is capped, and logout, non-GET requests, and `ledger:data-changed` clear the cache. The app signals when cached values are being refreshed or a refresh failed. Service Worker API behavior remains unchanged.
-
-This is a perceived wait-time strategy only; it does not reduce origin/API latency and does not help first-ever visits or a new tab without matching tab storage. No browser validation, production deployment, or before/after timing has yet been captured for this change. Treat freshness/invalidation behavior as requiring browser verification before release; no production performance improvement is claimed.
+The earlier tab-scoped `sessionStorage` cache described in this report has been removed. The SPA now authenticates with HttpOnly Sanctum cookies and fetches authenticated GET data from the server without persisting API response payloads in browser storage. No performance improvement is claimed for this security change.
