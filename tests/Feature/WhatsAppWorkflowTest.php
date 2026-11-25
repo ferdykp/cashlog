@@ -442,6 +442,10 @@ class WhatsAppWorkflowTest extends TestCase
         $this->assertStringContainsString('kategori pengeluaran', $help);
         $this->assertStringContainsString('kategori pemasukan', $help);
         $this->assertStringContainsString('riwayat', $help);
+
+        $this->assertStringContainsString('Panduan WhatsApp', $processor->handle($this->phone, 'bntuan'));
+        $this->assertStringContainsString('Pesan belum dikenali', $processor->handle($this->phone, 'xyzzy'));
+        $this->assertDatabaseCount('transactions', 0);
     }
 
     public function test_information_commands_preserve_pending_confirmation(): void

@@ -228,6 +228,10 @@ class WhatsAppMessageProcessor
                 'Kirim ulang dengan format *kategori: [nama persis]*. Ketik *kategori* untuk melihat daftar kategori.');
         }
 
+        if (empty($draft['amount']) && empty($draft['account_id'])) {
+            return WhatsAppMessageFormat::message('Pesan belum dikenali', 'Aku belum menemukan perintah atau detail transaksi yang bisa diproses.', 'Ketik *bantuan* untuk panduan, atau coba *makan 35rb gopay*.');
+        }
+
         if (
             $draft['type'] !== 'transfer'
             && empty($draft['account_id'])

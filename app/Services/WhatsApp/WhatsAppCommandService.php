@@ -11,6 +11,7 @@ class WhatsAppCommandService
     public function respond(User $user, string $input): ?string
     {
         $command = Str::lower(trim(preg_replace('/\s+/u', ' ', $input)));
+        $command = $this->correctSimpleCommandTypo($command);
         if (in_array($command, ['bantuan', 'help', 'panduan', 'halo ledger', 'menu', 'commands'], true)) {
             return $this->help();
         }
@@ -121,6 +122,21 @@ class WhatsAppCommandService
         }
 
         return null;
+    }
+
+    private function correctSimpleCommandTypo(string $command): string
+    {
+        if (str_contains($command, ' ')) {
+            return $command;
+        }
+
+        $targets = ['bantuan', 'dompet', 'kategori', 'riwayat'];
+        $matches = array_values(array_filter(
+            $targets,
+            fn ($target) => levenshtein($command, $target) === 1
+        ));
+
+        return count($matches) === 1 ? $matches[0] : $command;
     }
 
     public function help(): string
