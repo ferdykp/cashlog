@@ -5,6 +5,7 @@ namespace App\Services\QuickAdd;
 use App\Models\User;
 use App\Services\WhatsApp\WhatsAppMessageFormat;
 use App\Support\DecimalMath;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Str;
 
 class QuickAddParser
@@ -12,7 +13,8 @@ class QuickAddParser
     public function parse(User $user, string $text): array
     {
         $raw = trim($text);
-        $lower = Str::lower($raw);
+        $transactionText = preg_replace('/\s+(?:kategori|catatan|tanggal)\s*:\s*.+$/isu', '', $raw) ?? $raw;
+        $lower = Str::lower($transactionText);
         $amount = $this->amount($lower);
         $accounts = $user->accounts()->where('is_archived', false)->get();
         $type = $this->type($lower);
@@ -46,7 +48,11 @@ class QuickAddParser
         if ($ambiguousAccount) {
             $account = null;
         }
-        $category = $this->category($user, $lower, $type);
+        $requestedCategory = $this->directive($raw, 'kategori');
+        $category = $requestedCategory !== null
+            ? $this->namedCategory($user, $requestedCategory, $type)
+            : $this->category($user, $lower, $type);
+        [$date, $dateError] = $this->transactionDate($raw);
         $missing = [];
         if (! $amount) {
             $missing[] = 'amount';
@@ -59,7 +65,60 @@ class QuickAddParser
         }
         $confidence = 0.25 + ($amount ? 0.3 : 0) + ($account ? 0.25 : 0) + ($category ? 0.15 : 0) + ($type ? 0.05 : 0);
 
-        return ['ambiguous_account' => $ambiguousAccount, 'type' => $type, 'amount' => $amount, 'account_id' => $account?->id, 'account_name' => $account?->name, 'related_account_id' => $related?->id, 'related_account_name' => $related?->name, 'category_id' => $category?->id, 'category_name' => $category?->name, 'note' => $this->note($raw), 'date' => WhatsAppMessageFormat::today()->toDateString(), 'missing' => $missing, 'confidence' => round(min(1, $confidence), 2), 'source' => 'rule'];
+        return ['ambiguous_account' => $ambiguousAccount, 'type' => $type, 'amount' => $amount, 'account_id' => $account?->id, 'account_name' => $account?->name, 'related_account_id' => $related?->id, 'related_account_name' => $related?->name, 'category_id' => $category?->id, 'category_name' => $category?->name, 'category_requested' => $requestedCategory, 'note' => $this->note($raw), 'date' => $date, 'date_error' => $dateError, 'missing' => $missing, 'confidence' => round(min(1, $confidence), 2), 'source' => 'rule'];
+    }
+
+    private function directive(string $text, string $name): ?string
+    {
+        $names = '(?:kategori|catatan|tanggal)';
+        $pattern = '/(?:^|\s)'.preg_quote($name, '/').'\s*:\s*(.+?)(?=\s+'.$names.'\s*:|$)/isu';
+        if (! preg_match($pattern, trim($text), $match)) {
+            return null;
+        }
+
+        return trim($match[1]);
+    }
+
+    private function transactionDate(string $text): array
+    {
+        $requested = $this->directive($text, 'tanggal');
+        $today = WhatsAppMessageFormat::today();
+        if ($requested === null || Str::lower($requested) === 'hari ini') {
+            return [$today->toDateString(), null];
+        }
+        if (Str::lower($requested) === 'kemarin') {
+            return [$today->subDay()->toDateString(), null];
+        }
+
+        $format = preg_match('/^\d{4}-\d{2}-\d{2}$/', $requested) ? '!Y-m-d' : '!d-m-Y';
+        if (! preg_match($format === '!Y-m-d' ? '/^\d{4}-\d{2}-\d{2}$/' : '/^\d{2}-\d{2}-\d{4}$/', $requested)) {
+            return [$today->toDateString(), $requested];
+        }
+
+        try {
+            $date = CarbonImmutable::createFromFormat($format, $requested, config('services.whatsapp.timezone', 'Asia/Jakarta'));
+        } catch (\Throwable) {
+            return [$today->toDateString(), $requested];
+        }
+
+        if (! $date || $date->format(substr($format, 1)) !== $requested) {
+            return [$today->toDateString(), $requested];
+        }
+
+        return [$date->toDateString(), null];
+    }
+
+    private function namedCategory(User $user, string $name, string $type)
+    {
+        if ($type === 'transfer') {
+            return null;
+        }
+
+        $normalized = Str::lower(trim(preg_replace('/\s+/u', ' ', $name)));
+
+        return $user->categories()->where('type', $type)->get()->first(
+            fn ($category) => Str::lower(trim(preg_replace('/\s+/u', ' ', $category->name))) === $normalized
+        );
     }
 
     private function amount(string $text): ?string
@@ -129,6 +188,11 @@ class QuickAddParser
 
     private function note(string $s): string
     {
-        return Str::limit(trim(preg_replace('/\s+/', ' ', $s)), 500, '');
+        $note = $this->directive($s, 'catatan');
+        if ($note === null) {
+            return '';
+        }
+
+        return Str::limit(trim(preg_replace('/\s+/', ' ', $note)), 500, '');
     }
 }

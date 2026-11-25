@@ -79,6 +79,7 @@ final class WhatsAppMessageFormat
         return self::message('WhatsApp terhubung', '✅ Nomor Anda sudah terverifikasi. Mulai catat transaksi lewat chat.',
             "*Coba kirim*\n• makan 35rb gopay\n• gaji 5jt masuk bca\n• transfer 100rb bca ke gopay",
             'Setiap transaksi akan muncul sebagai draf untuk Anda periksa sebelum disimpan.',
+            'Kategori opsional: tambahkan *kategori: Nama Kategori*; ketik *kategori* untuk melihat daftar. Catatan opsional memakai *catatan: ...*. Tanggal bisa memakai *tanggal: kemarin* atau *tanggal: 24-11-2026*; tanpa tanggal, dipakai hari ini.',
             'Balas *1* untuk simpan atau *3* untuk batalkan. Ketik *bantuan* untuk melihat semua perintah.');
     }
 }

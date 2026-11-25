@@ -112,6 +112,67 @@ class WhatsAppWorkflowTest extends TestCase
         $this->assertEquals(50000, $parser->parse($this->user, 'makan 2 orang 50rb bca')['amount']);
     }
 
+    public function test_explicit_category_note_and_date_directives_are_parsed_separately(): void
+    {
+        $category = $this->user->categories()->create(['name' => 'Makanan', 'type' => 'expense']);
+        $this->travelTo(Carbon::parse('2026-11-25 12:00:00', 'Asia/Jakarta'));
+
+        $draft = app(QuickAddParser::class)->parse(
+            $this->user,
+            'makan 35rb gopay catatan: makan siang kategori: Makanan tanggal: 24-11-2026'
+        );
+
+        $this->assertSame('35000.00', $draft['amount']);
+        $this->assertSame($category->id, $draft['category_id']);
+        $this->assertSame('makan siang', $draft['note']);
+        $this->assertSame('2026-11-24', $draft['date']);
+        $this->assertNull($draft['date_error']);
+
+        $yesterday = app(QuickAddParser::class)->parse($this->user, 'makan 35rb gopay tanggal: kemarin');
+        $this->assertSame('2026-11-24', $yesterday['date']);
+        $this->assertSame('', $yesterday['note']);
+
+        $isoDate = app(QuickAddParser::class)->parse($this->user, 'makan 35rb gopay tanggal: 2026-11-23');
+        $this->assertSame('2026-11-23', $isoDate['date']);
+    }
+
+    public function test_explicit_category_note_and_date_are_carried_into_confirmation_and_saved_transaction(): void
+    {
+        $category = $this->user->categories()->create(['name' => 'Makanan', 'type' => 'expense']);
+        $processor = app(WhatsAppMessageProcessor::class);
+        $reply = $processor->handle(
+            $this->phone,
+            'makan 35rb gopay catatan: makan siang kategori: Makanan tanggal: 24-11-2026'
+        );
+
+        $this->assertStringContainsString('Makanan', $reply);
+        $this->assertStringContainsString('makan siang', $reply);
+        $this->assertStringContainsString('24 Nov 2026', $reply);
+        $this->assertStringNotContainsString('📝 makan 35rb gopay', $reply);
+
+        $processor->handle($this->phone, '1');
+        $this->assertDatabaseHas('transactions', [
+            'amount' => 35000,
+            'type' => 'expense',
+            'account_id' => $this->user->accounts()->where('name', 'gopay')->value('id'),
+            'category_id' => $category->id,
+            'date' => '2026-11-24',
+            'note' => 'makan siang',
+        ]);
+    }
+
+    public function test_invalid_explicit_date_is_reported_instead_of_silently_using_today(): void
+    {
+        $reply = app(WhatsAppMessageProcessor::class)->handle(
+            $this->phone,
+            'makan 35rb gopay tanggal: 31-02-2026'
+        );
+
+        $this->assertStringContainsString('Format tanggal belum dikenali', $reply);
+        $this->assertDatabaseCount('transactions', 0);
+        $this->assertSame('idle', ConversationSession::first()->state);
+    }
+
     public function test_longer_wallet_name_is_not_confused_with_its_prefix(): void
     {
         $this->user->accounts()->create(['name' => 'bca utama', 'type' => 'bank']);
@@ -267,6 +328,38 @@ class WhatsAppWorkflowTest extends TestCase
         $this->assertDatabaseCount('transactions', 0);
     }
 
+    public function test_category_commands_can_list_all_or_filter_by_transaction_type(): void
+    {
+        $this->user->categories()->create(['name' => 'Makanan', 'type' => 'expense']);
+        $this->user->categories()->create(['name' => 'Gaji', 'type' => 'income']);
+        $processor = app(WhatsAppMessageProcessor::class);
+
+        $all = $processor->handle($this->phone, 'kategori');
+        $this->assertStringContainsString('Makanan', $all);
+        $this->assertStringContainsString('Gaji', $all);
+
+        $expenses = $processor->handle($this->phone, 'kategori pengeluaran');
+        $this->assertStringContainsString('Makanan', $expenses);
+        $this->assertStringNotContainsString('Gaji', $expenses);
+
+        $income = $processor->handle($this->phone, 'kategori pemasukan');
+        $this->assertStringContainsString('Gaji', $income);
+        $this->assertStringNotContainsString('Makanan', $income);
+    }
+
+    public function test_riwayat_aliases_and_help_commands_are_available(): void
+    {
+        $processor = app(WhatsAppMessageProcessor::class);
+        foreach (['riwayat', 'riwayat transaksi', 'transaksi terakhir', '5 transaksi terakhir'] as $command) {
+            $this->assertStringContainsString('Belum ada transaksi yang tercatat', $processor->handle($this->phone, $command));
+        }
+
+        $help = $processor->handle($this->phone, 'bantuan');
+        $this->assertStringContainsString('kategori pengeluaran', $help);
+        $this->assertStringContainsString('kategori pemasukan', $help);
+        $this->assertStringContainsString('riwayat', $help);
+    }
+
     public function test_information_commands_preserve_pending_confirmation(): void
     {
         $processor = app(WhatsAppMessageProcessor::class);
@@ -321,7 +414,7 @@ class WhatsAppWorkflowTest extends TestCase
         $reply = app(WhatsAppMessageProcessor::class)->handle($this->phone, 'dompet');
         $this->assertStringContainsString('20 dari 27', $reply);
         $this->assertStringContainsString('Rp2.125.000', $reply);
-        $this->assertEquals(20, substr_count($reply, '• '));
+        $this->assertEquals(20, substr_count($reply, '💳 *'));
     }
 
     public function test_user_text_cannot_inject_message_sections(): void

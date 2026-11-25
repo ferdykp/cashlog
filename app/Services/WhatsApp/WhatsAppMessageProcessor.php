@@ -127,6 +127,9 @@ class WhatsAppMessageProcessor
         if ($draft['ambiguous_account'] ?? false) {
             return WhatsAppMessageFormat::message('Periksa nama dompet', 'Pesan menyebut lebih dari satu dompet, jadi transaksinya belum dibuat.', 'Pemasukan atau pengeluaran memakai satu dompet. Untuk memindahkan saldo, tulis *transfer 50rb bca ke gopay*.');
         }
+        if (! empty($draft['date_error'])) {
+            return WhatsAppMessageFormat::message('Format tanggal belum dikenali', 'Tanggal “'.WhatsAppMessageFormat::text($draft['date_error']).'” belum bisa dibaca.', 'Gunakan *tanggal: hari ini*, *tanggal: kemarin*, *tanggal: 24-11-2026*, atau *tanggal: 2026-11-24*.');
+        }
         if (empty($draft['amount']) && preg_match('/\d/u', $text)) {
             return WhatsAppMessageFormat::message('Nominal belum terbaca', 'Tulis satu nominal positif agar transaksi bisa dicatat.', 'Contoh: *35000*, *35rb*, atau *50.000,50*. Kirim ulang transaksi; saldo belum berubah.');
         }
@@ -179,6 +182,24 @@ class WhatsAppMessageProcessor
             }
 
             $draft['source'] = 'incoming-rule';
+        }
+
+        if (($draft['category_requested'] ?? null) !== null && $draft['type'] === 'transfer') {
+            return WhatsAppMessageFormat::message('Kategori tidak diperlukan', 'Transfer antar-dompet tidak memakai kategori.', 'Contoh: *transfer 50rb bca ke gopay*.');
+        }
+
+        if (($draft['category_requested'] ?? null) !== null && empty($draft['category_id'])) {
+            $typeLabel = $draft['type'] === 'income' ? 'pemasukan' : 'pengeluaran';
+            $categoryNames = $user->categories()
+                ->where('type', $draft['type'])
+                ->orderBy('name')
+                ->pluck('name')
+                ->map(fn ($name) => WhatsAppMessageFormat::text($name))
+                ->implode(', ');
+
+            return WhatsAppMessageFormat::message('Kategori belum cocok', '“'.WhatsAppMessageFormat::text($draft['category_requested']).'” tidak ditemukan untuk '.$typeLabel.'.',
+                $categoryNames !== '' ? 'Pilih salah satu kategori: '.$categoryNames.'.' : 'Belum ada kategori untuk jenis transaksi ini. Tambahkan kategori di aplikasi Ledger.',
+                'Kirim ulang dengan format *kategori: [nama persis]*. Ketik *kategori* untuk melihat daftar kategori.');
         }
 
         /*

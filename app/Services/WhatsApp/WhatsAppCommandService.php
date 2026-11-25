@@ -14,6 +14,46 @@ class WhatsAppCommandService
         if (in_array($command, ['bantuan', 'help', 'panduan', 'halo ledger', 'menu', 'commands'], true)) {
             return $this->help();
         }
+        $categoryType = match ($command) {
+            'kategori pengeluaran' => 'expense',
+            'kategori pemasukan' => 'income',
+            default => null,
+        };
+        if ($command === 'kategori' || $categoryType !== null) {
+            $query = $user->categories()
+                ->whereIn('type', $categoryType ? [$categoryType] : ['expense', 'income'])
+                ->orderBy('type')
+                ->orderBy('name');
+            $categories = $query->get(['name', 'type']);
+            $kindLabel = $categoryType === 'expense' ? 'pengeluaran' : 'pemasukan';
+
+            if ($categories->isEmpty()) {
+                $description = $categoryType ? 'Belum ada kategori '.$kindLabel.'.' : 'Belum ada kategori pemasukan atau pengeluaran.';
+
+                return WhatsAppMessageFormat::message('Kategori '.($categoryType ? $kindLabel : 'tersedia'), $description, 'Tambahkan kategori di aplikasi Ledger, lalu gunakan *kategori: Nama Kategori* saat mencatat transaksi.');
+            }
+
+            $expense = $categories->where('type', 'expense')
+                ->map(fn ($category) => '• '.WhatsAppMessageFormat::text($category->name))
+                ->implode("\n");
+            $income = $categories->where('type', 'income')
+                ->map(fn ($category) => '• '.WhatsAppMessageFormat::text($category->name))
+                ->implode("\n");
+
+            $sections = [];
+            if ($categoryType === null || $categoryType === 'expense') {
+                $sections[] = '*Pengeluaran*'.($expense !== '' ? "\n".$expense : "\nBelum ada kategori.");
+            }
+            if ($categoryType === null || $categoryType === 'income') {
+                $sections[] = '*Pemasukan*'.($income !== '' ? "\n".$income : "\nBelum ada kategori.");
+            }
+            if ($categoryType === null) {
+                $sections[] = 'Transfer antar-dompet tidak memakai kategori.';
+            }
+            $sections[] = 'Gunakan nama persis dari daftar dan letakkan kategori di akhir. Catatan boleh ditulis sebelumnya: *makan 35rb gopay catatan: makan siang kategori: [nama kategori]*.';
+
+            return WhatsAppMessageFormat::message('Kategori '.($categoryType ? $kindLabel : 'tersedia'), ...$sections);
+        }
         $accounts = fn () => $user->accounts()->where('is_archived', false)->orderBy('name');
         if ($command === 'dompet') {
             $query = $accounts();
@@ -59,7 +99,7 @@ class WhatsAppCommandService
                 $count ? $count.' transaksi tercatat.' : 'Belum ada transaksi pada periode ini.',
                 '_Transfer antar-dompet tidak dihitung. Selisih periode bukan saldo dompet._');
         }
-        if ($command === '5 transaksi terakhir') {
+        if (in_array($command, ['riwayat', 'riwayat transaksi', 'transaksi terakhir', '5 transaksi terakhir'], true)) {
             $transactions = $user->transactions()->with(['account:id,name', 'relatedAccount:id,name'])->orderByDesc('date')->orderByDesc('id')->limit(5)->get();
             if ($transactions->isEmpty()) {
                 return WhatsAppMessageFormat::message('Transaksi terakhir', 'Belum ada transaksi yang tercatat.', 'Ketik *bantuan* untuk mulai mencatat.');
@@ -86,9 +126,9 @@ class WhatsAppCommandService
     public function help(): string
     {
         return WhatsAppMessageFormat::message('Panduan WhatsApp', 'Catat transaksi, cek saldo, dan pantau ringkasan keuangan langsung lewat chat.',
-            "*🧾 Catat transaksi*\n• Pengeluaran: makan 35rb gopay\n• Pemasukan: gaji 5jt masuk bca\n• Transfer: transfer 100rb bca ke gopay",
-            "*📊 Pantau keuangan*\n• dompet\n• saldo bca\n• ringkasan hari ini\n• ringkasan bulan ini\n• 5 transaksi terakhir",
+            "*🧾 Catat transaksi*\n• Pengeluaran: makan 35rb gopay\n• Dengan kategori: makan 35rb gopay kategori: [nama kategori]\n• Dengan catatan dan tanggal: makan 35rb gopay catatan: makan siang kategori: [nama kategori] tanggal: 24-11-2026\n• Pemasukan: gaji 5jt masuk bca\n• Transfer: transfer 100rb bca ke gopay",
+            "*📊 Pantau keuangan*\n• dompet\n• saldo bca\n• kategori / kategori pengeluaran / kategori pemasukan\n• ringkasan hari ini\n• ringkasan bulan ini\n• riwayat",
             "*✅ Periksa sebelum menyimpan*\nSetiap transaksi muncul sebagai draf. Balas *1* untuk simpan atau *3* untuk batalkan. Draf aktif 30 menit.\nUntuk mengubah detail, batalkan draf lalu kirim ulang transaksi.",
-            'Gunakan nama dompet yang terdaftar di Ledger. Contoh nominal: *50rb*, *50k*, *50000*, atau *1,5jt*.');
+            'Ganti [nama kategori] dengan nama persis dari perintah *kategori*. Catatan opsional memakai *catatan: ...*. Tanggal opsional: *tanggal: hari ini*, *tanggal: kemarin*, *tanggal: 24-11-2026*, atau *tanggal: 2026-11-24*. Tanpa tanggal, transaksi memakai hari ini. Nominal: *50rb*, *50k*, *50000*, atau *1,5jt*.');
     }
 }
