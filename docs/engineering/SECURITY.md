@@ -3,6 +3,7 @@
 ## Authentication and CSRF
 
 - The first-party SPA uses Sanctum session cookies with Laravel CSRF middleware. Cookies are HttpOnly; Secure defaults on in production and SameSite remains Lax.
+- Sessions remain valid for up to 30 days of inactivity by default (`SESSION_LIFETIME=43200`); the cookie does not expire when the browser closes (`SESSION_EXPIRE_ON_CLOSE=false`).
 - The bearer-token `/api/login` flow remains for external API clients. The SPA does not store or send bearer tokens and clears legacy browser tokens on startup.
 - Sanctum PATs expire after 7 days by default; deployments can shorten this through `SANCTUM_EXPIRATION`.
 - Login routes are rate-limited. Protected application routes continue to require `auth:sanctum`.
