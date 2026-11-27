@@ -551,6 +551,8 @@ async function fetchCashFlowData() {
                                 <span class="home-wallet-type">{{ getWalletTypeLabel(wallet.type) }}</span>
                                 <span class="home-wallet-card-count">{{ String(wallet.accountIndex + 1).padStart(2, '0') }} / {{ String(walletCards.length).padStart(2, '0') }}</span>
                             </div>
+                            <span class="wallet-contactless" aria-hidden="true"><i></i><i></i><i></i></span>
+                            <span class="wallet-payment-chip" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
                             <div class="home-wallet-card-balance">
                                 <span>Saldo {{ wallet.purpose === 'savings' ? 'tabungan' : 'tersedia' }}</span>
                                 <strong><AnimatedMoney :value="wallet.balance || '0'" :masked="!balanceVisible" /></strong>

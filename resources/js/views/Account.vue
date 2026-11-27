@@ -329,6 +329,9 @@ async function handleDelete() {
                         </div>
                     </div>
 
+                    <span class="wallet-contactless" aria-hidden="true"><i></i><i></i><i></i></span>
+                    <span class="wallet-payment-chip" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+
                     <!-- Saldo Kartu -->
                     <div
                         class="wallet-card-content wallet-card-balance space-y-1"
