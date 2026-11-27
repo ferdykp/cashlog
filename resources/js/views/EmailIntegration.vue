@@ -460,57 +460,63 @@ onMounted(async () => {
             >
                 <label class="space-y-1.5 text-xs font-semibold text-ink-600">
                     Gmail
-                    <select
-                        v-model="mappingForm.connection_id"
-                        required
-                        class="w-full h-11 rounded-xl border border-line-200 bg-paper-0 px-3 text-sm text-ink-900 focus:border-violet-600 focus:outline-none"
-                    >
-                        <option
-                            v-for="connection in activeConnections"
-                            :key="connection.id"
-                            :value="String(connection.id)"
+                    <div class="email-select-wrap">
+                        <select
+                            v-model="mappingForm.connection_id"
+                            required
+                            class="email-select w-full h-11 rounded-xl border border-line-200 bg-paper-0 px-3 text-sm text-ink-900 focus:border-violet-600 focus:outline-none"
                         >
-                            {{ connection.email }}
-                        </option>
-                    </select>
+                            <option
+                                v-for="connection in activeConnections"
+                                :key="connection.id"
+                                :value="String(connection.id)"
+                            >
+                                {{ connection.email }}
+                            </option>
+                        </select>
+                    </div>
                 </label>
                 <label class="space-y-1.5 text-xs font-semibold text-ink-600">
                     Bank
-                    <select
-                        v-model="mappingForm.bank_code"
-                        required
-                        class="w-full h-11 rounded-xl border border-line-200 bg-paper-0 px-3 text-sm text-ink-900 focus:border-violet-600 focus:outline-none"
-                    >
-                        <option
-                            v-for="bank in bankOptions"
-                            :key="bank.value"
-                            :value="bank.value"
+                    <div class="email-select-wrap">
+                        <select
+                            v-model="mappingForm.bank_code"
+                            required
+                            class="email-select w-full h-11 rounded-xl border border-line-200 bg-paper-0 px-3 text-sm text-ink-900 focus:border-violet-600 focus:outline-none"
                         >
-                            {{ bank.label }}
-                        </option>
-                    </select>
+                            <option
+                                v-for="bank in bankOptions"
+                                :key="bank.value"
+                                :value="bank.value"
+                            >
+                                {{ bank.label }}
+                            </option>
+                        </select>
+                    </div>
                 </label>
                 <label class="space-y-1.5 text-xs font-semibold text-ink-600">
                     Akun Cashlog
-                    <select
-                        v-model="mappingForm.account_id"
-                        required
-                        class="w-full h-11 rounded-xl border border-line-200 bg-paper-0 px-3 text-sm text-ink-900 focus:border-violet-600 focus:outline-none"
-                    >
-                        <option value="" disabled>Pilih akun</option>
-                        <option
-                            v-for="account in accounts"
-                            :key="account.id"
-                            :value="String(account.id)"
+                    <div class="email-select-wrap">
+                        <select
+                            v-model="mappingForm.account_id"
+                            required
+                            class="email-select w-full h-11 rounded-xl border border-line-200 bg-paper-0 px-3 text-sm text-ink-900 focus:border-violet-600 focus:outline-none"
                         >
-                            {{ account.name
-                            }}{{
-                                providerLabel(account.provider)
-                                    ? ` · ${providerLabel(account.provider)}`
-                                    : ""
-                            }}
-                        </option>
-                    </select>
+                            <option value="" disabled>Pilih akun</option>
+                            <option
+                                v-for="account in accounts"
+                                :key="account.id"
+                                :value="String(account.id)"
+                            >
+                                {{ account.name
+                                }}{{
+                                    providerLabel(account.provider)
+                                        ? ` · ${providerLabel(account.provider)}`
+                                        : ""
+                                }}
+                            </option>
+                        </select>
+                    </div>
                 </label>
                 <button
                     type="submit"
@@ -686,3 +692,29 @@ onMounted(async () => {
         </section>
     </div>
 </template>
+
+<style scoped>
+.email-select-wrap {
+    position: relative;
+}
+
+.email-select-wrap::after {
+    position: absolute;
+    top: 50%;
+    right: 1rem;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-right: 1.5px solid var(--color-ink-500);
+    border-bottom: 1.5px solid var(--color-ink-500);
+    content: "";
+    pointer-events: none;
+    transform: translateY(-70%) rotate(45deg);
+}
+
+.email-select-wrap .email-select {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    background-image: none !important;
+    padding-right: 2.75rem !important;
+}
+</style>
