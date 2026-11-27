@@ -24,6 +24,7 @@ class AccountService
         return $user->accounts()->create([
             'name' => $data['name'],
             'type' => $data['type'],
+            'provider' => $data['provider'] ?? null,
             'purpose' => $data['purpose'] ?? 'operational',
             'balance' => $data['balance'] ?? 0,
             'color' => $data['color'] ?? '#6C4CF1',

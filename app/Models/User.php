@@ -79,4 +79,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Asset::class);
     }
+
+    public function emailConnections()
+    {
+        return $this->hasMany(EmailConnection::class);
+    }
 }

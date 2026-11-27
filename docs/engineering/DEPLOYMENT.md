@@ -4,6 +4,8 @@ The production browser URL is `https://ledger.fdevsite.cloud`, with same-origin 
 
 The OCR expiry cleanup requires the standard Laravel scheduler (`schedule:run` once per minute or an equivalent managed scheduler). Preview with `php artisan ocr:cleanup-expired --dry-run`. No production deployment or production-data purge was performed for these changes.
 
+Gmail transaction sync uses the Laravel scheduler every five minutes and the database queue worker. It remains disabled unless `GMAIL_INTEGRATION_ENABLED=true`; do not enable it publicly until the OAuth verification and restricted-scope security assessment are complete. Cloud Pub/Sub push is optional and may add cost; check pricing before enabling it. The production OAuth callback is `https://ledger.fdevsite.cloud/auth/gmail/callback`.
+
 No production deployment, infrastructure change, or database migration was performed. CI was added and locally mirrored, but has not yet run on GitHub.
 
 Before release, review and commit the branch; verify production DB engine and backup/rollback plan without exposing `.env`; deploy through the normal operator procedure; then verify login/logout, direct route reload, transaction retry, dashboard totals, budget/goal/report screens, and service-worker update on `https://ledger.fdevsite.cloud`. Compare authenticated cold/warm timings against the dated performance baseline.

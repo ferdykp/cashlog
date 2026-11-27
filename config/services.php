@@ -41,6 +41,26 @@ return [
         'redirect_uri' => env('GOOGLE_REDIRECT_URI', env('APP_URL').'/auth/google/callback'),
     ],
 
+    'gmail' => [
+        'enabled' => (bool) env('GMAIL_INTEGRATION_ENABLED', false),
+        'client_id' => env('GMAIL_CLIENT_ID') ?: env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GMAIL_CLIENT_SECRET') ?: env('GOOGLE_CLIENT_SECRET'),
+        'redirect_uri' => env('GMAIL_REDIRECT_URI', rtrim(env('LEDGER_PUBLIC_URL', env('APP_URL')), '/').'/auth/gmail/callback'),
+        'pubsub_topic' => env('GMAIL_PUBSUB_TOPIC'),
+        'pubsub_audience' => env('GMAIL_PUBSUB_AUDIENCE'),
+        'pubsub_service_account' => env('GMAIL_PUBSUB_SERVICE_ACCOUNT'),
+        'bank_senders' => collect(explode(',', (string) env('GMAIL_BANK_SENDERS', '')))
+            ->mapWithKeys(function ($entry) {
+                [$domain, $bank] = array_pad(explode(':', trim($entry), 2), 2, null);
+                $domain = strtolower(trim((string) $domain));
+                $bank = strtolower(trim((string) $bank));
+
+                return $domain !== '' && in_array($bank, ['bca', 'blu', 'mandiri', 'seabank'], true)
+                    ? [$domain => $bank]
+                    : [];
+            })->all(),
+    ],
+
     'ledger' => [
         'url' => rtrim(env('LEDGER_PUBLIC_URL', env('APP_URL', 'http://localhost')), '/'),
     ],

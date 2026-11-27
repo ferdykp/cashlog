@@ -28,6 +28,7 @@ const isLoading = ref(false);
 const form = ref({
     name: "",
     type: "bank", // 'cash' | 'bank' | 'ewallet' | 'credit_card'
+    provider: "",
     purpose: "operational",
     balance: 0,
     color: "#08796D",
@@ -54,6 +55,7 @@ const colorSwatches = [
 
 function selectAccountType(type) {
     form.value.type = type;
+    if (type === "cash") form.value.provider = "";
     if (type === "credit_card") form.value.purpose = "operational";
 }
 
@@ -207,6 +209,29 @@ async function handleSubmit() {
                         placeholder="Contoh: BCA Utama, GoPay, Cash"
                         class="w-full px-4 h-12 border border-line-200 rounded-xl bg-paper-0 focus:border-violet-600 focus:outline-none text-sm font-medium text-ink-900 transition-colors placeholder:text-ink-300"
                     />
+                </div>
+
+                <div v-if="form.type !== 'cash'" class="space-y-2">
+                    <label
+                        class="block text-[11px] font-bold text-ink-300 uppercase tracking-wider"
+                    >
+                        BANK / PENYEDIA
+                        <span class="normal-case font-medium">(opsional)</span>
+                    </label>
+                    <select
+                        v-model="form.provider"
+                        class="w-full px-4 h-12 border border-line-200 rounded-xl bg-paper-0 focus:border-violet-600 focus:outline-none text-sm font-medium text-ink-900"
+                    >
+                        <option value="">Belum dipilih</option>
+                        <option value="bca">BCA</option>
+                        <option value="blu">blu</option>
+                        <option value="mandiri">Mandiri</option>
+                        <option value="seabank">SeaBank</option>
+                        <option value="other">Lainnya</option>
+                    </select>
+                    <p class="text-xs text-ink-500">
+                        Nama dompet tetap bebas kamu tentukan.
+                    </p>
                 </div>
 
                 <!-- Saldo Awal (Big Amount Input) -->

@@ -21,6 +21,7 @@ const Settings = () => import("../views/Settings.vue");
 const SmartImport = () => import("../views/SmartImport.vue");
 const Bills = () => import("../views/Bills.vue");
 const WhatsAppIntegration = () => import("../views/WhatsAppIntegration.vue");
+const EmailIntegration = () => import("../views/EmailIntegration.vue");
 const SharedWorkspace = () => import("../views/SharedWorkspace.vue");
 
 const routes = [
@@ -93,6 +94,11 @@ const routes = [
                 path: "settings/whatsapp",
                 name: "settings.whatsapp",
                 component: WhatsAppIntegration,
+            },
+            {
+                path: "settings/email",
+                name: "settings.email",
+                component: EmailIntegration,
             },
             { path: "budgets", redirect: "/budget" },
             { path: "reports", redirect: "/report" },

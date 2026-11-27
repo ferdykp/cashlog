@@ -7,6 +7,7 @@ Dokumen sumber OCR disimpan pada private disk. Dokumen dan hasil ekstraksi sensi
 ## Data yang diproses
 
 - Data akun, kategori, transaksi, anggaran, tujuan, dan aset disimpan di database aplikasi.
+- Jika pengguna menghubungkan Gmail, Gmail API memeriksa header email baru dan hanya mengambil isi pesan dari domain pengirim bank yang diizinkan administrator. Isi mentah tidak disimpan. Token OAuth disimpan dengan cast enkripsi Laravel; ID pesan dan hasil ekstraksi minimum disimpan untuk deduplikasi dan tinjauan. Semua hasil menunggu konfirmasi pengguna sebelum menjadi transaksi. Memutus koneksi mencabut token Google dan menghapus koneksi, pemetaan, serta draft impor; transaksi Ledger yang sudah dicatat tetap tersimpan.
 - Gambar OCR disimpan pada disk privat selama periode retensi; teks mentah, hasil parsing, dan confidence disimpan sementara untuk membantu pemeriksaan draft dan kemudian dihapus. Ringkasan status impor tetap disimpan.
 - Webhook WhatsApp menyimpan nomor telepon, isi pesan, status pemrosesan, dan balasan untuk deduplikasi serta retry. Webhook baru tidak lagi menyimpan payload mentah provider; payload yang tersimpan dari versi sebelumnya tetap ada sampai pengelola menetapkan prosedur penghapusannya.
 - Parser Gemini dapat menerima teks pesan WhatsApp dan nama akun/kategori milik pengguna saat `DEVFLOW_AI_ENABLED` aktif dan API key tersedia. Pastikan pemberitahuan privasi menjelaskan pemrosesan oleh Google Gemini sebelum fitur ini digunakan oleh pengguna.
@@ -18,6 +19,7 @@ Dokumen sumber OCR disimpan pada private disk. Dokumen dan hasil ekstraksi sensi
 3. Tetapkan prosedur penghapusan akun dan ekspor data pengguna.
 4. Batasi akses staf ke database dan backup; enkripsi backup dan gunakan HTTPS untuk semua integrasi.
 5. Tinjau syarat dan lokasi pemrosesan penyedia eksternal sesuai kebutuhan pengguna dan wilayah operasi.
+6. Sebelum Gmail tersedia untuk publik, lengkapi verifikasi OAuth Google untuk scope `gmail.readonly`, kebijakan privasi yang menjelaskan pemrosesan email, dan security assessment yang diwajibkan Google untuk data restricted scope yang diakses lewat server. Fitur tetap nonaktif secara default sampai langkah ini selesai.
 
 ## Token akses
 

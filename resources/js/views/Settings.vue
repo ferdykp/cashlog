@@ -31,6 +31,7 @@ import {
     KeyRound,
     Eye,
     EyeOff,
+    Mail,
 } from "@lucide/vue";
 
 import api from "@/lib/axios";
@@ -807,6 +808,25 @@ async function handleLogout() {
                             pencatatan lebih cepat.
                         </p>
                     </div>
+
+                    <router-link
+                        to="/settings/email"
+                        class="group flex items-center justify-between gap-4 p-4 rounded-2xl border border-line-200 bg-paper-0 hover:border-violet-300 hover:bg-violet-50/40 transition-all"
+                    >
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-11 h-11 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                                <Mail class="w-5 h-5" />
+                            </div>
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <p class="font-display font-bold text-sm text-ink-900">Email transaksi</p>
+                                    <span class="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[9px] font-bold uppercase tracking-wide">Gmail</span>
+                                </div>
+                                <p class="text-xs text-ink-500 mt-1 leading-relaxed">Baca notifikasi transaksi bank dan catat otomatis.</p>
+                            </div>
+                        </div>
+                        <ChevronRight class="w-5 h-5 text-ink-300 group-hover:text-violet-600 group-hover:translate-x-0.5 transition-all shrink-0" />
+                    </router-link>
 
                     <!-- WhatsApp -->
 

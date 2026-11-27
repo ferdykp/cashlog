@@ -36,6 +36,7 @@ const editForm = ref({
     id: null,
     name: "",
     type: "bank",
+    provider: "",
     purpose: "operational",
     balance: 0,
     color: "#08796D",
@@ -84,6 +85,18 @@ function getBalanceLabel(type) {
     if (type === "ewallet") return "SALDO AKTIF";
     if (type === "credit_card") return "SISA LIMIT";
     return "SALDO TERSEDIA";
+}
+
+function providerLabel(provider) {
+    return (
+        {
+            bca: "BCA",
+            blu: "blu",
+            mandiri: "Mandiri",
+            seabank: "SeaBank",
+            other: "Lainnya",
+        }[provider] || ""
+    );
 }
 
 // Buka Modal Edit
@@ -181,7 +194,9 @@ async function handleDelete() {
         </div>
 
         <!-- Grid Kartu Akun -->
-        <div class="account-card-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div
+            class="account-card-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
             <template v-if="isLoading">
                 <div
                     v-for="i in 3"
@@ -214,7 +229,9 @@ async function handleDelete() {
                     ></div>
 
                     <!-- Header Kartu -->
-                    <div class="wallet-card-content flex items-start justify-between">
+                    <div
+                        class="wallet-card-content flex items-start justify-between"
+                    >
                         <div class="flex items-center gap-3">
                             <div
                                 class="wallet-card-emblem w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 shadow-soft group-hover:scale-105 transition-transform"
@@ -252,7 +269,11 @@ async function handleDelete() {
                                 <span
                                     class="text-xs text-ink-600 capitalize font-medium"
                                 >
-                                    {{ acc.type }}
+                                    {{ acc.type
+                                    }}<span v-if="providerLabel(acc.provider)">
+                                        ·
+                                        {{ providerLabel(acc.provider) }}</span
+                                    >
                                 </span>
                             </div>
                         </div>
@@ -309,7 +330,9 @@ async function handleDelete() {
                     </div>
 
                     <!-- Saldo Kartu -->
-                    <div class="wallet-card-content wallet-card-balance space-y-1">
+                    <div
+                        class="wallet-card-content wallet-card-balance space-y-1"
+                    >
                         <span
                             class="text-[10px] font-bold text-ink-300 uppercase tracking-wider block"
                         >
@@ -440,6 +463,28 @@ async function handleDelete() {
                             Tabungan tidak dihitung sebagai kas harian yang
                             tersedia.
                         </p>
+                    </div>
+
+                    <div v-if="editForm.type !== 'cash'" class="space-y-2">
+                        <label
+                            class="block text-[11px] font-bold text-ink-300 uppercase tracking-wider"
+                        >
+                            BANK / PENYEDIA
+                            <span class="normal-case font-medium"
+                                >(opsional)</span
+                            >
+                        </label>
+                        <select
+                            v-model="editForm.provider"
+                            class="w-full px-4 h-12 border border-line-200 rounded-xl bg-paper-0 focus:border-violet-600 focus:outline-none text-sm font-medium text-ink-900"
+                        >
+                            <option value="">Belum dipilih</option>
+                            <option value="bca">BCA</option>
+                            <option value="blu">blu</option>
+                            <option value="mandiri">Mandiri</option>
+                            <option value="seabank">SeaBank</option>
+                            <option value="other">Lainnya</option>
+                        </select>
                     </div>
 
                     <div class="space-y-2">

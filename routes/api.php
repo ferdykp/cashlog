@@ -6,19 +6,21 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BillController;
 use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\EmailIntegrationController;
 use App\Http\Controllers\ExpenseRecapController;
-use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\GoalCashAllocationController;
 use App\Http\Controllers\GoalController;
 use App\Http\Controllers\GoalFundingController;
 use App\Http\Controllers\GoalItemController;
 use App\Http\Controllers\GoalObligationController;
+use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\NetWorthController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SharedFinancialWorkspaceController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\Webhooks\GmailPushWebhookController;
 use App\Http\Controllers\Webhooks\WhatsAppWebhookController;
 use App\Http\Controllers\WhatsAppIntegrationController;
 use App\Http\Controllers\WhatsAppVerificationController;
@@ -36,10 +38,17 @@ Route::post('/auth/google/otp/verify', [GoogleAuthController::class, 'verify'])-
 
 // Route::get('/ping', fn() => response()->json(['message' => 'pong']))->middleware('auth:sanctum');
 Route::post('/webhooks/whatsapp', WhatsAppWebhookController::class)->middleware('throttle:120,1');
+Route::post('/webhooks/gmail', GmailPushWebhookController::class)->middleware('throttle:120,1');
 
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/integrations/whatsapp', [WhatsAppIntegrationController::class, 'status']);
+    Route::get('/integrations/email', [EmailIntegrationController::class, 'status']);
+    Route::get('/integrations/email/imports', [EmailIntegrationController::class, 'imports']);
+    Route::put('/integrations/email/{connection}/mappings', [EmailIntegrationController::class, 'saveMapping']);
+    Route::post('/integrations/email/imports/{import}/confirm', [EmailIntegrationController::class, 'confirm']);
+    Route::post('/integrations/email/imports/{import}/ignore', [EmailIntegrationController::class, 'ignore']);
+    Route::delete('/integrations/email/{connection}', [EmailIntegrationController::class, 'disconnect']);
     Route::post('/integrations/whatsapp/pairing', [WhatsAppIntegrationController::class, 'pairing'])->middleware('throttle:5,1');
     Route::delete('/integrations/whatsapp', [WhatsAppIntegrationController::class, 'disconnect']);
     Route::post('/logout', [AuthController::class, 'logout']);

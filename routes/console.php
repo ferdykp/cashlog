@@ -16,3 +16,8 @@ Schedule::command('ocr:cleanup-expired')
     ->dailyAt('02:15')
     ->timezone('Asia/Jakarta')
     ->withoutOverlapping();
+
+Schedule::command('gmail:sync')
+    ->everyFiveMinutes()
+    ->timezone('Asia/Jakarta')
+    ->withoutOverlapping();
