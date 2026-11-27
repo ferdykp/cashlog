@@ -557,3 +557,193 @@ body {
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* Dark theme: neutral graphite surfaces with restrained semantic accents. */
+:root.dark {
+    --canvas: #111315;
+    --canvas-raised: #181a1d;
+    --surface: #1d2023;
+    --surface-raised: #24272b;
+    --surface-solid: #1d2023;
+    --surface-sunken: #151719;
+    --surface-muted: #282b2f;
+    --ink: #f1f2f3;
+    --ink-soft: #d5d8db;
+    --ink-muted: #a4a9ae;
+    --line: #35393e;
+    --line-strong: #484d53;
+    --accent: #aeb8b2;
+    --accent-strong: #d1d7d3;
+    --accent-soft: #303633;
+    --primary-foreground: #171a18;
+    --positive: #80c99a;
+    --positive-soft: #26382d;
+    --negative: #ed918d;
+    --negative-soft: #402a2b;
+    --warning: #e3bd73;
+    --warning-soft: #3b3324;
+    --cyan: #b7c1bb;
+    --shadow-glass: 0 12px 30px rgba(0, 0, 0, .22);
+    --shadow-card: 0 8px 22px rgba(0, 0, 0, .2), 0 1px 0 rgba(255, 255, 255, .035);
+    --shadow-card-hover: 0 14px 32px rgba(0, 0, 0, .32), 0 0 0 1px rgba(255, 255, 255, .07);
+    --color-base-50: var(--canvas);
+    --color-base-100: var(--canvas-raised);
+    --color-paper-0: var(--surface);
+    --color-line-200: var(--line);
+    --color-ink-900: var(--ink);
+    --color-ink-800: var(--ink);
+    --color-ink-700: var(--ink-soft);
+    --color-ink-600: var(--ink-muted);
+    --color-ink-500: var(--ink-muted);
+    --color-ink-400: #9ba1a6;
+    --color-ink-300: #b1b6bb;
+    --color-primary-700: var(--accent-strong);
+    --color-primary-600: var(--accent);
+    --color-primary-100: var(--accent-soft);
+    --color-indigo-700: var(--accent-strong);
+    --color-indigo-600: var(--accent);
+    --color-violet-700: var(--accent-strong);
+    --color-violet-600: var(--accent);
+    --color-violet-100: var(--accent-soft);
+    --color-violet-50: #292d2a;
+    --color-lavender-50: #292d2a;
+    --color-mint-50: #292d2a;
+    --color-income-600: var(--positive);
+    --color-income-100: var(--positive-soft);
+    --color-expense-600: var(--negative);
+    --color-expense-100: var(--negative-soft);
+    --color-amber-600: var(--warning);
+    --color-amber-100: var(--warning-soft);
+    --shadow-soft: var(--shadow-card);
+    --shadow-violet: 0 5px 16px rgba(0, 0, 0, .2);
+}
+
+:root.dark,
+:root.dark body,
+:root.dark .app-frame,
+:root.dark .app-main-shell {
+    background-color: var(--canvas);
+    background-image: none;
+}
+
+:root.dark .ledger-sidebar,
+:root.dark .ledger-desktop-header,
+:root.dark .ledger-mobile-header,
+:root.dark .mobile-navigation {
+    background-color: var(--surface-sunken);
+    border-color: var(--line);
+}
+
+:root.dark .nav-item.is-active {
+    color: var(--ink);
+    background: #292d2b;
+    box-shadow: inset 3px 0 0 #9ba69f;
+}
+
+:root.dark .brand-mark {
+    color: #f0f2f1;
+    background: #303438;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), 0 5px 12px rgba(0, 0, 0, .2);
+}
+
+:root.dark .primary-button,
+:root.dark .mobile-navigation .mobile-create-icon {
+    color: #171a18;
+    background: #c4ccc7;
+    box-shadow: 0 5px 14px rgba(0, 0, 0, .2);
+}
+
+:root.dark .primary-button:hover { background: #d3d9d5; }
+:root.dark :focus-visible { outline-color: #c4ccc7; }
+
+/* Physical account cards: matte face, visible edge, and clean 3D depth. */
+:root.dark .wallet-card {
+    border-color: color-mix(in srgb, var(--line-strong) 84%, white 16%);
+    background: linear-gradient(148deg, #303438 0%, #25292d 44%, #202326 100%);
+    box-shadow: 0 3px 0 #17191b, 0 8px 0 -2px #2d3135,
+        0 16px 24px rgba(0, 0, 0, .24), 0 30px 38px rgba(0, 0, 0, .12),
+        inset 0 1px 0 rgba(255, 255, 255, .16), inset 0 -1px 0 rgba(0, 0, 0, .24);
+}
+
+:root.dark .wallet-card::before {
+    background: linear-gradient(132deg, rgba(255,255,255,.08), transparent 34%, rgba(255,255,255,.025) 70%, transparent);
+    background-size: 100% 100%;
+    animation: none;
+    opacity: 1;
+}
+
+:root.dark .wallet-card::after {
+    border-color: rgba(255, 255, 255, .1);
+    background: linear-gradient(180deg, #2a2e32, #1a1d20);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, .16), inset 0 1px 0 rgba(255, 255, 255, .045);
+}
+
+:root.dark .wallet-card-edge {
+    height: 4px;
+    filter: none;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .34), 0 1px 2px rgba(0, 0, 0, .2);
+}
+
+:root.dark .wallet-card-emblem {
+    border-color: rgba(255, 255, 255, .12);
+    background: rgba(255, 255, 255, .07) !important;
+    color: var(--ink-soft) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), 0 4px 10px rgba(0, 0, 0, .16);
+}
+
+:root.dark .wallet-card-balance > div { text-shadow: none; }
+
+:root.dark .home-cash {
+    border-color: var(--line);
+    background: linear-gradient(155deg, #202326, #1a1d20 72%);
+    box-shadow: 0 18px 42px rgba(0, 0, 0, .22), inset 0 1px 0 rgba(255, 255, 255, .055);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+:root.dark .home-cash::before { display: none; }
+
+:root.dark .home-wallet-card.wallet-card {
+    border-color: rgba(255, 255, 255, .18);
+    background: linear-gradient(148deg, #303438 0%, #25292d 44%, #202326 100%);
+    box-shadow: 0 3px 0 #17191b, 0 7px 0 -2px #2d3135,
+        0 13px 22px rgba(0, 0, 0, .27), inset 0 1px 0 rgba(255, 255, 255, .17),
+        inset 0 -1px 0 rgba(0, 0, 0, .24);
+}
+
+:root.dark .home-wallet-card.wallet-card::before { display: none; }
+:root.dark .home-wallet-card.wallet-card::after {
+    inset: 8px 9px -7px;
+    border-color: rgba(255, 255, 255, .12);
+    background: linear-gradient(180deg, #292d30, #1b1e21);
+}
+:root.dark .home-wallet-card-edge { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .32), 0 1px 2px rgba(0, 0, 0, .18); }
+:root.dark .home-wallet-card-edge,
+:root.dark .wallet-card-edge { opacity: .76; }
+:root.dark .home-wallet-emblem {
+    border-color: rgba(255, 255, 255, .13);
+    background: rgba(255, 255, 255, .075);
+    color: #e2e5e3 !important;
+}
+:root.dark .home-wallet-card-balance > strong { text-shadow: none; }
+
+:root.dark .home-cash-total {
+    border-color: var(--line);
+    background: var(--surface-muted);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04);
+}
+
+:root.dark .home-action-row a {
+    background: #222528;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    :root.dark .wallet-card:hover,
+    :root.dark .wallet-card:focus-within {
+        border-color: rgba(255, 255, 255, .3);
+        box-shadow: 0 4px 0 #17191b, 0 9px 0 -2px #33373b,
+            0 24px 34px rgba(0, 0, 0, .3), 0 42px 48px rgba(0, 0, 0, .16),
+            inset 0 1px 0 rgba(255, 255, 255, .2);
+    }
+}
